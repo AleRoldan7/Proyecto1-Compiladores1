@@ -4,8 +4,11 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.proyecto1_compi1.ui.screens.AnswerScreen
 import com.example.proyecto1_compi1.ui.screens.EditScreen
 import com.example.proyecto1_compi1.ui.screens.HomeScreen
+import com.example.proyecto1_compi1.ui.screens.PreviewScreen
+import com.example.proyecto1_compi1.ui.screens.ServerScreen
 import com.example.proyecto1_compi1.ui.screens.UploadFilesScreen
 
 @Composable
@@ -24,8 +27,16 @@ fun NavigationApp() {
             EditScreen(navController)
         }
 
-        composable("upload") {
-            UploadFilesScreen(navController)
+        composable("preview") {
+            PreviewScreen(navController)
+        }
+
+        composable("server") {
+            ServerScreen(navController)
+        }
+
+        composable("answer") {
+            AnswerScreen(navController)
         }
 
     }

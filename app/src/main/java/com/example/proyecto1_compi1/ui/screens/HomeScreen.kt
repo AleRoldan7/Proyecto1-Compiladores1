@@ -25,15 +25,17 @@ fun HomeScreen(navController: NavController) {
             style = MaterialTheme.typography.headlineMedium
         )
 
-        Spacer(modifier = Modifier.height(30.dp))
+        Spacer(modifier = Modifier.height(40.dp))
 
         Button(
             onClick = {
                 navController.navigate("edit")
             }
         ) {
-            Text("Editor")
+            Text("Crear / Editar Formularios")
         }
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         Button(
             onClick = {
@@ -41,6 +43,26 @@ fun HomeScreen(navController: NavController) {
             }
         ) {
             Text("Cargar Archivos")
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(
+            onClick = {
+                navController.navigate("server")
+            }
+        ) {
+            Text("Cagar Formularios Servidor")
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(
+            onClick = {
+                navController.navigate("answer")
+            }
+        ) {
+            Text("Responder Formularios")
         }
     }
 }

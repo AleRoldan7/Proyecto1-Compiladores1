@@ -1,0 +1,140 @@
+package com.example.proyecto1_compi1.analizador;
+
+import com.example.proyecto1_compi1.token.Token;
+import com.example.proyecto1_compi1.modelo.*;
+import java_cup.runtime.Symbol;
+import java.util.ArrayList;
+
+parser code {:
+    public static ArrayList<Token> listaErrores = new ArrayList<>();
+
+    @Override
+    public void syntax_error(Symbol s) {
+
+        listaErrores.add(
+            new Token(
+                s.value != null ? s.value.toString() : "EOF",
+                s.left + 1,
+                s.right + 1,
+                "Sintáctico",
+                "Error sintáctico"
+            )
+        );
+    }
+:};
+
+
+/* --------------- TERMINALES ---------------------*/
+
+terminal SECTION, TABLE, TEXT;
+
+terminal OPENQUESTION, DROPQUESTION, SELECTQUESTION, MULTIPLEQUESTION;
+
+terminal VARIABLENUMBER, VARIABLESTRING, VARIABLESPECIAL;
+
+terminal IGUALIGUAL, DIFERENTE, MAYORIGUAL, MENORIGUAL;
+terminal AND, OR, NOT;
+terminal IGUAL, MAYOR, MENOR;
+terminal SUMA, RESTA, MULTI, DIVISION, POTENCIA, MODULO;
+
+terminal PARENTESIS_ABRE, PARENTESIS_CIERRA;
+terminal CORCHETE_ABRE, CORCHETE_CIERRA;
+terminal LLAVE_ABRE, LLAVE_CIERRA;
+
+terminal PUNTOCOMA, COMA, DOSPUNTOS;
+
+terminal DECIMAL, ENTERO;
+terminal VARIABLE, CADENA;
+
+/* --------------------- PRECEDENCIA ---------------------------*/
+
+
+
+/* ---------------------- NO TERMINALES ----------------------- */
+
+non terminal inicio;
+non terminal lista_secciones;
+non terminal seccion;
+non terminal lista_instrucciones;
+non terminal instruccion;
+non terminal pregunta;
+non terminal expresion;
+non terminal tipo_variable;
+non terminal declaracion;
+
+precedence left SUMA, RESTA;
+precedence left MULTI, DIVISION, MODULO;
+precedence right POTENCIA;
+precedence left MAYOR, MENOR, IGUALIGUAL, DIFERENTE;
+
+start with inicio;
+
+inicio ::=
+        lista_secciones
+        ;
+
+lista_secciones ::=
+        lista_secciones seccion
+        | seccion
+        ;
+
+seccion ::=
+    SECTION VARIABLE:v LLAVE_ABRE
+    {:
+        ResultParser.formsModel = new FormsModel(v.toString());
+    :}
+    lista_instrucciones
+    LLAVE_CIERRA
+;
+
+lista_instrucciones ::=
+        lista_instrucciones instruccion
+        | instruccion
+        ;
+
+instruccion ::=
+        pregunta
+        | declaracion
+        ;
+
+declaracion ::=
+        tipo_variable VARIABLE IGUAL expresion PUNTOCOMA
+        ;
+
+tipo_variable ::=
+        VARIABLENUMBER
+        | VARIABLESTRING
+        | VARIABLESPECIAL
+        ;
+
+pregunta ::=
+        OPENQUESTION VARIABLE:v PUNTOCOMA
+        {:
+            if (ResultParser.formsModel != null) {
+                        ResultParser.formsModel.addQuestion(
+                            new QuestionModel("OPEN", v.toString())
+                        );
+                    }
+        :}
+        | DROPQUESTION VARIABLE PUNTOCOMA
+        | SELECTQUESTION VARIABLE PUNTOCOMA
+        | MULTIPLEQUESTION VARIABLE PUNTOCOMA
+        ;
+
+expresion ::=
+        expresion SUMA expresion
+        | expresion RESTA expresion
+        | expresion MULTI expresion
+        | expresion DIVISION expresion
+        | expresion POTENCIA expresion
+        | expresion MODULO expresion
+        | expresion MAYOR expresion
+        | expresion MENOR expresion
+        | expresion IGUALIGUAL expresion
+        | expresion DIFERENTE expresion
+        | PARENTESIS_ABRE expresion PARENTESIS_CIERRA
+        | ENTERO
+        | DECIMAL
+        | CADENA
+        | VARIABLE
+        ;
