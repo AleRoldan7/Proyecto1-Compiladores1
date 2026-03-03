@@ -1,4 +1,4 @@
-package com.example.proyecto1_compi1.modelo;
+package com.example.proyecto1_compi1.modelo.forms;
 
 public class ResultParser {
 

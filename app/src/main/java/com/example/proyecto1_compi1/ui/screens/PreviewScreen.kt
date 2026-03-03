@@ -2,11 +2,19 @@ package com.example.proyecto1_compi1.ui.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.proyecto1_compi1.modelo.ResultParser
+import com.example.proyecto1_compi1.modelo.forms.ResultParser
+import com.example.proyecto1_compi1.modelo.question.DropQuestion
+import com.example.proyecto1_compi1.modelo.question.MultipleQuestion
+import com.example.proyecto1_compi1.modelo.question.OpenQuestion
+import com.example.proyecto1_compi1.modelo.question.SelectQuestion
+import com.example.proyecto1_compi1.ui.question.DropQuestionUI
+import com.example.proyecto1_compi1.ui.question.MultipleQuestionUI
+import com.example.proyecto1_compi1.ui.question.SelectQuestionUI
+import com.example.proyecto1_compi1.ui.table.TableUI
 
 @Composable
 fun PreviewScreen(navController: NavController) {
@@ -37,18 +45,59 @@ fun PreviewScreen(navController: NavController) {
 
             forms.questions.forEach { question ->
 
-                Text(text = question.name)
+                when (question) {
 
-                Spacer(modifier = Modifier.height(8.dp))
+                    is OpenQuestion -> {
 
-                OutlinedTextField(
-                    value = "",
-                    onValueChange = {},
-                    label = { Text("Respuesta") },
-                    modifier = Modifier.fillMaxWidth()
-                )
+                        Text(question.name)
 
-                Spacer(modifier = Modifier.height(16.dp))
+                        var text by remember { mutableStateOf("") }
+
+                        OutlinedTextField(
+                            value = text,
+                            onValueChange = { text = it },
+                            label = { Text("Respuesta") },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+
+                    is DropQuestion -> {
+
+                        Text(question.name)
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        DropQuestionUI(question.options)
+                    }
+
+                    is SelectQuestion -> {
+
+                        Text(question.name)
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        SelectQuestionUI(question.options)
+                    }
+
+                    is MultipleQuestion -> {
+
+                        Text(question.name)
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        MultipleQuestionUI(question.options)
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+            }
+
+            forms.tables.forEach { table ->
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                TableUI(table)
+
             }
 
         } else {

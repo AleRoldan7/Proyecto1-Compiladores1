@@ -57,9 +57,9 @@ CADENA = \"[^\"]*\"
 
 /*  VARIABLES  */
 
-"number"     { return symbol(sym.VARIABLENUMBER); }
-"string"     { return symbol(sym.VARIABLESTRING); }
-"special"  { return symbol(sym.VARIABLESPECIAL); }
+"number"    { return new Symbol(sym.VARIABLENUMBER, yyline, yycolumn, yytext()); }
+"string"    { return new Symbol(sym.VARIABLESTRING, yyline, yycolumn, yytext()); }
+"OPEN_QUESTION" { return new Symbol(sym.OPENQUESTION, yyline, yycolumn, yytext()); }
 
 
 /*  FORMA DE CREAR LAS PREGUNTAS */
@@ -76,8 +76,25 @@ CADENA = \"[^\"]*\"
 "TABLE"                  { return symbol(sym.TABLE); }
 "TEXT"                   { return symbol(sym.TEXT); }
 
+"special"     { return symbol(sym.SPECIAL); }
+ "draw"        { return symbol(sym.DRAW); }
 
+ /* CONFIGURACIONES */
 
+"elements"    { return symbol(sym.ELEMENTS); }
+"styles"      { return symbol(sym.STYLES); }
+
+"width"       { return symbol(sym.WIDTH); }
+"height"      { return symbol(sym.HEIGHT); }
+"pointX"      { return symbol(sym.POINTX); }
+"pointY"      { return symbol(sym.POINTY); }
+
+"color"       { return symbol(sym.COLOR); }
+"border"      { return symbol(sym.BORDER); }
+
+"SOLID"   { return symbol(sym.SOLID); }
+"DASHED"  { return symbol(sym.DASHED); }
+"DOTTED"  { return symbol(sym.DOTTED); }
 
 /* OPERADORES  */
 
@@ -123,7 +140,7 @@ CADENA = \"[^\"]*\"
 
 /* IDENTIFICADORES  */
 
-{ID}            { return symbol(sym.VARIABLE, yytext()); }
+{ID} { return new Symbol(sym.VARIABLE, yyline, yycolumn, yytext()); }
 {CADENA}        { return symbol(sym.CADENA, yytext()); }
 
 /* ERRORES */

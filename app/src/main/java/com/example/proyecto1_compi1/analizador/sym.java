@@ -9,11 +9,18 @@ package com.example.proyecto1_compi1.analizador;
 public class sym {
   /* terminals */
   public static final int DOSPUNTOS = 36;
+  public static final int INTERROGACION = 44;
+  public static final int WIDTH = 47;
   public static final int PARENTESIS_CIERRA = 29;
+  public static final int ELEMENTS = 45;
   public static final int ENTERO = 38;
   public static final int DIFERENTE = 13;
   public static final int RESTA = 23;
+  public static final int STYLES = 46;
   public static final int PUNTOCOMA = 34;
+  public static final int POINTY = 50;
+  public static final int POINTX = 49;
+  public static final int DRAW = 42;
   public static final int NOT = 18;
   public static final int MENORIGUAL = 15;
   public static final int AND = 16;
@@ -21,6 +28,7 @@ public class sym {
   public static final int VARIABLESPECIAL = 11;
   public static final int OR = 17;
   public static final int CORCHETE_CIERRA = 31;
+  public static final int SOLID = 53;
   public static final int SUMA = 22;
   public static final int MAYORIGUAL = 14;
   public static final int DECIMAL = 37;
@@ -32,15 +40,21 @@ public class sym {
   public static final int CADENA = 40;
   public static final int MODULO = 27;
   public static final int MENOR = 21;
+  public static final int HEIGHT = 48;
   public static final int MULTIPLEQUESTION = 8;
   public static final int LLAVE_ABRE = 32;
+  public static final int COLOR = 51;
+  public static final int SPECIAL = 41;
   public static final int MAYOR = 20;
   public static final int VARIABLENUMBER = 9;
   public static final int POTENCIA = 26;
   public static final int CORCHETE_ABRE = 30;
+  public static final int PUNTO = 43;
   public static final int VARIABLE = 39;
   public static final int IGUALIGUAL = 12;
+  public static final int DASHED = 54;
   public static final int DROPQUESTION = 6;
+  public static final int BORDER = 52;
   public static final int MULTI = 24;
   public static final int LLAVE_CIERRA = 33;
   public static final int TEXT = 4;
@@ -49,6 +63,7 @@ public class sym {
   public static final int DIVISION = 25;
   public static final int VARIABLESTRING = 10;
   public static final int PARENTESIS_ABRE = 28;
+  public static final int DOTTED = 55;
   public static final String[] terminalNames = new String[] {
   "EOF",
   "error",
@@ -90,7 +105,22 @@ public class sym {
   "DECIMAL",
   "ENTERO",
   "VARIABLE",
-  "CADENA"
+  "CADENA",
+  "SPECIAL",
+  "DRAW",
+  "PUNTO",
+  "INTERROGACION",
+  "ELEMENTS",
+  "STYLES",
+  "WIDTH",
+  "HEIGHT",
+  "POINTX",
+  "POINTY",
+  "COLOR",
+  "BORDER",
+  "SOLID",
+  "DASHED",
+  "DOTTED"
   };
 }
 

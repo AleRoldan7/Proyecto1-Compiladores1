@@ -26,7 +26,7 @@ fun AnswerScreen(navController: NavController) {
 
         Button(modifier = Modifier.fillMaxWidth(),
             onClick = {
-                // Aquí validas respuestas
+
             }
         ) {
             Text("Enviar")

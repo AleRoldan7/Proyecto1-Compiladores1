@@ -1,9 +1,13 @@
 package com.example.proyecto1_compi1.analizador;
 
 import com.example.proyecto1_compi1.token.Token;
-import com.example.proyecto1_compi1.modelo.*;
+import com.example.proyecto1_compi1.modelo.question.*;
+import com.example.proyecto1_compi1.modelo.variable.*;
+import com.example.proyecto1_compi1.modelo.forms.*;
+import com.example.proyecto1_compi1.modelo.table.*;
 import java_cup.runtime.Symbol;
 import java.util.ArrayList;
+import com.example.proyecto1_compi1.enums.*;
 
 parser code {:
     public static ArrayList<Token> listaErrores = new ArrayList<>();
@@ -20,6 +24,27 @@ parser code {:
                 "Error sintáctico"
             )
         );
+    }
+
+    @Override
+    public void report_error(String message, Object info) {
+
+        Symbol sym = (Symbol) info;
+
+        listaErrores.add(
+            new Token(
+                sym.value != null ? sym.value.toString() : "EOF",
+                sym.left + 1,
+                sym.right + 1,
+                message,
+                message
+            )
+        );
+    }
+
+    @Override
+    public void report_fatal_error(String message, Object info) {
+        report_error(message, info);
     }
 :};
 
@@ -46,6 +71,14 @@ terminal PUNTOCOMA, COMA, DOSPUNTOS;
 terminal DECIMAL, ENTERO;
 terminal VARIABLE, CADENA;
 
+terminal SPECIAL, DRAW, PUNTO, INTERROGACION;
+
+terminal ELEMENTS, STYLES;
+
+terminal WIDTH, HEIGHT, POINTX, POINTY;
+terminal COLOR, BORDER;
+
+terminal SOLID, DASHED, DOTTED;
 /* --------------------- PRECEDENCIA ---------------------------*/
 
 
@@ -58,9 +91,25 @@ non terminal seccion;
 non terminal lista_instrucciones;
 non terminal instruccion;
 non terminal pregunta;
-non terminal expresion;
-non terminal tipo_variable;
 non terminal declaracion;
+non terminal ArrayList<String> lista_opciones;
+non terminal ArrayList<String> lista_valores;
+non terminal Object expresion;
+
+non terminal SpecialQuestion special_decl;
+non terminal ArrayList<Object> propiedades;
+non terminal Object propiedad;
+
+non terminal draw_call;
+non terminal ArrayList<Object> parametros;
+
+non terminal table_decl;
+non terminal ArrayList<PropertyTable> table_props;
+non terminal PropertyTable table_prop;
+
+non terminal ArrayList<Style> style_list;
+non terminal Style style_item;
+non terminal TypeBorder tipo_borde;
 
 precedence left SUMA, RESTA;
 precedence left MULTI, DIVISION, MODULO;
@@ -77,6 +126,26 @@ lista_secciones ::=
         lista_secciones seccion
         | seccion
         ;
+
+lista_opciones ::=
+    CORCHETE_ABRE lista_valores:l CORCHETE_CIERRA
+    {: RESULT = l; :}
+;
+
+lista_valores ::=
+    lista_valores:l COMA CADENA:c
+    {:
+        l.add(c.toString());
+        RESULT = l;
+    :}
+    |
+    CADENA:c
+    {:
+        ArrayList<String> lista = new ArrayList<>();
+        lista.add(c.toString());
+        RESULT = lista;
+    :}
+;
 
 seccion ::=
     SECTION VARIABLE:v LLAVE_ABRE
@@ -95,46 +164,208 @@ lista_instrucciones ::=
 instruccion ::=
         pregunta
         | declaracion
+        | table_decl
+        | special_decl
+        | draw_call
         ;
 
 declaracion ::=
-        tipo_variable VARIABLE IGUAL expresion PUNTOCOMA
-        ;
 
-tipo_variable ::=
-        VARIABLENUMBER
-        | VARIABLESTRING
-        | VARIABLESPECIAL
-        ;
+    VARIABLENUMBER VARIABLE:v IGUAL expresion:e PUNTOCOMA
+    {:
+        if (ResultParser.formsModel != null) {
+            ResultParser.formsModel.addVariable(
+                new VariableModel("number", v.toString(), e)
+            );
+        }
+    :}
+
+|   VARIABLESTRING VARIABLE:v IGUAL expresion:e PUNTOCOMA
+    {:
+        if (ResultParser.formsModel != null) {
+            ResultParser.formsModel.addVariable(
+                new VariableModel("string", v.toString(), e)
+            );
+        }
+    :}
+
+|   VARIABLESPECIAL VARIABLE:v IGUAL expresion:e PUNTOCOMA
+    {:
+        if (ResultParser.formsModel != null) {
+            ResultParser.formsModel.addVariable(
+                new VariableModel("special", v.toString(), e)
+            );
+        }
+    :}
+;
+
 
 pregunta ::=
-        OPENQUESTION VARIABLE:v PUNTOCOMA
-        {:
-            if (ResultParser.formsModel != null) {
-                        ResultParser.formsModel.addQuestion(
-                            new QuestionModel("OPEN", v.toString())
-                        );
-                    }
-        :}
-        | DROPQUESTION VARIABLE PUNTOCOMA
-        | SELECTQUESTION VARIABLE PUNTOCOMA
-        | MULTIPLEQUESTION VARIABLE PUNTOCOMA
-        ;
+
+    OPENQUESTION VARIABLE:v PUNTOCOMA
+    {:
+        if (ResultParser.formsModel != null) {
+            ResultParser.formsModel.addQuestion(
+                new OpenQuestion(v.toString())
+            );
+        }
+    :}
+
+    | DROPQUESTION VARIABLE:v lista_opciones:ops PUNTOCOMA
+    {:
+        if (ResultParser.formsModel != null) {
+            ResultParser.formsModel.addQuestion(
+                new DropQuestion(v.toString(), ops)
+            );
+        }
+    :}
+
+    | SELECTQUESTION VARIABLE:v lista_opciones:ops PUNTOCOMA
+    {:
+        if (ResultParser.formsModel != null) {
+            ResultParser.formsModel.addQuestion(
+                new SelectQuestion(v.toString(), ops)
+            );
+        }
+    :}
+
+    | MULTIPLEQUESTION VARIABLE:v lista_opciones:ops PUNTOCOMA
+    {:
+        if (ResultParser.formsModel != null) {
+            ResultParser.formsModel.addQuestion(
+                new MultipleQuestion(v.toString(), ops)
+            );
+        }
+    :}
+;
+
+
+
+propiedades ::=
+    propiedades:p COMA propiedad:prop
+    {:
+        p.add(prop);
+        RESULT = p;
+    :}
+    |
+    propiedad:prop
+    {:
+        ArrayList<Object> list = new ArrayList<>();
+        list.add(prop);
+        RESULT = list;
+    :}
+;
+
+propiedad ::=
+      VARIABLE DOSPUNTOS INTERROGACION
+      {: RESULT = "?"; :}
+
+    | VARIABLE DOSPUNTOS expresion:e
+      {: RESULT = e; :}
+;
+
+
+
+parametros ::=
+    parametros:p COMA expresion:e
+    {:
+        p.add(e);
+        RESULT = p;
+    :}
+    |
+    expresion:e
+    {:
+        ArrayList<Object> list = new ArrayList<>();
+        list.add(e);
+        RESULT = list;
+    :}
+;
 
 expresion ::=
-        expresion SUMA expresion
-        | expresion RESTA expresion
-        | expresion MULTI expresion
-        | expresion DIVISION expresion
-        | expresion POTENCIA expresion
-        | expresion MODULO expresion
-        | expresion MAYOR expresion
-        | expresion MENOR expresion
-        | expresion IGUALIGUAL expresion
-        | expresion DIFERENTE expresion
-        | PARENTESIS_ABRE expresion PARENTESIS_CIERRA
-        | ENTERO
-        | DECIMAL
-        | CADENA
-        | VARIABLE
-        ;
+        ENTERO:e
+        {: RESULT = Integer.parseInt(e.toString()); :}
+
+    | DECIMAL:d
+        {: RESULT = Double.parseDouble(d.toString()); :}
+
+    | CADENA:c
+        {: RESULT = c.toString(); :}
+
+    | VARIABLE:v
+        {: RESULT = v.toString(); :}
+;
+
+
+/* ------------ PARA CREAR LAS TABLAS ---------------*/
+
+table_decl ::=
+    TABLE CORCHETE_ABRE table_props:p CORCHETE_CIERRA
+    {:
+        TableModel table = new TableModel();
+
+        for(PropertyTable prop : p){
+            table.addProperty(prop);
+        }
+
+        ResultParser.formsModel.addTable(table);
+    :}
+;
+
+table_props ::=
+      table_props:p COMA table_prop:t
+      {:
+          p.add(t);
+          RESULT = p;
+      :}
+    | table_prop:t
+      {:
+          ArrayList<PropertyTable> list = new ArrayList<>();
+          list.add(t);
+          RESULT = list;
+      :}
+;
+
+table_prop ::=
+      WIDTH DOSPUNTOS expresion:e
+        {: RESULT = new PropertyWidth(e); :}
+
+    | HEIGHT DOSPUNTOS expresion:e
+        {: RESULT = new PropertyHeigth(e); :}
+
+    | POINTX DOSPUNTOS expresion:e
+      {: RESULT = new PropertyPosition((Integer)e, 0); :}
+
+    | POINTY DOSPUNTOS expresion:e
+        {: RESULT = new PropertyPosition(0,(Integer)e); :}
+
+    | STYLES DOSPUNTOS CORCHETE_ABRE style_list:s CORCHETE_CIERRA
+        {: RESULT = new PropertyStyle(s); :}
+;
+
+style_list ::=
+      style_list:s COMA style_item:i
+      {:
+          s.add(i);
+          RESULT = s;
+      :}
+    | style_item:i
+      {:
+          ArrayList<Style> list = new ArrayList<>();
+          list.add(i);
+          RESULT = list;
+      :}
+;
+
+style_item ::=
+      COLOR DOSPUNTOS VARIABLE:v
+        {: RESULT = new StyleColor(v.toString()); :}
+
+    | BORDER DOSPUNTOS PARENTESIS_ABRE expresion:g COMA tipo_borde:t COMA VARIABLE:c PARENTESIS_CIERRA
+        {: RESULT = new StyleBorder(g, t , c.toString()); :}
+;
+
+tipo_borde ::=
+      SOLID   {: RESULT = TypeBorder.SOLID; :}
+    | DASHED  {: RESULT = TypeBorder.DASHED; :}
+    | DOTTED  {: RESULT = TypeBorder.DOTTED; :}
+;

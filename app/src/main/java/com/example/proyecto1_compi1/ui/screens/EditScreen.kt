@@ -10,7 +10,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.BlendMode.Companion.Screen
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
@@ -19,7 +18,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.proyecto1_compi1.analizador.Lexer
 import com.example.proyecto1_compi1.analizador.Parser
-import com.example.proyecto1_compi1.modelo.ResultParser
+import com.example.proyecto1_compi1.modelo.forms.ResultParser
 import com.example.proyecto1_compi1.ui.theme.Proyecto1Compi1Theme
 import java.io.StringReader
 import android.util.Log
@@ -28,6 +27,7 @@ import android.util.Log
 fun EditScreen(navController: NavController? = null) {
 
     var editorText by remember { mutableStateOf(TextFieldValue("")) }
+    var erroresTexto by remember { mutableStateOf("") }
     val context = LocalContext.current
 
     Column(
@@ -75,6 +75,9 @@ fun EditScreen(navController: NavController? = null) {
             onClick = {
 
                 try {
+
+                    erroresTexto = ""
+
                     Lexer.listaError.clear()
                     Parser.listaErrores.clear()
 
@@ -83,41 +86,62 @@ fun EditScreen(navController: NavController? = null) {
 
                     parser.parse()
 
-                    val forms = ResultParser.formsModel
+                    if (Lexer.listaError.isEmpty() && Parser.listaErrores.isEmpty()) {
 
-                    if (forms != null) {
+                        Toast.makeText(context, "Formulario válido ✅", Toast.LENGTH_LONG).show()
 
-                        Log.d("FORM_DEBUG", "Formulario: ${forms.name}")
+                    } else {
 
-                        forms.questions.forEach {
-                            Log.d("FORM_DEBUG", "Pregunta: ${it.name} - Tipo: ${it.type}")
+                        val builder = StringBuilder()
+
+                        Lexer.listaError.forEach {
+                            builder.append("Error Léxico → Línea ${it.line}, Columna ${it.column}: ${it.description}\n")
                         }
 
-                    } else {
-                        Log.e("FORM_DEBUG", "formsModel es NULL")
-                    }
+                        Parser.listaErrores.forEach {
+                            builder.append("Error Sintáctico → Línea ${it.line}, Columna ${it.column}: ${it.description}\n")
+                        }
 
-                    if (Lexer.listaError.isEmpty() && Parser.listaErrores.isEmpty()) {
-                        Toast.makeText(context, "Formulario válido", Toast.LENGTH_LONG).show()
-                    } else {
-                        val totalErrores =
-                            Lexer.listaError.size + Parser.listaErrores.size
-
-                        Toast.makeText(
-                            context,
-                            "Se encontraron $totalErrores errores",
-                            Toast.LENGTH_LONG
-                        ).show()
+                        erroresTexto = builder.toString()
                     }
 
                 } catch (e: Exception) {
-                    Log.e("FORM_DEBUG", "Error en parseo", e)
+                    erroresTexto = "Error fatal: ${e.message}"
+                    erroresTexto = "Error fatal:\n${e.stackTraceToString()}"
                 }
             }
+
+
         ) {
             Text("Analizar Formulario")
         }
 
+        if (erroresTexto.isNotEmpty()) {
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(150.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.errorContainer
+                )
+            ) {
+                Box(
+                    modifier = Modifier
+                        .padding(12.dp)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    Text(
+                        text = erroresTexto,
+                        color = MaterialTheme.colorScheme.onErrorContainer
+                    )
+                }
+            }
+        }
+        Log.d("DEBUG_FORM", "formsModel = ${ResultParser.formsModel}")
+        Log.d("DEBUG_FORM", "questions = ${ResultParser.formsModel?.questions?.size}")
         Spacer(modifier = Modifier.height(12.dp))
 
         Row(
