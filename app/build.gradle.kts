@@ -62,4 +62,10 @@ dependencies {
     implementation("de.jflex:cup_runtime:11b-20160615")
     // https://mvnrepository.com/artifact/com.itextpdf/itextpdf
     implementation("com.itextpdf:itextpdf:5.5.13.3")
+
+
+    //PARA LA CONEXION CON LA API
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("com.squareup.okhttp3:okhttp:4.11.0")
 }

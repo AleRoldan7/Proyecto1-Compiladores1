@@ -59,6 +59,7 @@ public class sym {
   public static final int LLAVE_CIERRA = 33;
   public static final int TEXT = 4;
   public static final int SECTION = 2;
+  public static final int LABEL = 56;
   public static final int OPENQUESTION = 5;
   public static final int DIVISION = 25;
   public static final int VARIABLESTRING = 10;
@@ -120,7 +121,8 @@ public class sym {
   "BORDER",
   "SOLID",
   "DASHED",
-  "DOTTED"
+  "DOTTED",
+  "LABEL"
   };
 }
 

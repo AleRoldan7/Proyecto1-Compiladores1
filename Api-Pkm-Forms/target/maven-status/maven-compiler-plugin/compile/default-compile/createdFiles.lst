@@ -1,0 +1,10 @@
+Modelos/Formulario.class
+com/mycompany/api/pkm/forms/JakartaRestConfiguration.class
+Modelos/FormularioUploadDTO.class
+Service/FormularioService.class
+Controller/FormularioController.class
+Conexion/FormularioDBA.class
+Modelos/FormularioLista.class
+Excepcion/DatosInvalidos.class
+com/mycompany/api/pkm/forms/resources/JakartaEE10Resource.class
+Conexion/PoolConexion.class

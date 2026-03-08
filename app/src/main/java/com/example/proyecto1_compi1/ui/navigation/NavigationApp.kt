@@ -1,6 +1,8 @@
 package com.example.proyecto1_compi1.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -32,7 +34,7 @@ fun NavigationApp() {
         }
 
         composable("server") {
-            ServerScreen(navController)
+            ServerScreen()
         }
 
         composable("answer") {

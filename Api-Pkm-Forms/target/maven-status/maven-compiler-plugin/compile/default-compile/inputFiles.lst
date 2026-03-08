@@ -1,0 +1,10 @@
+/home/alejandro/NetBeansProjects/Api-Pkm-Forms/src/main/java/Modelos/FormularioLista.java
+/home/alejandro/NetBeansProjects/Api-Pkm-Forms/src/main/java/Conexion/FormularioDBA.java
+/home/alejandro/NetBeansProjects/Api-Pkm-Forms/src/main/java/Excepcion/DatosInvalidos.java
+/home/alejandro/NetBeansProjects/Api-Pkm-Forms/src/main/java/Conexion/PoolConexion.java
+/home/alejandro/NetBeansProjects/Api-Pkm-Forms/src/main/java/Controller/FormularioController.java
+/home/alejandro/NetBeansProjects/Api-Pkm-Forms/src/main/java/Modelos/FormularioUploadDTO.java
+/home/alejandro/NetBeansProjects/Api-Pkm-Forms/src/main/java/Service/FormularioService.java
+/home/alejandro/NetBeansProjects/Api-Pkm-Forms/src/main/java/com/mycompany/api/pkm/forms/resources/JakartaEE10Resource.java
+/home/alejandro/NetBeansProjects/Api-Pkm-Forms/src/main/java/Modelos/Formulario.java
+/home/alejandro/NetBeansProjects/Api-Pkm-Forms/src/main/java/com/mycompany/api/pkm/forms/JakartaRestConfiguration.java

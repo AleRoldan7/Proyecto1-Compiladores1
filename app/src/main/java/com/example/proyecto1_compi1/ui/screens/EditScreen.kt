@@ -22,6 +22,12 @@ import com.example.proyecto1_compi1.modelo.forms.ResultParser
 import com.example.proyecto1_compi1.ui.theme.Proyecto1Compi1Theme
 import java.io.StringReader
 import android.util.Log
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
+import kotlin.math.max
 
 @Composable
 fun EditScreen(navController: NavController? = null) {
@@ -29,6 +35,15 @@ fun EditScreen(navController: NavController? = null) {
     var editorText by remember { mutableStateOf(TextFieldValue("")) }
     var erroresTexto by remember { mutableStateOf("") }
     val context = LocalContext.current
+
+    val scrollState = rememberScrollState()
+
+    val fontCode = TextStyle(
+        fontFamily = FontFamily.Monospace,
+        fontSize = 15.sp,
+        lineHeight = 24.sp,
+        letterSpacing = 0.5.sp
+    )
 
     Column(
         modifier = Modifier
@@ -51,19 +66,40 @@ fun EditScreen(navController: NavController? = null) {
                 .weight(1f),
             elevation = CardDefaults.cardElevation(8.dp)
         ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-                    .padding(16.dp)
-                    .verticalScroll(rememberScrollState())
-            ) {
-                BasicTextField(
-                    value = editorText,
-                    onValueChange = { editorText = it },
-                    modifier = Modifier.fillMaxSize()
+            Row(modifier = Modifier.fillMaxSize()) {
+
+                LineNumbersColumn(
+                    text = editorText.text,
+                    textStyle = fontCode,
+                    scrollState = scrollState,
+                    modifier = Modifier
+                        .width(48.dp)
+                        .fillMaxHeight()
+                        .background(Color.LightGray)
                 )
+
+                Spacer(
+                    modifier = Modifier
+                        .width(1.dp)
+                        .fillMaxHeight()
+                        .background(Color(0xFF444444))
+                )
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .padding(16.dp)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    BasicTextField(
+                        value = editorText,
+                        onValueChange = { editorText = it },
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
             }
+
         }
 
         Spacer(modifier = Modifier.height(20.dp))
@@ -85,21 +121,21 @@ fun EditScreen(navController: NavController? = null) {
                     val parser = Parser(lexer)
 
                     parser.parse()
-
+                    Log.d("DEBUG_PARSER", "formsModel después de parse: ${ResultParser.formsModel}")
                     if (Lexer.listaError.isEmpty() && Parser.listaErrores.isEmpty()) {
 
-                        Toast.makeText(context, "Formulario válido ✅", Toast.LENGTH_LONG).show()
+                        Toast.makeText(context, "Formulario válido ", Toast.LENGTH_LONG).show()
 
                     } else {
 
                         val builder = StringBuilder()
 
                         Lexer.listaError.forEach {
-                            builder.append("Error Léxico → Línea ${it.line}, Columna ${it.column}: ${it.description}\n")
+                            builder.append("Error Léxico → Lexema ${it.lexema}, Línea ${it.line}, Columna ${it.column}: ${it.description}\n")
                         }
 
                         Parser.listaErrores.forEach {
-                            builder.append("Error Sintáctico → Línea ${it.line}, Columna ${it.column}: ${it.description}\n")
+                            builder.append("Error Sintáctico → Lexema ${it.lexema},Línea ${it.line}, Columna ${it.column}: ${it.description}\n")
                         }
 
                         erroresTexto = builder.toString()
@@ -173,6 +209,36 @@ fun EditScreen(navController: NavController? = null) {
         }
 
         Spacer(modifier = Modifier.height(16.dp))
+    }
+}
+
+@Composable
+private fun LineNumbersColumn(
+    text: String,
+    textStyle: TextStyle,
+    scrollState: androidx.compose.foundation.ScrollState,
+    modifier: Modifier = Modifier
+) {
+    val linesCount = remember(text) { max(1, text.count { it == '\n' } + 1) }
+
+    Column(
+        modifier = modifier
+            .verticalScroll(scrollState)
+            .padding(top = 8.dp, bottom = 8.dp)
+    ) {
+        repeat(linesCount) { index ->
+            Text(
+                text = "${index + 1}",
+                style = textStyle.copy(
+                    color = Color(0xFF858585),
+                    fontWeight = FontWeight.Medium
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(end = 8.dp),
+                textAlign = androidx.compose.ui.text.style.TextAlign.End
+            )
+        }
     }
 }
 

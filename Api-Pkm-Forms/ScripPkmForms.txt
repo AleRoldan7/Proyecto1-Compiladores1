@@ -1,0 +1,9 @@
+CREATE DATABASE Pkm_Forms;
+
+mysql> CREATE TABLE forms (
+    -> id_formulario INTEGER PRIMARY KEY AUTO_INCREMENT,
+    -> autor VARCHAR(200) NOT NULL,
+    -> nombre_archivo VARCHAR(200) NOT NULL,
+    -> archivo_formulario LONGBLOB NOT NULL
+    -> );
+

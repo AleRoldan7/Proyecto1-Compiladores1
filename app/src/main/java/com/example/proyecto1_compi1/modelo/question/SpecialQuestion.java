@@ -3,51 +3,77 @@ package com.example.proyecto1_compi1.modelo.question;
 import androidx.room.jarjarred.org.antlr.v4.codegen.model.Wildcard;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class SpecialQuestion {
 
     private String name;
-    private String questionType;
-    private ArrayList<Object> properties;
-    private int wildcardCount;
+    private String type;
+    private List<PropertyItem> properties;
+    private List<Integer> wildcardIndices;
+    private List<Object> drawArguments = new ArrayList<>();
 
-    public SpecialQuestion(String name, String questionType) {
+    public SpecialQuestion(String name, String type,
+                           List<PropertyItem> properties,
+                           List<Integer> wildcardIndices) {
         this.name = name;
-        this.questionType = questionType;
-        this.properties = new ArrayList<>();
-        this.wildcardCount = 0;
+        this.type = type;
+        this.properties = new ArrayList<>(properties);
+        this.wildcardIndices = new ArrayList<>(wildcardIndices);
     }
 
-    public void addProperty(Object value){
-        properties.add(value);
-        if(value instanceof Wildcard){
-            wildcardCount++;
-        }
+    public int getWildcardCount() {
+        return wildcardIndices.size();
     }
 
-    public int getWildcardCount(){
-        return wildcardCount;
+    public void setDrawArguments(List<Object> args) {
+        this.drawArguments = args != null ? new ArrayList<>(args) : new ArrayList<>();
     }
 
-    public void draw(ArrayList<Object> params){
-
-        if(params.size() != wildcardCount){
-            throw new RuntimeException(
-                    "Error: número incorrecto de parámetros en draw()"
-            );
+    public List<PropertyItem> getResolvedProperties() {
+        if (drawArguments.size() != wildcardIndices.size()) {
+            return new ArrayList<>(properties);
         }
 
-        int index = 0;
-
-        for(Object prop : properties){
-
-            if(prop instanceof Wildcard){
-                Object value = params.get(index++);
-                System.out.println("Reemplazando ? por " + value);
-            }
-            else{
-                System.out.println("Propiedad fija: " + prop);
+        List<PropertyItem> resolved = new ArrayList<>();
+        int argIndex = 0;
+        for (PropertyItem item : properties) {
+            if (item.value instanceof String && "?".equals(item.value)) {
+                resolved.add(new PropertyItem(item.key, drawArguments.get(argIndex++)));
+            } else {
+                resolved.add(item);
             }
         }
+        return resolved;
+    }
+
+    public String getName() { return name; }
+    public String getType() { return type; }
+    public List<PropertyItem> getProperties() { return properties; }
+
+    public QuestionModel draw() {
+
+        List<PropertyItem> resolved = getResolvedProperties();
+
+        switch (type.toUpperCase()) {
+
+            case "OPENQUESTION":
+                return new OpenQuestion(name);
+
+        }
+
+        return null;
+    }
+
+    private String getLabel(List<PropertyItem> props) {
+
+        for (PropertyItem prop : props) {
+
+            if (prop.key.equalsIgnoreCase("label")) {
+                return prop.value.toString();
+            }
+        }
+
+        return name;
     }
 }

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Servidor Formularios</title>
+        <meta charset="UTF-8">
+
+        <link rel="stylesheet" href="styles.css">
+
+    </head>
+
+    <body>
+
+        <div class="container">
+
+            <h1>Subir Formulario .pkm</h1>
+
+            <form id="formSubir">
+
+                <label>Autor</label>
+                <input type="text" name="autor" required>
+
+                <label>Archivo .pkm</label>
+                <input type="file" name="archivo" accept=".pkm" required>
+
+                <button type="submit">Subir Formulario</button>
+
+            </form>
+
+            <p id="mensaje"></p>
+
+            <hr>
+
+            <h2>Formularios disponibles</h2>
+
+            <button onclick="cargarFormularios()">Actualizar</button>
+
+            <ul id="listaFormularios"></ul>
+
+        </div>
+
+        <script>
+
+            const form = document.getElementById("formSubir")
+
+            form.addEventListener("submit", async (e) => {
+
+                e.preventDefault()
+
+                const formData = new FormData(form)
+
+                const response = await fetch("api/v1/formularios/subir", {
+                    method: "POST",
+                    body: formData
+                })
+
+                const mensaje = document.getElementById("mensaje")
+
+                if (response.ok) {
+
+                    mensaje.innerHTML = "Formulario subido correctamente"
+
+                    setTimeout(() => {
+                        location.reload()
+                    }, 1500)
+
+                } else {
+
+                    mensaje.innerHTML = "Error al subir formulario"
+
+                }
+
+            })
+
+
+            async function cargarFormularios() {
+
+                const response = await fetch("api/v1/formularios/lista-formularios")
+
+                const data = await response.json()
+
+                const lista = document.getElementById("listaFormularios")
+
+                lista.innerHTML = ""
+
+                data.forEach(f => {
+
+                    const item = document.createElement("li")
+
+                    item.innerHTML =
+                            `<strong>${f.nombreArchivo}</strong>
+                    - Autor: ${f.autor}
+                    <a href="api/v1/formularios/${f.idFormulario}">Descargar</a>`
+
+                    lista.appendChild(item)
+
+                })
+
+            }
+
+            cargarFormularios()
+
+        </script>
+
+    </body>
+</html>

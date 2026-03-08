@@ -130,6 +130,9 @@ CADENA = \"[^\"]*\"
 "{"             { return symbol(sym.LLAVE_ABRE); }
 "}"             { return symbol(sym.LLAVE_CIERRA); }
 
+"?"             { return new Symbol(sym.INTERROGACION, yyline+1, yycolumn+1, yytext()); }
+
+"."             { return new Symbol(sym.PUNTO, yyline+1, yycolumn+1, yytext()); }
 
 /*  LITERALES  */
 

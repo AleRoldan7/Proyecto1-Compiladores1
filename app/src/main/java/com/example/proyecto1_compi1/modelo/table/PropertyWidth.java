@@ -11,7 +11,7 @@ public class PropertyWidth implements PropertyTable{
     @Override
     public void apply(TableModel tableModel) {
         if (value instanceof Integer) {
-            tableModel.setWith((Integer) value);
+            tableModel.setWidth((Integer) value);
         }
     }
 }

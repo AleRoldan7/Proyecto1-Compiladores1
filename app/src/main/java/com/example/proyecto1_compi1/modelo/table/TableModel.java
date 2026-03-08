@@ -5,13 +5,15 @@ import java.util.List;
 
 public class TableModel {
 
-    public int with;
+    public int width;
     public int height;
     public int pointX;
     public int pointY;
 
     public List<Style> styles = new ArrayList<>();
     public List<PropertyTable> properties = new ArrayList<>();
+
+    private ArrayList<ArrayList<TableCell>> elements = new ArrayList<>();
 
     public void addProperty(PropertyTable propertyTable) {
         properties.add(propertyTable);
@@ -22,13 +24,14 @@ public class TableModel {
         styles.add(style);
     }
 
-    public int getWith() {
-        return with;
+    public int getWidth() {
+        return width;
     }
 
-    public void setWith(int with) {
-        this.with = with;
+    public void setWidth(int width) {
+        this.width = width;
     }
+
 
     public int getHeight() {
         return height;
@@ -68,5 +71,13 @@ public class TableModel {
 
     public void setProperties(List<PropertyTable> properties) {
         this.properties = properties;
+    }
+
+    public ArrayList<ArrayList<TableCell>> getElements() {
+        return elements;
+    }
+
+    public void setElements(ArrayList<ArrayList<TableCell>> elements) {
+        this.elements = elements;
     }
 }

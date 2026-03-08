@@ -13,6 +13,20 @@
           </set>
         </option>
       </GradleProjectSettings>
+      <GradleProjectSettings>
+        <option name="distributionType" value="LOCAL" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$/Proyecto1Compi1" />
+        <option name="gradleJvm" value="17" />
+      </GradleProjectSettings>
+      <GradleProjectSettings>
+        <option name="externalProjectPath" value="$PROJECT_DIR$/app/app" />
+        <option name="gradleJvm" value="#GRADLE_LOCAL_JAVA_HOME" />
+      </GradleProjectSettings>
+      <GradleProjectSettings>
+        <option name="distributionType" value="LOCAL" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$/backend" />
+        <option name="gradleJvm" value="17 (2)" />
+      </GradleProjectSettings>
     </option>
   </component>
 </project>

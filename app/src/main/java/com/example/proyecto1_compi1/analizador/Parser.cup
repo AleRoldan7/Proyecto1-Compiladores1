@@ -79,6 +79,9 @@ terminal WIDTH, HEIGHT, POINTX, POINTY;
 terminal COLOR, BORDER;
 
 terminal SOLID, DASHED, DOTTED;
+
+terminal LABEL;
+
 /* --------------------- PRECEDENCIA ---------------------------*/
 
 
@@ -90,15 +93,22 @@ non terminal lista_secciones;
 non terminal seccion;
 non terminal lista_instrucciones;
 non terminal instruccion;
-non terminal pregunta;
+non terminal QuestionModel pregunta;
 non terminal declaracion;
 non terminal ArrayList<String> lista_opciones;
 non terminal ArrayList<String> lista_valores;
 non terminal Object expresion;
 
-non terminal SpecialQuestion special_decl;
-non terminal ArrayList<Object> propiedades;
-non terminal Object propiedad;
+non terminal String tipo_pregunta;
+non terminal special_decl;
+non terminal ArrayList<Object> prop_list;
+non terminal Object prop_value;
+non terminal ArrayList<Integer> wildcard_positions;
+non terminal SpecialQuestion special_question;
+
+non terminal ArrayList<PropertyItem> special_props;
+non terminal PropertyItem special_prop;
+non terminal Object special_prop_value;
 
 non terminal draw_call;
 non terminal ArrayList<Object> parametros;
@@ -111,6 +121,14 @@ non terminal ArrayList<Style> style_list;
 non terminal Style style_item;
 non terminal TypeBorder tipo_borde;
 
+non terminal List<String> elements_list;
+
+non terminal ArrayList<ArrayList<TableCell>> elements_matrix;
+non terminal ArrayList<TableCell> row;
+non terminal ArrayList<TableCell> cells;
+non terminal TableCell cell;
+non terminal ArrayList<Object> contenido_celda;
+
 precedence left SUMA, RESTA;
 precedence left MULTI, DIVISION, MODULO;
 precedence right POTENCIA;
@@ -120,6 +138,7 @@ start with inicio;
 
 inicio ::=
         lista_secciones
+        | lista_instrucciones
         ;
 
 lista_secciones ::=
@@ -154,6 +173,7 @@ seccion ::=
     :}
     lista_instrucciones
     LLAVE_CIERRA
+
 ;
 
 lista_instrucciones ::=
@@ -199,70 +219,169 @@ declaracion ::=
     :}
 ;
 
+/* ------------------------- VARIABLE ESPECIAL -------------------------------------------*/
+tipo_pregunta ::=
+      OPENQUESTION {: RESULT = "OPENQUESTION"; :}
+    | DROPQUESTION {: RESULT = "DROPQUESTION"; :}
+    | SELECTQUESTION {: RESULT = "SELECTQUESTION"; :}
+    | MULTIPLEQUESTION {: RESULT = "MULTIPLEQUESTION"; :}
+;
 
+/* ------------------ Declaración de variable special ------------- */
+
+special_decl ::=
+    SPECIAL VARIABLE:v IGUAL tipo_pregunta:t
+    CORCHETE_ABRE special_props:props CORCHETE_CIERRA PUNTOCOMA
+    {:
+        java.util.ArrayList<java.lang.Integer> wildcards = new java.util.ArrayList<>();
+        int idx = 0;
+        for (PropertyItem item : props) {
+            if (item.value instanceof String && "?".equals(item.value)) {
+                wildcards.add(idx);
+            }
+            idx++;
+        }
+
+        SpecialQuestion sq = new SpecialQuestion(
+            v.toString(),
+            t,
+            props,
+            wildcards
+        );
+
+        if (ResultParser.formsModel != null) {
+            ResultParser.formsModel.addSpecialQuestion(sq);
+        }
+
+        RESULT = sq;
+    :}
+    ;
+
+special_props ::=
+      special_props:l COMA special_prop:p   {: l.add(p); RESULT = l; :}
+    | special_prop:p                        {:
+        ArrayList<PropertyItem> lst = new ArrayList<>();
+        lst.add(p);
+        RESULT = lst;
+      :}
+    ;
+
+special_prop ::=
+      WIDTH DOSPUNTOS special_prop_value:v     {: RESULT = new PropertyItem("width", v); :}
+    | HEIGHT DOSPUNTOS special_prop_value:v    {: RESULT = new PropertyItem("height", v); :}
+    | LABEL DOSPUNTOS special_prop_value:v     {: RESULT = new PropertyItem("label", v); :}
+    | VARIABLE:key DOSPUNTOS special_prop_value:v
+      {: RESULT = new PropertyItem(key.toString().toLowerCase(), v); :}
+    ;
+
+special_prop_value ::=
+      INTERROGACION                   {: RESULT = "?"; :}
+    | expresion:e                     {: RESULT = e; :}
+    ;
+
+
+/* --------------------- DRAW -----------------------------------------*/
+
+draw_call ::=
+    VARIABLE:v PUNTO DRAW
+    PARENTESIS_ABRE parametros:args PARENTESIS_CIERRA PUNTOCOMA
+    {:
+        if (ResultParser.formsModel == null) {
+            ResultParser.formsModel = new FormsModel("UntitledForm");
+        }
+
+        SpecialQuestion sq = ResultParser.formsModel.findSpecialQuestion(v.toString());
+
+        if (sq == null) {
+            report_error("No existe variable special con nombre: " + v, null);
+        }
+        else if (args.size() != sq.getWildcardCount()) {
+            report_error(
+                "La llamada draw espera " + sq.getWildcardCount() +
+                " argumento(s), pero se recibieron " + args.size(),
+                null
+            );
+        }
+        else {
+
+            sq.setDrawArguments(args);
+
+            QuestionModel q = sq.draw();
+
+            if (q != null) {
+                ResultParser.formsModel.addQuestion(q);
+            }
+        }
+
+        RESULT = null;
+    :}
+
+    | VARIABLE:v PUNTO DRAW PARENTESIS_ABRE PARENTESIS_CIERRA PUNTOCOMA
+    {:
+        if (ResultParser.formsModel == null) {
+            ResultParser.formsModel = new FormsModel("UntitledForm");
+        }
+
+        SpecialQuestion sq = ResultParser.formsModel.findSpecialQuestion(v.toString());
+
+        if (sq != null) {
+
+            QuestionModel q = sq.draw();
+
+            if (q != null) {
+                ResultParser.formsModel.addQuestion(q);
+            }
+        }
+
+        RESULT = null;
+    :}
+;
+/* ------------------------------------------------------------------------------*/
 pregunta ::=
 
     OPENQUESTION VARIABLE:v PUNTOCOMA
     {:
+        OpenQuestion open = new OpenQuestion(v.toString());
+
         if (ResultParser.formsModel != null) {
-            ResultParser.formsModel.addQuestion(
-                new OpenQuestion(v.toString())
-            );
+            ResultParser.formsModel.addQuestion(open);
         }
+
+        RESULT = open;
     :}
 
     | DROPQUESTION VARIABLE:v lista_opciones:ops PUNTOCOMA
     {:
+        DropQuestion drop = new DropQuestion(v.toString(), ops);
         if (ResultParser.formsModel != null) {
-            ResultParser.formsModel.addQuestion(
-                new DropQuestion(v.toString(), ops)
-            );
+            ResultParser.formsModel.addQuestion(drop);
         }
+
+        RESULT = drop;
+
     :}
 
     | SELECTQUESTION VARIABLE:v lista_opciones:ops PUNTOCOMA
     {:
+        SelectQuestion select =  new SelectQuestion(v.toString(), ops);
         if (ResultParser.formsModel != null) {
-            ResultParser.formsModel.addQuestion(
-                new SelectQuestion(v.toString(), ops)
-            );
+            ResultParser.formsModel.addQuestion(select);
         }
+
+        RESULT = select;
     :}
 
     | MULTIPLEQUESTION VARIABLE:v lista_opciones:ops PUNTOCOMA
     {:
+        MultipleQuestion multiple =  new MultipleQuestion(v.toString(), ops);
         if (ResultParser.formsModel != null) {
-            ResultParser.formsModel.addQuestion(
-                new MultipleQuestion(v.toString(), ops)
-            );
+            ResultParser.formsModel.addQuestion(multiple);
         }
+
+        RESULT = multiple;
     :}
 ;
 
-
-
-propiedades ::=
-    propiedades:p COMA propiedad:prop
-    {:
-        p.add(prop);
-        RESULT = p;
-    :}
-    |
-    propiedad:prop
-    {:
-        ArrayList<Object> list = new ArrayList<>();
-        list.add(prop);
-        RESULT = list;
-    :}
-;
-
-propiedad ::=
-      VARIABLE DOSPUNTOS INTERROGACION
-      {: RESULT = "?"; :}
-
-    | VARIABLE DOSPUNTOS expresion:e
-      {: RESULT = e; :}
-;
 
 
 
@@ -340,6 +459,9 @@ table_prop ::=
 
     | STYLES DOSPUNTOS CORCHETE_ABRE style_list:s CORCHETE_CIERRA
         {: RESULT = new PropertyStyle(s); :}
+
+    | ELEMENTS DOSPUNTOS CORCHETE_ABRE elements_matrix:e CORCHETE_CIERRA
+        {: RESULT = new PropertyElements(e); :}
 ;
 
 style_list ::=
@@ -368,4 +490,79 @@ tipo_borde ::=
       SOLID   {: RESULT = TypeBorder.SOLID; :}
     | DASHED  {: RESULT = TypeBorder.DASHED; :}
     | DOTTED  {: RESULT = TypeBorder.DOTTED; :}
+;
+
+
+
+elements_matrix ::=
+      elements_matrix:m COMA row:r
+      {:
+          m.add(r);
+          RESULT = m;
+      :}
+    | row:r
+      {:
+          ArrayList<ArrayList<TableCell>> list = new ArrayList<>();
+          list.add(r);
+          RESULT = list;
+      :}
+;
+
+row ::=
+    CORCHETE_ABRE cells:c CORCHETE_CIERRA
+    {:  RESULT = c; :}
+;
+
+cells ::=
+    cells:l COMA cell:c
+    {:
+        l.add(c);
+        RESULT = l;
+    :}
+    | cell:c
+    {:
+        ArrayList<TableCell> list = new ArrayList<>();
+        list.add(c);
+        RESULT = list;
+    :}
+;
+
+cell ::=
+    LLAVE_ABRE contenido_celda:cont LLAVE_CIERRA
+    {:
+        RESULT = new TableCell(cont);
+    :}
+    | LLAVE_ABRE LLAVE_CIERRA
+    {:
+        RESULT = new TableCell(new ArrayList<Object>());
+    :}
+;
+
+
+contenido_celda ::=
+    contenido_celda:list COMA expresion:e
+    {:
+        list.add(e);
+        RESULT = list;
+    :}
+
+| contenido_celda:list COMA pregunta:p
+    {:
+        list.add(p);
+        RESULT = list;
+    :}
+
+| expresion:e
+    {:
+        ArrayList<Object> lista = new ArrayList<>();
+        lista.add(e);
+        RESULT = lista;
+    :}
+
+| pregunta:p
+    {:
+        ArrayList<Object> lista = new ArrayList<>();
+        lista.add(p);
+        RESULT = lista;
+    :}
 ;

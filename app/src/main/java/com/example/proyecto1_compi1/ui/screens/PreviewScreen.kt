@@ -1,6 +1,9 @@
 package com.example.proyecto1_compi1.ui.screens
 
+import android.util.Log
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -10,6 +13,7 @@ import com.example.proyecto1_compi1.modelo.forms.ResultParser
 import com.example.proyecto1_compi1.modelo.question.DropQuestion
 import com.example.proyecto1_compi1.modelo.question.MultipleQuestion
 import com.example.proyecto1_compi1.modelo.question.OpenQuestion
+import com.example.proyecto1_compi1.modelo.question.QuestionRender
 import com.example.proyecto1_compi1.modelo.question.SelectQuestion
 import com.example.proyecto1_compi1.ui.question.DropQuestionUI
 import com.example.proyecto1_compi1.ui.question.MultipleQuestionUI
@@ -25,6 +29,7 @@ fun PreviewScreen(navController: NavController) {
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
+            .verticalScroll(rememberScrollState())
     ) {
 
         Text(
@@ -45,50 +50,7 @@ fun PreviewScreen(navController: NavController) {
 
             forms.questions.forEach { question ->
 
-                when (question) {
-
-                    is OpenQuestion -> {
-
-                        Text(question.name)
-
-                        var text by remember { mutableStateOf("") }
-
-                        OutlinedTextField(
-                            value = text,
-                            onValueChange = { text = it },
-                            label = { Text("Respuesta") },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-
-                    is DropQuestion -> {
-
-                        Text(question.name)
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        DropQuestionUI(question.options)
-                    }
-
-                    is SelectQuestion -> {
-
-                        Text(question.name)
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        SelectQuestionUI(question.options)
-                    }
-
-                    is MultipleQuestion -> {
-
-                        Text(question.name)
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        MultipleQuestionUI(question.options)
-                    }
-                }
-
+                QuestionRender(question)
                 Spacer(modifier = Modifier.height(20.dp))
             }
 
@@ -100,18 +62,25 @@ fun PreviewScreen(navController: NavController) {
 
             }
 
-        } else {
+            if (forms.specialQuestions.isNotEmpty()) {
+                Text("Preguntas especiales", style = MaterialTheme.typography.titleMedium)
+                Spacer(Modifier.height(8.dp))
 
+                forms.specialQuestions.forEachIndexed { index, sq ->
+                    Log.d("PreviewDebug", "Renderizando special #${index+1}: ${sq.name} (${sq.type})")
+                    QuestionRender(sq)
+                    Spacer(Modifier.height(24.dp))
+                }
+            }
+
+        } else {
             Text("No hay formulario generado aún.")
         }
 
-        Spacer(modifier = Modifier.weight(1f))
+        Spacer(Modifier.weight(1f))
 
-        Button(
-            modifier = Modifier.fillMaxWidth(),
-            onClick = { navController.popBackStack() }
-        ) {
-            Text("Regresar al Editor")
+        Button(onClick = { navController.popBackStack() }, modifier = Modifier.fillMaxWidth()) {
+            Text("Regresar")
         }
     }
 }
