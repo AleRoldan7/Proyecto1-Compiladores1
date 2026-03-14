@@ -15,7 +15,9 @@ import com.example.proyecto1_compi1.ui.theme.Proyecto1Compi1Theme
 fun HomeScreen(navController: NavController) {
 
     Column(
-        modifier = Modifier.fillMaxSize().padding(24.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -64,6 +66,7 @@ fun HomeScreen(navController: NavController) {
         ) {
             Text("Responder Formularios")
         }
+
     }
 }
 

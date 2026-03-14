@@ -1,5 +1,6 @@
 package com.example.proyecto1_compi1.ui.screens
 
+import android.content.Context
 import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -9,21 +10,29 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.proyecto1_compi1.generate_lenguaje.GeneratePKM
 import com.example.proyecto1_compi1.modelo.forms.ResultParser
-import com.example.proyecto1_compi1.modelo.question.DropQuestion
-import com.example.proyecto1_compi1.modelo.question.MultipleQuestion
-import com.example.proyecto1_compi1.modelo.question.OpenQuestion
 import com.example.proyecto1_compi1.modelo.question.QuestionRender
-import com.example.proyecto1_compi1.modelo.question.SelectQuestion
-import com.example.proyecto1_compi1.ui.question.DropQuestionUI
-import com.example.proyecto1_compi1.ui.question.MultipleQuestionUI
-import com.example.proyecto1_compi1.ui.question.SelectQuestionUI
 import com.example.proyecto1_compi1.ui.table.TableUI
+import java.io.File
+import androidx.compose.ui.platform.LocalContext
+import com.example.proyecto1_compi1.ui.question.TextUi
 
 @Composable
 fun PreviewScreen(navController: NavController) {
 
-    val forms = ResultParser.formsModel
+    val forms = ResultParser.forms
+    val texto = GeneratePKM.generate(ResultParser.forms)
+    val context = LocalContext.current
+
+    LaunchedEffect(Unit) {
+        Log.d("PREVIEW_DEBUG", "Forms size: ${forms?.size}")
+        forms?.forEachIndexed { formIndex, form ->
+            Log.d("PREVIEW_DEBUG", "Form $formIndex - texts size: ${form.texts?.size}")
+            Log.d("PREVIEW_DEBUG", "Form $formIndex - questions size: ${form.questions?.size}")
+            Log.d("PREVIEW_DEBUG", "Form $formIndex - tables size: ${form.tables?.size}")
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -39,48 +48,103 @@ fun PreviewScreen(navController: NavController) {
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        if (forms != null) {
+        if (forms.isNotEmpty()) {
 
-            Text(
-                text = "Formulario: ${forms.name}",
-                style = MaterialTheme.typography.titleLarge
-            )
+            forms.forEach { form ->
 
-            Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "Formulario: ${form.name}",
+                    style = MaterialTheme.typography.titleLarge
+                )
 
-            forms.questions.forEach { question ->
+                Spacer(modifier = Modifier.height(16.dp))
 
-                QuestionRender(question)
-                Spacer(modifier = Modifier.height(20.dp))
-            }
+                form.questions.forEach { question ->
 
-            forms.tables.forEach { table ->
+                    QuestionRender(question)
 
-                Spacer(modifier = Modifier.height(20.dp))
-
-                TableUI(table)
-
-            }
-
-            if (forms.specialQuestions.isNotEmpty()) {
-                Text("Preguntas especiales", style = MaterialTheme.typography.titleMedium)
-                Spacer(Modifier.height(8.dp))
-
-                forms.specialQuestions.forEachIndexed { index, sq ->
-                    Log.d("PreviewDebug", "Renderizando special #${index+1}: ${sq.name} (${sq.type})")
-                    QuestionRender(sq)
-                    Spacer(Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(20.dp))
                 }
+
+                form.tables.forEach { table ->
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    TableUI(table)
+                }
+
+                form.texts.forEach { text ->
+
+                    Log.d("PREVIEW_DEBUG", "Text $text")
+                    TextUi(text)
+
+                    Spacer(modifier = Modifier.height(20.dp))
+                }
+                if (form.specialQuestions.isNotEmpty()) {
+
+                    Text(
+                        "Preguntas especiales",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+
+                    Spacer(Modifier.height(8.dp))
+
+                    form.specialQuestions.forEachIndexed { index, sq ->
+
+                        Log.d(
+                            "PreviewDebug",
+                            "Renderizando special #${index + 1}: ${sq.name} (${sq.type})"
+                        )
+
+                        QuestionRender(sq)
+
+                        Spacer(Modifier.height(24.dp))
+                    }
+                }
+
+
+
+                Spacer(modifier = Modifier.height(40.dp))
             }
 
         } else {
-            Text("No hay formulario generado aún.")
+
+            Text("No hay formularios generados.")
         }
 
         Spacer(Modifier.weight(1f))
+        Button(
+            onClick = {
 
+                val nombre = "form_${System.currentTimeMillis()}.pkm"
+
+                guardarFormulario(context,nombre,texto)
+
+
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Guardar formulario (.pkm)")
+        }
+
+        Spacer(modifier = Modifier.height(10.dp))
         Button(onClick = { navController.popBackStack() }, modifier = Modifier.fillMaxWidth()) {
             Text("Regresar")
         }
     }
+}
+
+fun guardarFormulario(context: Context, nombre: String, contenido: String) {
+
+    val cartpeta = File(context.getExternalFilesDir(null), "formularios")
+
+    if (!cartpeta.exists()) {
+        cartpeta.mkdirs()
+    }
+
+    val archivo = File(cartpeta, nombre)
+
+    archivo.writeText(contenido)
+
+    Log.d("ARCHIVO", "GUARDANDO EN: ${archivo.absolutePath}")
 }

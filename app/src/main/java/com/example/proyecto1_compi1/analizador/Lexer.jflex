@@ -20,7 +20,15 @@ import com.example.proyecto1_compi1.token.Token;
 
      private void errorLexer(String lexema) {
 
-        listaError.add(new Token(lexema, yyline + 1, yycolumn + 1, yytext(), "Error Lexico"));
+         listaError.add(
+             new Token(
+                 lexema,
+                 yyline + 1,
+                 yycolumn + 1,
+                 lexema,
+                 "Error Léxico"
+             )
+         );
 
      }
      private Symbol symbol(int type) {
@@ -47,8 +55,24 @@ ID = {LETTER}({LETTER}|{DIGITO}|"_")*
 COMENTARIO = "$"[^(\r\n)]*
 CADENA = \"[^\"]*\"
 
+/* COLORES */
+
+HEXCOLOR = \#[0-9a-fA-F]{6}
+RGB = \({DIGITO}+,{DIGITO}+,{DIGITO}+\)
+HSL = \<{DIGITO}+\,{DECIMAL}|{DIGITO}+\,{DECIMAL}|{DIGITO}+\>
 
 %%
+
+/* PARA LOS ESTILOS*/
+
+\"color\"                { return symbol(sym.STYLE_COLOR); }
+
+\"background color\"     { return symbol(sym.STYLE_BACKGROUND); }
+
+\"font family\"          { return symbol(sym.STYLE_FONT); }
+
+\"text size\"            { return symbol(sym.STYLE_SIZE); }
+
 
 /*  IGNORAR  */
 
@@ -59,7 +83,7 @@ CADENA = \"[^\"]*\"
 
 "number"    { return new Symbol(sym.VARIABLENUMBER, yyline, yycolumn, yytext()); }
 "string"    { return new Symbol(sym.VARIABLESTRING, yyline, yycolumn, yytext()); }
-"OPEN_QUESTION" { return new Symbol(sym.OPENQUESTION, yyline, yycolumn, yytext()); }
+
 
 
 /*  FORMA DE CREAR LAS PREGUNTAS */
@@ -84,17 +108,46 @@ CADENA = \"[^\"]*\"
 "elements"    { return symbol(sym.ELEMENTS); }
 "styles"      { return symbol(sym.STYLES); }
 
+"label"       { return symbol(sym.LABEL); }
+"content"     { return symbol(sym.CONTENT); }
 "width"       { return symbol(sym.WIDTH); }
 "height"      { return symbol(sym.HEIGHT); }
 "pointX"      { return symbol(sym.POINTX); }
 "pointY"      { return symbol(sym.POINTY); }
+"options"      { return symbol(sym.OPTIONS); }
+"correct"      { return symbol(sym.CORRECT); }
+"orientation"  { return symbol(sym.ORIENTATION); }
 
-"color"       { return symbol(sym.COLOR); }
-"border"      { return symbol(sym.BORDER); }
+
+
 
 "SOLID"   { return symbol(sym.SOLID); }
 "DASHED"  { return symbol(sym.DASHED); }
 "DOTTED"  { return symbol(sym.DOTTED); }
+"MONO"    { return symbol(sym.MONO); }
+"SANS_SERIF" { return symbol(sym.SANS_SERIF); }
+"CURSIVE" { return symbol(sym.CURSIVE); }
+
+/* ORIENTACIONES */
+
+"VERTICAL"     { return symbol(sym.VERTICAL); }
+"HORIZONTAL"   { return symbol(sym.HORIZONTAL); }
+
+/* COLORES BASE */
+
+"RED"      { return symbol(sym.RED); }
+"BLUE"     { return symbol(sym.BLUE); }
+"GREEN"    { return symbol(sym.GREEN); }
+"PURPLE"   { return symbol(sym.PURPLE); }
+"SKY"      { return symbol(sym.SKY); }
+"YELLOW"   { return symbol(sym.YELLOW); }
+"BLACK"    { return symbol(sym.BLACK); }
+"WHITE"    { return symbol(sym.WHITE); }
+
+{HEXCOLOR} { return symbol(sym.HEXCOLOR, yytext()); }
+
+
+
 
 /* OPERADORES  */
 

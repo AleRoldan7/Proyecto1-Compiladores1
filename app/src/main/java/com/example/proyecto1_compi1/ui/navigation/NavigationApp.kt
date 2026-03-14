@@ -34,12 +34,15 @@ fun NavigationApp() {
         }
 
         composable("server") {
-            ServerScreen()
+            ServerScreen(navController = navController)
         }
 
         composable("answer") {
             AnswerScreen(navController)
         }
 
+        composable("upload") {
+            UploadFilesScreen(navController)
+        }
     }
 }

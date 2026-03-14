@@ -27,6 +27,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import com.example.proyecto1_compi1.token.ErrorItem
 import kotlin.math.max
 
 @Composable
@@ -34,6 +35,8 @@ fun EditScreen(navController: NavController? = null) {
 
     var editorText by remember { mutableStateOf(TextFieldValue("")) }
     var erroresTexto by remember { mutableStateOf("") }
+    var errores by remember { mutableStateOf<List<ErrorItem>>(emptyList()) }
+    var showErrors by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
     val scrollState = rememberScrollState()
@@ -90,7 +93,7 @@ fun EditScreen(navController: NavController? = null) {
                         .fillMaxSize()
                         .background(MaterialTheme.colorScheme.surfaceVariant)
                         .padding(16.dp)
-                        .verticalScroll(rememberScrollState())
+                        .verticalScroll(scrollState)
                 ) {
                     BasicTextField(
                         value = editorText,
@@ -117,6 +120,8 @@ fun EditScreen(navController: NavController? = null) {
                     Lexer.listaError.clear()
                     Parser.listaErrores.clear()
 
+                    ResultParser.reset()
+
                     val lexer = Lexer(StringReader(editorText.text))
                     val parser = Parser(lexer)
 
@@ -142,7 +147,7 @@ fun EditScreen(navController: NavController? = null) {
                     }
 
                 } catch (e: Exception) {
-                    erroresTexto = "Error fatal: ${e.message}"
+                    //erroresTexto = "Error fatal: ${e.message}"
                     erroresTexto = "Error fatal:\n${e.stackTraceToString()}"
                 }
             }
@@ -150,6 +155,16 @@ fun EditScreen(navController: NavController? = null) {
 
         ) {
             Text("Analizar Formulario")
+        }
+
+        Button(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp),
+            enabled = errores.isNotEmpty(),
+            onClick = { showErrors = true }
+        ) {
+            Text("Ver Reporte de Errores")
         }
 
         if (erroresTexto.isNotEmpty()) {
@@ -167,7 +182,7 @@ fun EditScreen(navController: NavController? = null) {
                 Box(
                     modifier = Modifier
                         .padding(12.dp)
-                        .verticalScroll(rememberScrollState())
+                        .verticalScroll(scrollState)
                 ) {
                     Text(
                         text = erroresTexto,
@@ -178,6 +193,7 @@ fun EditScreen(navController: NavController? = null) {
         }
         Log.d("DEBUG_FORM", "formsModel = ${ResultParser.formsModel}")
         Log.d("DEBUG_FORM", "questions = ${ResultParser.formsModel?.questions?.size}")
+        Log.d("DEBUG_FORM", "TEXT = ${ResultParser.printStatus()}")
         Spacer(modifier = Modifier.height(12.dp))
 
         Row(

@@ -58,7 +58,7 @@ public class SpecialQuestion {
         switch (type.toUpperCase()) {
 
             case "OPENQUESTION":
-                return new OpenQuestion(name);
+               // return new OpenQuestion(name);
 
         }
 

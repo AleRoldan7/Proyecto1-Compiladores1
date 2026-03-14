@@ -5,9 +5,11 @@ import com.example.proyecto1_compi1.modelo.question.*;
 import com.example.proyecto1_compi1.modelo.variable.*;
 import com.example.proyecto1_compi1.modelo.forms.*;
 import com.example.proyecto1_compi1.modelo.table.*;
+import com.example.proyecto1_compi1.modelo.color_style.*;
 import java_cup.runtime.Symbol;
 import java.util.ArrayList;
 import com.example.proyecto1_compi1.enums.*;
+
 
 parser code {:
     public static ArrayList<Token> listaErrores = new ArrayList<>();
@@ -15,13 +17,51 @@ parser code {:
     @Override
     public void syntax_error(Symbol s) {
 
+        String lexema = "EOF";
+
+        if (s.value != null) {
+            lexema = s.value.toString();
+        }
+
+        String esperado = "Token inesperado";
+
+        switch(s.sym){
+
+            case sym.PUNTOCOMA:
+                esperado = "Se esperaba ';'";
+                break;
+
+            case sym.CORCHETE_CIERRA:
+                esperado = "Se esperaba ']'";
+                break;
+
+            case sym.CORCHETE_ABRE:
+                esperado = "Se esperaba '['";
+                break;
+
+            case sym.LLAVE_CIERRA:
+                esperado = "Se esperaba '}'";
+                break;
+
+            case sym.LLAVE_ABRE:
+                esperado = "Se esperaba '{'";
+                break;
+
+            case sym.COMA:
+                esperado = "Se esperaba ','";
+                break;
+
+            default:
+                esperado = "Error sintáctico en la estructura";
+        }
+
         listaErrores.add(
             new Token(
-                s.value != null ? s.value.toString() : "EOF",
+                lexema,
                 s.left + 1,
                 s.right + 1,
                 "Sintáctico",
-                "Error sintáctico"
+                esperado
             )
         );
     }
@@ -29,17 +69,20 @@ parser code {:
     @Override
     public void report_error(String message, Object info) {
 
-        Symbol sym = (Symbol) info;
+        if(info instanceof Symbol){
 
-        listaErrores.add(
-            new Token(
-                sym.value != null ? sym.value.toString() : "EOF",
-                sym.left + 1,
-                sym.right + 1,
-                message,
-                message
-            )
-        );
+            Symbol sym = (Symbol) info;
+
+            listaErrores.add(
+                new Token(
+                    sym.value != null ? sym.value.toString() : "EOF",
+                    sym.left + 1,
+                    sym.right + 1,
+                    "Sintáctico",
+                    message
+                )
+            );
+        }
     }
 
     @Override
@@ -75,16 +118,25 @@ terminal SPECIAL, DRAW, PUNTO, INTERROGACION;
 
 terminal ELEMENTS, STYLES;
 
-terminal WIDTH, HEIGHT, POINTX, POINTY;
-terminal COLOR, BORDER;
+terminal WIDTH, HEIGHT, POINTX, POINTY, ORIENTATION;
 
 terminal SOLID, DASHED, DOTTED;
 
-terminal LABEL;
+terminal MONO, SANS_SERIF, CURSIVE;
 
-/* --------------------- PRECEDENCIA ---------------------------*/
+terminal LABEL, OPTIONS, CORRECT, CONTENT;
 
+terminal VERTICAL, HORIZONTAL;
 
+terminal HEXCOLOR;
+
+terminal RED, BLUE, GREEN, PURPLE, SKY, YELLOW, BLACK, WHITE;
+
+/* TERMINALES DE ESTILOS */
+terminal STYLE_COLOR;
+terminal STYLE_BACKGROUND;
+terminal STYLE_FONT;
+terminal STYLE_SIZE;
 
 /* ---------------------- NO TERMINALES ----------------------- */
 
@@ -92,10 +144,11 @@ non terminal inicio;
 non terminal lista_secciones;
 non terminal seccion;
 non terminal lista_instrucciones;
+non terminal lista_elementos;
+non terminal elemento;
 non terminal instruccion;
 non terminal QuestionModel pregunta;
 non terminal declaracion;
-non terminal ArrayList<String> lista_opciones;
 non terminal ArrayList<String> lista_valores;
 non terminal Object expresion;
 
@@ -111,14 +164,19 @@ non terminal PropertyItem special_prop;
 non terminal Object special_prop_value;
 
 non terminal draw_call;
+non terminal draw_stmt;
+non terminal draw_expr;
 non terminal ArrayList<Object> parametros;
 
 non terminal table_decl;
 non terminal ArrayList<PropertyTable> table_props;
 non terminal PropertyTable table_prop;
 
-non terminal ArrayList<Style> style_list;
-non terminal Style style_item;
+non terminal ArrayList<PropertyItem> section_props;
+non terminal PropertyItem section_prop;
+
+//non terminal ArrayList<Style> style_list;
+//non terminal Style style_item;
 non terminal TypeBorder tipo_borde;
 
 non terminal List<String> elements_list;
@@ -129,6 +187,27 @@ non terminal ArrayList<TableCell> cells;
 non terminal TableCell cell;
 non terminal ArrayList<Object> contenido_celda;
 
+non terminal text_decl;
+non terminal ArrayList<PropertyItem> text_props;
+non terminal PropertyItem text_prop;
+
+non terminal open_q;
+non terminal drop_q;
+non terminal select_q;
+non terminal multiple_q;
+non terminal ArrayList<PropertyItem> question_props;
+non terminal PropertyItem question_prop;
+non terminal ArrayList<String> lista_opciones;
+non terminal ArrayList<String> lista_strings;
+non terminal preguntas;
+
+/*COLOR Y FONDO*/
+non terminal ColorValue color_value;
+non terminal Object style_item;
+non terminal ArrayList<Object> styles_block;
+non terminal ArrayList<Object> style_list;
+non terminal String font_value;
+
 precedence left SUMA, RESTA;
 precedence left MULTI, DIVISION, MODULO;
 precedence right POTENCIA;
@@ -136,20 +215,24 @@ precedence left MAYOR, MENOR, IGUALIGUAL, DIFERENTE;
 
 start with inicio;
 
-inicio ::=
-        lista_secciones
-        | lista_instrucciones
-        ;
+inicio ::= lista_elementos;
 
-lista_secciones ::=
-        lista_secciones seccion
-        | seccion
-        ;
 
-lista_opciones ::=
-    CORCHETE_ABRE lista_valores:l CORCHETE_CIERRA
-    {: RESULT = l; :}
+
+lista_elementos ::=
+    lista_elementos elemento
+    | elemento
 ;
+
+elemento ::=
+    seccion
+    | pregunta
+    | text_decl
+    | table_decl
+    | preguntas
+;
+
+
 
 lista_valores ::=
     lista_valores:l COMA CADENA:c
@@ -167,14 +250,318 @@ lista_valores ::=
 ;
 
 seccion ::=
-    SECTION VARIABLE:v LLAVE_ABRE
+    SECTION CORCHETE_ABRE section_props:p CORCHETE_CIERRA
     {:
-        ResultParser.formsModel = new FormsModel(v.toString());
-    :}
-    lista_instrucciones
-    LLAVE_CIERRA
+        SectionModel section = new SectionModel();
 
+        for(PropertyItem prop : p) {
+            section.addProperty(prop);
+        }
+
+        if(ResultParser.currentForm != null) {
+            ResultParser.currentForm.addSection(section);
+        }
+    :}
 ;
+
+section_props ::=
+    section_props:l COMA section_prop:p
+    {:
+        l.add(p);
+        RESULT = l;
+    :}
+    | section_prop:p
+    {:
+        ArrayList<PropertyItem> list = new ArrayList<>();
+        list.add(p);
+        RESULT = list;
+    :}
+;
+
+section_prop ::=
+    WIDTH DOSPUNTOS ENTERO:n
+    {:
+        RESULT = new PropertyItem("width", n);
+    :}
+    | HEIGHT DOSPUNTOS ENTERO:n
+    {:
+        RESULT = new PropertyItem("height", n);
+    :}
+    | POINTX DOSPUNTOS ENTERO:n
+    {:
+        RESULT = new PropertyItem("pointX", n);
+    :}
+    | POINTY DOSPUNTOS ENTERO:n
+    {:
+        RESULT = new PropertyItem("pointY", n);
+    :}
+    | ORIENTATION DOSPUNTOS VERTICAL
+    {:
+        RESULT = new PropertyItem("orientation", VERTICAL);
+    :}
+    | ORIENTATION DOSPUNTOS HORIZONTAL
+    {:
+        RESULT = new PropertyItem("orientation", HORIZONTAL);
+    :}
+    | ELEMENTS DOSPUNTOS LLAVE_ABRE lista_elementos LLAVE_CIERRA
+    {:
+        RESULT = new PropertyItem("elements", null);
+    :}
+    | styles_block:s
+    {:
+        RESULT = new PropertyItem("styles", s);
+    :}
+;
+
+
+text_decl ::=
+    TEXT CORCHETE_ABRE text_props:p CORCHETE_CIERRA
+    {:
+        if (ResultParser.currentForm == null) {
+            ResultParser.currentForm = new FormsModel("Formulario");
+        }
+
+        TextModel text = new TextModel();
+
+        for(PropertyItem prop : p) {
+            text.addProperty(prop);
+        }
+
+        ResultParser.currentForm.addText(text);
+    :}
+;
+
+text_props ::=
+    text_props:l COMA text_prop:p
+    {:
+        l.add(p);
+        RESULT = l;
+    :}
+    | text_prop:l
+    {:
+        ArrayList<PropertyItem> list = new ArrayList<>();
+        list.add(l);
+        RESULT = list;
+    :}
+;
+
+text_prop ::=
+
+    CONTENT DOSPUNTOS CADENA:c
+    {:
+        RESULT = new PropertyItem("content", c);
+    :}
+    | WIDTH DOSPUNTOS ENTERO:n
+    {:
+        RESULT = new PropertyItem("width", n);
+    :}
+    | HEIGHT DOSPUNTOS ENTERO:n
+    {:
+        RESULT = new PropertyItem("height", n);
+    :}
+    | styles_block:s
+    {:
+        RESULT = new PropertyItem("styles", s);
+    :}
+    | LABEL DOSPUNTOS CADENA:c
+    {:
+        RESULT = new PropertyItem("label", c);
+    :}
+;
+
+
+
+/*-------------- PREGUNTAS MODIFICADO -------------------*/
+
+preguntas ::=
+    open_q
+    | drop_q
+    | select_q
+    | multiple_q
+;
+
+open_q ::=
+    OPENQUESTION CORCHETE_ABRE question_props:p CORCHETE_CIERRA
+    {:
+        try {
+            if (ResultParser.currentForm == null) {
+                System.err.println("WARNING: currentForm es null, inicializando...");
+                ResultParser.init();
+            }
+
+            OpenQuestion open = new OpenQuestion();
+
+            for(PropertyItem prop : p) {
+                if (prop != null) {
+                    open.addProperty(prop);
+                }
+            }
+
+            if (ResultParser.currentForm != null) {
+                ResultParser.currentForm.addQuestion(open);
+                System.out.println("OPEN_QUESTION agregada: " + open.getLabel());
+            } else {
+                System.err.println("ERROR: No se pudo agregar OPEN_QUESTION - currentForm null");
+            }
+
+            RESULT = open;
+        } catch (Exception e) {
+            System.err.println("Error en open_q: " + e.getMessage());
+            e.printStackTrace();
+            RESULT = null;
+        }
+    :}
+;
+
+drop_q ::=
+    DROPQUESTION CORCHETE_ABRE question_props:p CORCHETE_CIERRA
+    {:
+        try {
+            if (ResultParser.currentForm == null) {
+                ResultParser.init();
+            }
+
+            DropQuestion drop = new DropQuestion();
+
+            for(PropertyItem prop : p) {
+                if (prop != null) {
+                    drop.addProperty(prop);
+                }
+            }
+
+            if (ResultParser.currentForm != null) {
+                ResultParser.currentForm.addQuestion(drop);
+                System.out.println("DROP_QUESTION agregada: " + drop.getLabel());
+            }
+
+            RESULT = drop;
+        } catch (Exception e) {
+            System.err.println("Error en drop_q: " + e.getMessage());
+            RESULT = null;
+        }
+    :}
+;
+
+select_q ::=
+    SELECTQUESTION CORCHETE_ABRE question_props:p CORCHETE_CIERRA
+    {:
+        try {
+            if (ResultParser.currentForm == null) {
+                ResultParser.init();
+            }
+
+            SelectQuestion select = new SelectQuestion();
+
+            for(PropertyItem prop : p) {
+                if (prop != null) {
+                    select.addProperty(prop);
+                }
+            }
+
+            if (ResultParser.currentForm != null) {
+                ResultParser.currentForm.addQuestion(select);
+                System.out.println("SELECT_QUESTION agregada: " + select.getLabel());
+            }
+
+            RESULT = select;
+        } catch (Exception e) {
+            System.err.println("Error en select_q: " + e.getMessage());
+            RESULT = null;
+        }
+    :}
+;
+
+multiple_q ::=
+    MULTIPLEQUESTION CORCHETE_ABRE question_props:p CORCHETE_CIERRA
+    {:
+        try {
+            if (ResultParser.currentForm == null) {
+                ResultParser.init();
+            }
+
+            MultipleQuestion multiple = new MultipleQuestion();
+
+            for(PropertyItem prop : p) {
+                if (prop != null) {
+                    multiple.addProperty(prop);
+                }
+            }
+
+            if (ResultParser.currentForm != null) {
+                ResultParser.currentForm.addQuestion(multiple);
+                System.out.println("MULTIPLE_QUESTION agregada: " + multiple.getLabel());
+            }
+
+            RESULT = multiple;
+        } catch (Exception e) {
+            System.err.println("Error en multiple_q: " + e.getMessage());
+            RESULT = null;
+        }
+    :}
+;
+
+question_props ::=
+    question_props:l COMA question_prop:p
+    {:
+        l.add(p);
+        RESULT = l;
+    :}
+    | question_prop:p
+    {:
+        ArrayList<PropertyItem> list = new ArrayList<>();
+        list.add(p);
+        RESULT = list;
+    :}
+;
+
+question_prop ::=
+    LABEL DOSPUNTOS CADENA:c
+    {:
+        RESULT = new PropertyItem("label", c.toString().replace("\"", ""));
+    :}
+    | WIDTH DOSPUNTOS ENTERO:n
+    {:
+        RESULT = new PropertyItem("width", Integer.parseInt(n.toString()));
+    :}
+    | HEIGHT DOSPUNTOS ENTERO:n
+    {:
+        RESULT = new PropertyItem("height", Integer.parseInt(n.toString()));
+    :}
+    | OPTIONS DOSPUNTOS lista_opciones:o
+    {:
+        RESULT = new PropertyItem("options", o);
+    :}
+    | CORRECT DOSPUNTOS ENTERO:n
+    {:
+        RESULT = new PropertyItem("correct", Integer.parseInt(n.toString()));
+    :}
+    | styles_block:s
+    {:
+        RESULT = new PropertyItem("styles", s);
+    :}
+;
+
+lista_opciones ::=
+    LLAVE_ABRE lista_strings:l LLAVE_CIERRA
+    {:
+        RESULT = l;
+    :}
+;
+
+lista_strings ::=
+   lista_strings:l COMA CADENA:c
+   {:
+       l.add(c.toString().replace("\"", ""));
+       RESULT = l;
+   :}
+   | CADENA:c
+   {:
+        ArrayList<String> list = new ArrayList<>();
+        list.add(c.toString().replace("\"", ""));
+        RESULT = list;
+   :}
+;
+/*-------------------------------------------------------*/
 
 lista_instrucciones ::=
         lista_instrucciones instruccion
@@ -182,19 +569,24 @@ lista_instrucciones ::=
         ;
 
 instruccion ::=
-        pregunta
-        | declaracion
-        | table_decl
-        | special_decl
-        | draw_call
-        ;
+      pregunta
+    | declaracion
+    | table_decl
+    | special_decl
+    | draw_stmt
+    | seccion
+    | error PUNTOCOMA
+      {:
+          System.out.println("Se recuperó de error");
+      :}
+;
 
 declaracion ::=
 
     VARIABLENUMBER VARIABLE:v IGUAL expresion:e PUNTOCOMA
     {:
-        if (ResultParser.formsModel != null) {
-            ResultParser.formsModel.addVariable(
+        if (ResultParser.currentForm != null) {
+            ResultParser.currentForm.addVariable(
                 new VariableModel("number", v.toString(), e)
             );
         }
@@ -202,8 +594,8 @@ declaracion ::=
 
 |   VARIABLESTRING VARIABLE:v IGUAL expresion:e PUNTOCOMA
     {:
-        if (ResultParser.formsModel != null) {
-            ResultParser.formsModel.addVariable(
+        if (ResultParser.currentForm != null) {
+            ResultParser.currentForm.addVariable(
                 new VariableModel("string", v.toString(), e)
             );
         }
@@ -211,8 +603,8 @@ declaracion ::=
 
 |   VARIABLESPECIAL VARIABLE:v IGUAL expresion:e PUNTOCOMA
     {:
-        if (ResultParser.formsModel != null) {
-            ResultParser.formsModel.addVariable(
+        if (ResultParser.currentForm != null) {
+            ResultParser.currentForm.addVariable(
                 new VariableModel("special", v.toString(), e)
             );
         }
@@ -249,8 +641,8 @@ special_decl ::=
             wildcards
         );
 
-        if (ResultParser.formsModel != null) {
-            ResultParser.formsModel.addSpecialQuestion(sq);
+        if (ResultParser.currentForm != null) {
+            ResultParser.currentForm.addSpecialQuestion(sq);
         }
 
         RESULT = sq;
@@ -336,51 +728,65 @@ draw_call ::=
         RESULT = null;
     :}
 ;
-/* ------------------------------------------------------------------------------*/
-pregunta ::=
 
-    OPENQUESTION VARIABLE:v PUNTOCOMA
+draw_stmt ::=
+    VARIABLE:v PUNTO DRAW
+    PARENTESIS_ABRE parametros:args PARENTESIS_CIERRA PUNTOCOMA
     {:
-        OpenQuestion open = new OpenQuestion(v.toString());
+        SpecialQuestion sq = ResultParser.currentForm.findSpecialQuestion(v.toString());
 
-        if (ResultParser.formsModel != null) {
-            ResultParser.formsModel.addQuestion(open);
+        if(sq != null) {
+
+            sq.setDrawArguments(args);
+
+            QuestionModel q = sq.draw();
+
+            if(sq != null) {
+                ResultParser.currentForm.addQuestion(q);
+            }
         }
-
-        RESULT = open;
     :}
+    | VARIABLE:v PUNTO DRAW PARENTESIS_ABRE PARENTESIS_CIERRA PUNTOCOMA
+          {:
+              if (ResultParser.currentForm == null) {
+                  ResultParser.currentForm = new FormsModel("UntitledForm");
+              }
 
-    | DROPQUESTION VARIABLE:v lista_opciones:ops PUNTOCOMA
+              SpecialQuestion sq = ResultParser.currentForm.findSpecialQuestion(v.toString());
+
+              if (sq != null) {
+
+                  QuestionModel q = sq.draw();
+
+                  if (q != null) {
+                      ResultParser.currentForm.addQuestion(q);
+                  }
+              }
+
+              RESULT = null;
+          :}
+;
+
+draw_expr ::=
+    VARIABLE:v PUNTO DRAW
+    PARENTESIS_ABRE parametros:args PARENTESIS_CIERRA
     {:
-        DropQuestion drop = new DropQuestion(v.toString(), ops);
-        if (ResultParser.formsModel != null) {
-            ResultParser.formsModel.addQuestion(drop);
+        SpecialQuestion sq = ResultParser.currentForm.findSpecialQuestion(v.toString());
+
+        if (sq != null) {
+
+            sq.setDrawArguments(args);
+
+            RESULT = sq.draw();
+        } else {
+
+            RESULT = null;
         }
-
-        RESULT = drop;
-
-    :}
-
-    | SELECTQUESTION VARIABLE:v lista_opciones:ops PUNTOCOMA
-    {:
-        SelectQuestion select =  new SelectQuestion(v.toString(), ops);
-        if (ResultParser.formsModel != null) {
-            ResultParser.formsModel.addQuestion(select);
-        }
-
-        RESULT = select;
-    :}
-
-    | MULTIPLEQUESTION VARIABLE:v lista_opciones:ops PUNTOCOMA
-    {:
-        MultipleQuestion multiple =  new MultipleQuestion(v.toString(), ops);
-        if (ResultParser.formsModel != null) {
-            ResultParser.formsModel.addQuestion(multiple);
-        }
-
-        RESULT = multiple;
     :}
 ;
+
+/* ------------------------------------------------------------------------------*/
+
 
 
 
@@ -426,7 +832,7 @@ table_decl ::=
             table.addProperty(prop);
         }
 
-        ResultParser.formsModel.addTable(table);
+        ResultParser.currentForm.addTable(table);
     :}
 ;
 
@@ -457,33 +863,11 @@ table_prop ::=
     | POINTY DOSPUNTOS expresion:e
         {: RESULT = new PropertyPosition(0,(Integer)e); :}
 
-    | STYLES DOSPUNTOS CORCHETE_ABRE style_list:s CORCHETE_CIERRA
+    | styles_block:s
         {: RESULT = new PropertyStyle(s); :}
 
     | ELEMENTS DOSPUNTOS CORCHETE_ABRE elements_matrix:e CORCHETE_CIERRA
         {: RESULT = new PropertyElements(e); :}
-;
-
-style_list ::=
-      style_list:s COMA style_item:i
-      {:
-          s.add(i);
-          RESULT = s;
-      :}
-    | style_item:i
-      {:
-          ArrayList<Style> list = new ArrayList<>();
-          list.add(i);
-          RESULT = list;
-      :}
-;
-
-style_item ::=
-      COLOR DOSPUNTOS VARIABLE:v
-        {: RESULT = new StyleColor(v.toString()); :}
-
-    | BORDER DOSPUNTOS PARENTESIS_ABRE expresion:g COMA tipo_borde:t COMA VARIABLE:c PARENTESIS_CIERRA
-        {: RESULT = new StyleBorder(g, t , c.toString()); :}
 ;
 
 tipo_borde ::=
@@ -552,6 +936,11 @@ contenido_celda ::=
         RESULT = list;
     :}
 
+| contenido_celda:list COMA draw_expr:d
+    {:
+        list.add(d);
+        RESULT = list;
+    :}
 | expresion:e
     {:
         ArrayList<Object> lista = new ArrayList<>();
@@ -565,4 +954,98 @@ contenido_celda ::=
         lista.add(p);
         RESULT = lista;
     :}
+| draw_expr:d
+    {:
+        ArrayList<Object> lista = new ArrayList<>();
+        lista.add(d);
+        RESULT = lista;
+    :}
 ;
+
+/*GRAMATICA PARA COLOR Y ESTILOS*/
+
+styles_block ::=
+    STYLES CORCHETE_ABRE style_list:s CORCHETE_CIERRA
+    {: RESULT = s; :}
+;
+
+color_value ::=
+
+   HEXCOLOR:h
+        {: RESULT = new HexaColor(h.toString()); :}
+
+    | PARENTESIS_ABRE ENTERO:r COMA ENTERO:g COMA ENTERO:b PARENTESIS_CIERRA
+         {: RESULT = new RgbColor(
+               Integer.parseInt(r.toString()),
+               Integer.parseInt(g.toString()),
+               Integer.parseInt(b.toString())
+         ); :}
+
+    | MENOR ENTERO:h COMA DECIMAL:s COMA DECIMAL:l MAYOR
+        {: RESULT = new HslColor(
+               Float.parseFloat(h.toString()),
+               Float.parseFloat(s.toString()),
+               Float.parseFloat(l.toString())
+        ); :}
+
+    | RED
+        {: RESULT = BaseColor.RED; :}
+
+    | BLUE
+        {: RESULT = BaseColor.BLUE; :}
+
+   | GREEN
+        {: RESULT = BaseColor.GREEN; :}
+
+   | PURPLE
+        {: RESULT = BaseColor.PURPLE; :}
+
+   | SKY
+        {: RESULT = BaseColor.SKY; :}
+
+   | YELLOW
+        {: RESULT = BaseColor.YELLOW; :}
+
+   | BLACK
+        {: RESULT = BaseColor.BLACK; :}
+
+   | WHITE
+        {: RESULT = BaseColor.WHITE; :}
+;
+
+style_list ::=
+
+      style_list:l COMA style_item:s
+         {:
+            l.add(s);
+            RESULT = l;
+         :}
+
+     | style_item:s
+         {:
+            ArrayList<Object> list = new ArrayList<>();
+            list.add(s);
+            RESULT = list;
+         :}
+;
+
+style_item ::=
+      STYLE_COLOR DOSPUNTOS color_value:c
+      {: RESULT = new ColorStyle(c); :}
+
+    | STYLE_BACKGROUND DOSPUNTOS color_value:c
+      {: RESULT = new BackgroundStyle(c); :}
+
+    | STYLE_SIZE DOSPUNTOS ENTERO:n
+      {: RESULT = new TextSizeStyle(Integer.parseInt(n.toString())); :}
+
+    | STYLE_FONT DOSPUNTOS font_value:f
+      {: RESULT = new FontStyle(f); :}
+;
+
+font_value ::=
+        MONO {: RESULT = "MONO"; :}
+        | SANS_SERIF {: RESULT = "SANS_SERIF"; :}
+        | CURSIVE {: RESULT = "CURSIVE"; :}
+;
+

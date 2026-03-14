@@ -2,27 +2,30 @@ package com.example.proyecto1_compi1.modelo.question;
 
 import java.util.ArrayList;
 
-public abstract class QuestionModel {
+public class TextModel {
 
-    protected String label;
-    protected int width;
-    protected int height;
+    private String content;
+    private int width;
+    private int height;
 
-    protected ArrayList<Object> styles;
+    private ArrayList<Object> styles;
 
-    public QuestionModel(){
+    public TextModel(){
         styles = new ArrayList<>();
     }
 
     public void addProperty(PropertyItem prop){
-
+        System.out.println("TextModel.addProperty - Key: " + prop.getKey() +
+                ", Value: " + prop.getValue() +
+                ", Value type: " + (prop.getValue() != null ? prop.getValue().getClass().getSimpleName() : "null"));
         switch(prop.getKey()){
 
-            case "label":
-                label = (String) prop.getValue();
+            case "content":
+                content = (String) prop.getValue();
                 break;
 
             case "width":
+
                 Object value = prop.getValue();
 
                 if (value instanceof Integer) {
@@ -30,6 +33,7 @@ public abstract class QuestionModel {
                 } else if (value instanceof String){
                     width = Integer.parseInt((String) value);
                 }
+
                 break;
 
             case "height":
@@ -51,35 +55,20 @@ public abstract class QuestionModel {
 
     }
 
-    public String getLabel(){
-        return label;
+    public String getContent() {
+        return content;
     }
 
-    public int getWidth(){
+    public int getWidth() {
         return width;
     }
 
-    public int getHeight(){
+    public int getHeight() {
         return height;
     }
 
-    public ArrayList<Object> getStyles(){
+    public ArrayList<Object> getStyles() {
         return styles;
     }
 
-    /*
-    protected String name;
-
-    public QuestionModel() {
-    }
-
-    public QuestionModel(String name) {
-        this.name = name;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-     */
 }

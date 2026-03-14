@@ -1,0 +1,3 @@
+package com.example.proyecto1_compi1.modelo.color_style
+
+class BackgroundStyle(val color : ColorValue)

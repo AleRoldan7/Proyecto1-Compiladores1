@@ -6,11 +6,117 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.proyecto1_compi1.modelo.question.*
 import com.example.proyecto1_compi1.ui.question.DropQuestionUI
 import com.example.proyecto1_compi1.ui.question.MultipleQuestionUI
 import com.example.proyecto1_compi1.ui.question.SelectQuestionUI
+import com.example.proyecto1_compi1.ui.question.TextUi
 
+@Composable
+fun QuestionRender(question: Any) {
+
+    Log.d("QuestionRender", "Tipo recibido: ${question.javaClass.simpleName}")
+
+    when (question) {
+
+        is OpenQuestion -> {
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp)
+            ) {
+
+                Text(
+                    text = question.label ?: "",
+                    style = MaterialTheme.typography.titleMedium
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                var text by remember { mutableStateOf("") }
+
+                OutlinedTextField(
+                    value = text,
+                    onValueChange = { text = it },
+                    label = { Text("Respuesta") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+
+        is DropQuestion -> {
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp)
+            ) {
+
+                Text(
+                    text = question.label ?: "",
+                    style = MaterialTheme.typography.titleMedium
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                DropQuestionUI(question.options)
+            }
+        }
+
+        is SelectQuestion -> {
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp)
+            ) {
+
+                Text(
+                    text = question.label ?: "",
+                    style = MaterialTheme.typography.titleMedium
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                SelectQuestionUI(question.options)
+            }
+        }
+
+        is MultipleQuestion -> {
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp)
+            ) {
+
+                Text(
+                    text = question.label ?: "",
+                    style = MaterialTheme.typography.titleMedium
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                MultipleQuestionUI(question.options)
+            }
+        }
+
+        is TextModel -> {
+            TextUi(question)
+        }
+        else -> {
+
+            Text(
+                text = "Elemento no soportado: ${question.javaClass.simpleName}",
+                color = MaterialTheme.colorScheme.error
+            )
+        }
+    }
+}
+
+
+
+/*
 @Composable
 fun QuestionRender(question: Any) {
     Log.d("QuestionRender", "Tipo recibido: ${question.javaClass.simpleName}")
@@ -117,3 +223,4 @@ fun QuestionRender(question: Any) {
         }
     }
 }
+ */
