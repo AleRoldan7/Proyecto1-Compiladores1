@@ -33,6 +33,7 @@ public class GeneratePKM {
 
         for (FormsModel form : forms) {
 
+            /*
             for (QuestionModel q : form.getQuestions()) {
 
                 totalQuestions++;
@@ -42,6 +43,8 @@ public class GeneratePKM {
                 if (q instanceof SelectQuestion) seleccion++;
                 if (q instanceof MultipleQuestion) multiples++;
             }
+
+             */
         }
 
         stringBuilder.append("Total de Secciones: ").append(totalSections).append("\n");
@@ -60,12 +63,13 @@ public class GeneratePKM {
 
             stringBuilder.append("<content>\n");
 
-            for (QuestionModel q : form.getQuestions()) {
+            /*
+            for (QuestionModel q : form.getElements()) {
 
                 stringBuilder.append(generateQuestion(q));
 
             }
-
+    */
             stringBuilder.append("</content>\n");
 
             stringBuilder.append("</section>\n\n");

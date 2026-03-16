@@ -6,7 +6,7 @@ import java.util.List;
 public class SelectQuestion extends QuestionModel {
 
     private ArrayList<String> options;
-    private int correct;
+    private int correct = -1;
 
     public SelectQuestion() {
         options = new ArrayList<>();
@@ -24,7 +24,7 @@ public class SelectQuestion extends QuestionModel {
                 break;
 
             case "correct":
-                correct = (int) prop.getValue();
+                correct = (Integer) prop.getValue();
                 break;
 
         }
@@ -34,6 +34,9 @@ public class SelectQuestion extends QuestionModel {
         return options;
     }
 
+    public boolean validateAnswer(int answer) {
+        return answer == correct;
+    }
     public int getCorrect() {
         return correct;
     }

@@ -6,7 +6,7 @@ import java.util.List;
 public class DropQuestion extends QuestionModel {
 
     private ArrayList<String> options;
-    private int correct;
+    private int correct = -1;
 
     public DropQuestion() {
         options = new ArrayList<>();
@@ -24,14 +24,20 @@ public class DropQuestion extends QuestionModel {
                 break;
 
             case "correct":
-                correct = (int) prop.getValue();
+                correct = (Integer) prop.getValue();
                 break;
 
+            default:
+                super.addProperty(prop);
         }
     }
 
     public ArrayList<String> getOptions() {
         return options;
+    }
+
+    public boolean isCorrect(int answer) {
+        return answer == correct;
     }
 
     public int getCorrect() {

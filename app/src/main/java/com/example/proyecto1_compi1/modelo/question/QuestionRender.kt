@@ -12,7 +12,7 @@ import com.example.proyecto1_compi1.ui.question.SelectQuestionUI
 import com.example.proyecto1_compi1.ui.question.TextUi
 
 @Composable
-fun QuestionRender(question: Any) {
+fun QuestionRender(question: QuestionModel) {
 
     Log.d("QuestionRender", "Tipo recibido: ${question.javaClass.simpleName}")
 
@@ -101,9 +101,7 @@ fun QuestionRender(question: Any) {
             }
         }
 
-        is TextModel -> {
-            TextUi(question)
-        }
+
         else -> {
 
             Text(

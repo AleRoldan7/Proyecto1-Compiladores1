@@ -13,7 +13,7 @@ public class PropertyStyle implements PropertyTable{
     @Override
     public void apply(TableModel table) {
         for(Style style : styles) {
-            table.addStyle(style);
+            //table.addStyle(style);
             style.apply(table);
         }
     }

@@ -12,7 +12,7 @@ public class PropertyPosition implements PropertyTable{
 
     @Override
     public void apply(TableModel tableModel) {
-        tableModel.setPointX(x);
-        tableModel.setPointY(y);
+        //tableModel.setPointX(x);
+        //tableModel.setPointY(y);
     }
 }

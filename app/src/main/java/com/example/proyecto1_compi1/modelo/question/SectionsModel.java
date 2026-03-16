@@ -4,51 +4,53 @@ import com.example.proyecto1_compi1.enums.Orientation;
 
 import java.util.ArrayList;
 
-public class SectionModel {
+public class SectionsModel {
 
     private int width;
     private int height;
     private int pointX;
     private int pointY;
-    private Orientation orientation;
+    private Orientation orientation = Orientation.VERTICAL;
 
     private ArrayList<Object> elements;
     private ArrayList<Object> styles;
 
-    public SectionModel() {
-        elements = new ArrayList<>();
-        styles = new ArrayList<>();
+    public SectionsModel(ArrayList<PropertyItem> props) {
+
+        for (PropertyItem prop : props) {
+
+            addProperty(prop);
+
+        }
+
     }
 
-    public void addProperty(PropertyItem prop){
+    public void addProperty(PropertyItem prop) {
 
-        switch(prop.getKey()){
+        switch (prop.getKey()) {
 
             case "width":
-                width = (int) prop.getValue();
+                width = Integer.parseInt(prop.getValue().toString());
                 break;
 
             case "height":
-                height = (int) prop.getValue();
+                height = Integer.parseInt(prop.getValue().toString());
                 break;
 
             case "pointX":
-                pointX = (int) prop.getValue();
+                pointX = Integer.parseInt(prop.getValue().toString());
                 break;
 
             case "pointY":
-                pointY = (int) prop.getValue();
+                pointY = Integer.parseInt(prop.getValue().toString());
                 break;
 
             case "orientation":
-                if (prop.getValue().equals("VERTICAL")) {
-                    orientation = Orientation.VERTICAL;
-                } else {
-                    orientation = Orientation.HORIZONATAL;
-                }
+                orientation = Orientation.valueOf(prop.value.toString());
                 break;
 
             case "elements":
+                elements = (ArrayList<Object>) prop.getValue();
                 break;
 
             case "styles":
@@ -58,7 +60,7 @@ public class SectionModel {
 
     }
 
-    public void addElement(Object element){
+    public void addElement(Object element) {
         elements.add(element);
     }
 

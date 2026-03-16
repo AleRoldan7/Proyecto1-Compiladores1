@@ -16,7 +16,9 @@ import com.example.proyecto1_compi1.modelo.question.QuestionRender
 import com.example.proyecto1_compi1.ui.table.TableUI
 import java.io.File
 import androidx.compose.ui.platform.LocalContext
+import com.example.proyecto1_compi1.ui.question.SectionUI
 import com.example.proyecto1_compi1.ui.question.TextUi
+import com.example.proyecto1_compi1.ui.utils.RenderElement
 
 @Composable
 fun PreviewScreen(navController: NavController) {
@@ -28,9 +30,7 @@ fun PreviewScreen(navController: NavController) {
     LaunchedEffect(Unit) {
         Log.d("PREVIEW_DEBUG", "Forms size: ${forms?.size}")
         forms?.forEachIndexed { formIndex, form ->
-            Log.d("PREVIEW_DEBUG", "Form $formIndex - texts size: ${form.texts?.size}")
-            Log.d("PREVIEW_DEBUG", "Form $formIndex - questions size: ${form.questions?.size}")
-            Log.d("PREVIEW_DEBUG", "Form $formIndex - tables size: ${form.tables?.size}")
+
         }
     }
 
@@ -52,6 +52,7 @@ fun PreviewScreen(navController: NavController) {
 
             forms.forEach { form ->
 
+                Log.d("PREVIEW_DEBUG", "Elementos: ${form.elements.size}")
                 Text(
                     text = "Formulario: ${form.name}",
                     style = MaterialTheme.typography.titleLarge
@@ -59,49 +60,10 @@ fun PreviewScreen(navController: NavController) {
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                form.questions.forEach { question ->
+                form.elements.forEach { element ->
 
-                    QuestionRender(question)
-
-                    Spacer(modifier = Modifier.height(20.dp))
+                    RenderElement(element)
                 }
-
-                form.tables.forEach { table ->
-
-                    Spacer(modifier = Modifier.height(20.dp))
-
-                    TableUI(table)
-                }
-
-                form.texts.forEach { text ->
-
-                    Log.d("PREVIEW_DEBUG", "Text $text")
-                    TextUi(text)
-
-                    Spacer(modifier = Modifier.height(20.dp))
-                }
-                if (form.specialQuestions.isNotEmpty()) {
-
-                    Text(
-                        "Preguntas especiales",
-                        style = MaterialTheme.typography.titleMedium
-                    )
-
-                    Spacer(Modifier.height(8.dp))
-
-                    form.specialQuestions.forEachIndexed { index, sq ->
-
-                        Log.d(
-                            "PreviewDebug",
-                            "Renderizando special #${index + 1}: ${sq.name} (${sq.type})"
-                        )
-
-                        QuestionRender(sq)
-
-                        Spacer(Modifier.height(24.dp))
-                    }
-                }
-
 
 
                 Spacer(modifier = Modifier.height(40.dp))
@@ -118,7 +80,7 @@ fun PreviewScreen(navController: NavController) {
 
                 val nombre = "form_${System.currentTimeMillis()}.pkm"
 
-                guardarFormulario(context,nombre,texto)
+                guardarFormulario(context, nombre, texto)
 
 
             },

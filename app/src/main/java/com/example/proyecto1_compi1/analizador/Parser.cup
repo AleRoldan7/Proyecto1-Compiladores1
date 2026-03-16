@@ -169,19 +169,19 @@ non terminal draw_expr;
 non terminal ArrayList<Object> parametros;
 
 non terminal table_decl;
-non terminal ArrayList<PropertyTable> table_props;
-non terminal PropertyTable table_prop;
+//non terminal ArrayList<PropertyTable> table_props;
+//non terminal PropertyTable table_prop;
 
-non terminal ArrayList<PropertyItem> section_props;
-non terminal PropertyItem section_prop;
+//non terminal ArrayList<PropertyItem> section_props;
+//non terminal PropertyItem section_prop;
 
 //non terminal ArrayList<Style> style_list;
 //non terminal Style style_item;
 non terminal TypeBorder tipo_borde;
 
-non terminal List<String> elements_list;
+//non terminal List<String> elements_list;
 
-non terminal ArrayList<ArrayList<TableCell>> elements_matrix;
+//non terminal ArrayList<ArrayList<TableCell>> elements_matrix;
 non terminal ArrayList<TableCell> row;
 non terminal ArrayList<TableCell> cells;
 non terminal TableCell cell;
@@ -191,15 +191,32 @@ non terminal text_decl;
 non terminal ArrayList<PropertyItem> text_props;
 non terminal PropertyItem text_prop;
 
-non terminal open_q;
-non terminal drop_q;
-non terminal select_q;
-non terminal multiple_q;
+non terminal OpenQuestion open_q;
+non terminal DropQuestion drop_q;
+non terminal SelectQuestion select_q;
+non terminal MultipleQuestion multiple_q;
 non terminal ArrayList<PropertyItem> question_props;
 non terminal PropertyItem question_prop;
 non terminal ArrayList<String> lista_opciones;
 non terminal ArrayList<String> lista_strings;
-non terminal preguntas;
+non terminal Object preguntas;
+
+/*SECCIONES Y TABLAS*/
+
+non terminal Object section;
+non terminal TableModel table;
+
+non terminal ArrayList section_props;
+non terminal Object section_prop;
+
+non terminal ArrayList element_list;
+non terminal Object element;
+
+non terminal ArrayList table_props;
+non terminal PropertyItem table_prop;
+non terminal ArrayList table_rows;
+non terminal ArrayList table_row;
+non terminal ArrayList table_cells;
 
 /*COLOR Y FONDO*/
 non terminal ColorValue color_value;
@@ -215,15 +232,28 @@ precedence left MAYOR, MENOR, IGUALIGUAL, DIFERENTE;
 
 start with inicio;
 
-inicio ::= lista_elementos;
+inicio ::=
+    lista_elementos
 
+;
 
 
 lista_elementos ::=
-    lista_elementos elemento
-    | elemento
+
+    lista_elementos element:e
+    {:
+
+        ResultParser.currentForm.addElement(e);
+    :}
+
+    | element:e
+    {:
+
+        ResultParser.currentForm.addElement(e);
+    :}
 ;
 
+/*
 elemento ::=
     seccion
     | pregunta
@@ -231,7 +261,7 @@ elemento ::=
     | table_decl
     | preguntas
 ;
-
+*/
 
 
 lista_valores ::=
@@ -249,77 +279,12 @@ lista_valores ::=
     :}
 ;
 
-seccion ::=
-    SECTION CORCHETE_ABRE section_props:p CORCHETE_CIERRA
-    {:
-        SectionModel section = new SectionModel();
 
-        for(PropertyItem prop : p) {
-            section.addProperty(prop);
-        }
-
-        if(ResultParser.currentForm != null) {
-            ResultParser.currentForm.addSection(section);
-        }
-    :}
-;
-
-section_props ::=
-    section_props:l COMA section_prop:p
-    {:
-        l.add(p);
-        RESULT = l;
-    :}
-    | section_prop:p
-    {:
-        ArrayList<PropertyItem> list = new ArrayList<>();
-        list.add(p);
-        RESULT = list;
-    :}
-;
-
-section_prop ::=
-    WIDTH DOSPUNTOS ENTERO:n
-    {:
-        RESULT = new PropertyItem("width", n);
-    :}
-    | HEIGHT DOSPUNTOS ENTERO:n
-    {:
-        RESULT = new PropertyItem("height", n);
-    :}
-    | POINTX DOSPUNTOS ENTERO:n
-    {:
-        RESULT = new PropertyItem("pointX", n);
-    :}
-    | POINTY DOSPUNTOS ENTERO:n
-    {:
-        RESULT = new PropertyItem("pointY", n);
-    :}
-    | ORIENTATION DOSPUNTOS VERTICAL
-    {:
-        RESULT = new PropertyItem("orientation", VERTICAL);
-    :}
-    | ORIENTATION DOSPUNTOS HORIZONTAL
-    {:
-        RESULT = new PropertyItem("orientation", HORIZONTAL);
-    :}
-    | ELEMENTS DOSPUNTOS LLAVE_ABRE lista_elementos LLAVE_CIERRA
-    {:
-        RESULT = new PropertyItem("elements", null);
-    :}
-    | styles_block:s
-    {:
-        RESULT = new PropertyItem("styles", s);
-    :}
-;
 
 
 text_decl ::=
     TEXT CORCHETE_ABRE text_props:p CORCHETE_CIERRA
     {:
-        if (ResultParser.currentForm == null) {
-            ResultParser.currentForm = new FormsModel("Formulario");
-        }
 
         TextModel text = new TextModel();
 
@@ -327,7 +292,7 @@ text_decl ::=
             text.addProperty(prop);
         }
 
-        ResultParser.currentForm.addText(text);
+        RESULT = text;
     :}
 ;
 
@@ -371,196 +336,151 @@ text_prop ::=
 
 
 
-/*-------------- PREGUNTAS MODIFICADO -------------------*/
+    /*-------------- PREGUNTAS MODIFICADO -------------------*/
 
-preguntas ::=
-    open_q
-    | drop_q
-    | select_q
-    | multiple_q
-;
+    preguntas ::=
+        open_q
+        | drop_q
+        | select_q
+        | multiple_q
+    ;
 
-open_q ::=
-    OPENQUESTION CORCHETE_ABRE question_props:p CORCHETE_CIERRA
-    {:
-        try {
-            if (ResultParser.currentForm == null) {
-                System.err.println("WARNING: currentForm es null, inicializando...");
-                ResultParser.init();
-            }
+    open_q ::=
+        OPENQUESTION CORCHETE_ABRE question_props:p CORCHETE_CIERRA
+        {:
+                System.out.println("SI ESTA EN OPEN");
+                OpenQuestion open = new OpenQuestion();
 
-            OpenQuestion open = new OpenQuestion();
+                for(PropertyItem prop : p) {
 
-            for(PropertyItem prop : p) {
-                if (prop != null) {
-                    open.addProperty(prop);
+                        open.addProperty(prop);
+
                 }
-            }
 
-            if (ResultParser.currentForm != null) {
-                ResultParser.currentForm.addQuestion(open);
-                System.out.println("OPEN_QUESTION agregada: " + open.getLabel());
-            } else {
-                System.err.println("ERROR: No se pudo agregar OPEN_QUESTION - currentForm null");
-            }
 
-            RESULT = open;
-        } catch (Exception e) {
-            System.err.println("Error en open_q: " + e.getMessage());
-            e.printStackTrace();
-            RESULT = null;
-        }
-    :}
-;
+                RESULT = open;
 
-drop_q ::=
-    DROPQUESTION CORCHETE_ABRE question_props:p CORCHETE_CIERRA
-    {:
-        try {
-            if (ResultParser.currentForm == null) {
-                ResultParser.init();
-            }
+        :}
+    ;
 
-            DropQuestion drop = new DropQuestion();
+    drop_q ::=
+        DROPQUESTION CORCHETE_ABRE question_props:p CORCHETE_CIERRA
+        {:
+                System.out.println("SI ESTA EN DROP");
 
-            for(PropertyItem prop : p) {
-                if (prop != null) {
-                    drop.addProperty(prop);
+                DropQuestion drop = new DropQuestion();
+
+                for(PropertyItem prop : p) {
+
+                        drop.addProperty(prop);
+
                 }
-            }
 
-            if (ResultParser.currentForm != null) {
-                ResultParser.currentForm.addQuestion(drop);
-                System.out.println("DROP_QUESTION agregada: " + drop.getLabel());
-            }
 
-            RESULT = drop;
-        } catch (Exception e) {
-            System.err.println("Error en drop_q: " + e.getMessage());
-            RESULT = null;
-        }
-    :}
-;
 
-select_q ::=
-    SELECTQUESTION CORCHETE_ABRE question_props:p CORCHETE_CIERRA
-    {:
-        try {
-            if (ResultParser.currentForm == null) {
-                ResultParser.init();
-            }
+                RESULT = drop;
 
-            SelectQuestion select = new SelectQuestion();
+        :}
+    ;
 
-            for(PropertyItem prop : p) {
-                if (prop != null) {
-                    select.addProperty(prop);
+    select_q ::=
+        SELECTQUESTION CORCHETE_ABRE question_props:p CORCHETE_CIERRA
+        {:
+
+                System.out.println("SI ESTA EN SELECT ");
+                SelectQuestion select = new SelectQuestion();
+
+                for(PropertyItem prop : p) {
+
+                        select.addProperty(prop);
+
                 }
-            }
 
-            if (ResultParser.currentForm != null) {
-                ResultParser.currentForm.addQuestion(select);
-                System.out.println("SELECT_QUESTION agregada: " + select.getLabel());
-            }
 
-            RESULT = select;
-        } catch (Exception e) {
-            System.err.println("Error en select_q: " + e.getMessage());
-            RESULT = null;
-        }
-    :}
-;
+                RESULT = select;
 
-multiple_q ::=
-    MULTIPLEQUESTION CORCHETE_ABRE question_props:p CORCHETE_CIERRA
-    {:
-        try {
-            if (ResultParser.currentForm == null) {
-                ResultParser.init();
-            }
+        :}
+    ;
 
-            MultipleQuestion multiple = new MultipleQuestion();
+    multiple_q ::=
+        MULTIPLEQUESTION CORCHETE_ABRE question_props:p CORCHETE_CIERRA
+        {:
+                System.out.println("SI ESTA EN MULTIPLE");
+                MultipleQuestion multiple = new MultipleQuestion();
 
-            for(PropertyItem prop : p) {
-                if (prop != null) {
-                    multiple.addProperty(prop);
+                for(PropertyItem prop : p) {
+
+                        multiple.addProperty(prop);
+
                 }
-            }
 
-            if (ResultParser.currentForm != null) {
-                ResultParser.currentForm.addQuestion(multiple);
-                System.out.println("MULTIPLE_QUESTION agregada: " + multiple.getLabel());
-            }
 
-            RESULT = multiple;
-        } catch (Exception e) {
-            System.err.println("Error en multiple_q: " + e.getMessage());
-            RESULT = null;
-        }
-    :}
-;
+                RESULT = multiple;
 
-question_props ::=
-    question_props:l COMA question_prop:p
-    {:
-        l.add(p);
-        RESULT = l;
-    :}
-    | question_prop:p
-    {:
-        ArrayList<PropertyItem> list = new ArrayList<>();
-        list.add(p);
-        RESULT = list;
-    :}
-;
+        :}
+    ;
 
-question_prop ::=
-    LABEL DOSPUNTOS CADENA:c
-    {:
-        RESULT = new PropertyItem("label", c.toString().replace("\"", ""));
-    :}
-    | WIDTH DOSPUNTOS ENTERO:n
-    {:
-        RESULT = new PropertyItem("width", Integer.parseInt(n.toString()));
-    :}
-    | HEIGHT DOSPUNTOS ENTERO:n
-    {:
-        RESULT = new PropertyItem("height", Integer.parseInt(n.toString()));
-    :}
-    | OPTIONS DOSPUNTOS lista_opciones:o
-    {:
-        RESULT = new PropertyItem("options", o);
-    :}
-    | CORRECT DOSPUNTOS ENTERO:n
-    {:
-        RESULT = new PropertyItem("correct", Integer.parseInt(n.toString()));
-    :}
-    | styles_block:s
-    {:
-        RESULT = new PropertyItem("styles", s);
-    :}
-;
+    question_props ::=
+        question_props:l COMA question_prop:p
+        {:
+            l.add(p);
+            RESULT = l;
+        :}
+        | question_prop:p
+        {:
+            ArrayList<PropertyItem> list = new ArrayList<>();
+            list.add(p);
+            RESULT = list;
+        :}
+    ;
 
-lista_opciones ::=
-    LLAVE_ABRE lista_strings:l LLAVE_CIERRA
-    {:
-        RESULT = l;
-    :}
-;
+    question_prop ::=
+        LABEL DOSPUNTOS CADENA:c
+        {:
+            RESULT = new PropertyItem("label", c.toString().replace("\"", ""));
+        :}
+        | WIDTH DOSPUNTOS ENTERO:n
+        {:
+            RESULT = new PropertyItem("width", Integer.parseInt(n.toString()));
+        :}
+        | HEIGHT DOSPUNTOS ENTERO:n
+        {:
+            RESULT = new PropertyItem("height", Integer.parseInt(n.toString()));
+        :}
+        | OPTIONS DOSPUNTOS lista_opciones:o
+        {:
+            RESULT = new PropertyItem("options", o);
+        :}
+        | CORRECT DOSPUNTOS ENTERO:n
+        {:
+            RESULT = new PropertyItem("correct", Integer.parseInt(n.toString()));
+        :}
+        | styles_block:s
+        {:
+            RESULT = new PropertyItem("styles", s);
+        :}
+    ;
 
-lista_strings ::=
-   lista_strings:l COMA CADENA:c
-   {:
-       l.add(c.toString().replace("\"", ""));
-       RESULT = l;
-   :}
-   | CADENA:c
-   {:
-        ArrayList<String> list = new ArrayList<>();
-        list.add(c.toString().replace("\"", ""));
-        RESULT = list;
-   :}
-;
+    lista_opciones ::=
+        LLAVE_ABRE lista_strings:l LLAVE_CIERRA
+        {:
+            RESULT = l;
+        :}
+    ;
+
+    lista_strings ::=
+       lista_strings:l COMA CADENA:c
+       {:
+           l.add(c.toString().replace("\"", ""));
+           RESULT = l;
+       :}
+       | CADENA:c
+       {:
+            ArrayList<String> list = new ArrayList<>();
+            list.add(c.toString().replace("\"", ""));
+            RESULT = list;
+       :}
+    ;
 /*-------------------------------------------------------*/
 
 lista_instrucciones ::=
@@ -821,145 +741,190 @@ expresion ::=
 ;
 
 
-/* ------------ PARA CREAR LAS TABLAS ---------------*/
+/* ------------ PARA CREAR LAS TABLAS Y SECCIONES ---------------*/
 
-table_decl ::=
-    TABLE CORCHETE_ABRE table_props:p CORCHETE_CIERRA
+element ::=
+    section:s
     {:
-        TableModel table = new TableModel();
+        RESULT = s;
+    :}
+    | table:t
+    {:
+        RESULT = t;
+    :}
+    | text_decl:x
+    {:
+        RESULT = x;
+    :}
+    | open_q:o
+    {:
+        RESULT = o;
+    :}
+    | drop_q:d
+    {:
+        RESULT = d;
+    :}
+    | select_q:s
+    {:
+        RESULT = s;
+    :}
+    | multiple_q:m
+    {:
+        RESULT = m;
+    :}
+;
 
-        for(PropertyTable prop : p){
-            table.addProperty(prop);
-        }
+section ::=
+    SECTION CORCHETE_ABRE section_props:p CORCHETE_CIERRA
+    {:
+        RESULT = new SectionsModel(p);
+    :}
+;
 
-        ResultParser.currentForm.addTable(table);
+section_props ::=
+    section_props:l COMA section_prop:p
+    {:
+        l.add(p);
+        RESULT = l;
+    :}
+    | section_prop:p
+    {:
+        ArrayList list = new ArrayList();
+        list.add(p);
+        RESULT = list;
+    :}
+;
+
+section_prop ::=
+    WIDTH DOSPUNTOS ENTERO:n
+    {:
+        RESULT = new PropertyItem("width", n);
+    :}
+    | HEIGHT DOSPUNTOS ENTERO:n
+    {:
+        RESULT = new PropertyItem("height", n);
+    :}
+    | POINTX DOSPUNTOS ENTERO:n
+    {:
+        RESULT = new PropertyItem("pointX", n);
+    :}
+    | POINTY DOSPUNTOS ENTERO:n
+    {:
+        RESULT = new PropertyItem("pointY", n);
+    :}
+    | ORIENTATION DOSPUNTOS VERTICAL
+    {:
+        RESULT = new PropertyItem("orientation", "VERTICAL");
+    :}
+    | ORIENTATION DOSPUNTOS HORIZONTAL
+    {:
+        RESULT = new PropertyItem("orientation", "HORIZONTAL");
+    :}
+    | ELEMENTS DOSPUNTOS LLAVE_ABRE element_list:e LLAVE_CIERRA
+    {:
+        RESULT = new PropertyItem("elements", e);
+    :}
+    | styles_block:s
+    {:
+        RESULT = new PropertyItem("styles", s);
+    :}
+;
+
+element_list ::=
+    element_list:l COMA element:e
+    {:
+        l.add(e);
+        RESULT = l;
+    :}
+    | element:e
+    {:
+        ArrayList list = new ArrayList();
+        list.add(e);
+        RESULT = list;
+    :}
+;
+
+table ::=
+    TABLE CORCHETE_ABRE table_props:tp CORCHETE_CIERRA
+    {:
+        RESULT = new TableModel(tp);
     :}
 ;
 
 table_props ::=
-      table_props:p COMA table_prop:t
-      {:
-          p.add(t);
-          RESULT = p;
-      :}
-    | table_prop:t
-      {:
-          ArrayList<PropertyTable> list = new ArrayList<>();
-          list.add(t);
-          RESULT = list;
-      :}
+
+      table_props:l COMA table_prop:p
+        {:
+            l.add(p);
+            RESULT = l;
+        :}
+
+    | table_prop:p
+        {:
+            ArrayList list = new ArrayList();
+            list.add(p);
+            RESULT = list;
+        :}
 ;
 
 table_prop ::=
-      WIDTH DOSPUNTOS expresion:e
-        {: RESULT = new PropertyWidth(e); :}
 
-    | HEIGHT DOSPUNTOS expresion:e
-        {: RESULT = new PropertyHeigth(e); :}
+      WIDTH DOSPUNTOS ENTERO:n
+        {: RESULT = new PropertyItem("width", n); :}
 
-    | POINTX DOSPUNTOS expresion:e
-      {: RESULT = new PropertyPosition((Integer)e, 0); :}
+    | HEIGHT DOSPUNTOS ENTERO:n
+        {: RESULT = new PropertyItem("height", n); :}
 
-    | POINTY DOSPUNTOS expresion:e
-        {: RESULT = new PropertyPosition(0,(Integer)e); :}
+    | POINTX DOSPUNTOS ENTERO:n
+        {: RESULT = new PropertyItem("pointX", n); :}
+
+    | POINTY DOSPUNTOS ENTERO:n
+        {: RESULT = new PropertyItem("pointY", n); :}
+
+    | ELEMENTS DOSPUNTOS LLAVE_ABRE table_rows:r LLAVE_CIERRA
+        {: RESULT = new PropertyItem("elements", r); :}
 
     | styles_block:s
-        {: RESULT = new PropertyStyle(s); :}
-
-    | ELEMENTS DOSPUNTOS CORCHETE_ABRE elements_matrix:e CORCHETE_CIERRA
-        {: RESULT = new PropertyElements(e); :}
+        {: RESULT = new PropertyItem("styles", s); :}
 ;
 
-tipo_borde ::=
-      SOLID   {: RESULT = TypeBorder.SOLID; :}
-    | DASHED  {: RESULT = TypeBorder.DASHED; :}
-    | DOTTED  {: RESULT = TypeBorder.DOTTED; :}
+table_rows ::=
+
+      table_rows:l COMA table_row:r
+        {:
+            l.add(r);
+            RESULT = l;
+        :}
+
+    | table_row:r
+        {:
+            ArrayList list = new ArrayList();
+            list.add(r);
+            RESULT = list;
+        :}
 ;
 
-
-
-elements_matrix ::=
-      elements_matrix:m COMA row:r
-      {:
-          m.add(r);
-          RESULT = m;
-      :}
-    | row:r
-      {:
-          ArrayList<ArrayList<TableCell>> list = new ArrayList<>();
-          list.add(r);
-          RESULT = list;
-      :}
-;
-
-row ::=
-    CORCHETE_ABRE cells:c CORCHETE_CIERRA
-    {:  RESULT = c; :}
-;
-
-cells ::=
-    cells:l COMA cell:c
+table_row ::=
+    CORCHETE_ABRE table_cells:c CORCHETE_CIERRA
     {:
-        l.add(c);
-        RESULT = l;
-    :}
-    | cell:c
-    {:
-        ArrayList<TableCell> list = new ArrayList<>();
-        list.add(c);
-        RESULT = list;
+        RESULT = c;
     :}
 ;
 
-cell ::=
-    LLAVE_ABRE contenido_celda:cont LLAVE_CIERRA
-    {:
-        RESULT = new TableCell(cont);
-    :}
-    | LLAVE_ABRE LLAVE_CIERRA
-    {:
-        RESULT = new TableCell(new ArrayList<Object>());
-    :}
-;
+table_cells ::=
 
+      table_cells:l COMA LLAVE_ABRE element:e LLAVE_CIERRA
+        {:
+            l.add(e);
+            RESULT = l;
+        :}
 
-contenido_celda ::=
-    contenido_celda:list COMA expresion:e
-    {:
-        list.add(e);
-        RESULT = list;
-    :}
-
-| contenido_celda:list COMA pregunta:p
-    {:
-        list.add(p);
-        RESULT = list;
-    :}
-
-| contenido_celda:list COMA draw_expr:d
-    {:
-        list.add(d);
-        RESULT = list;
-    :}
-| expresion:e
-    {:
-        ArrayList<Object> lista = new ArrayList<>();
-        lista.add(e);
-        RESULT = lista;
-    :}
-
-| pregunta:p
-    {:
-        ArrayList<Object> lista = new ArrayList<>();
-        lista.add(p);
-        RESULT = lista;
-    :}
-| draw_expr:d
-    {:
-        ArrayList<Object> lista = new ArrayList<>();
-        lista.add(d);
-        RESULT = lista;
-    :}
+    | LLAVE_ABRE element:e LLAVE_CIERRA
+        {:
+            ArrayList list = new ArrayList();
+            list.add(e);
+            RESULT = list;
+        :}
 ;
 
 /*GRAMATICA PARA COLOR Y ESTILOS*/

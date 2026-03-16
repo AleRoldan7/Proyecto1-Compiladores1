@@ -20,8 +20,52 @@ import com.example.proyecto1_compi1.modelo.question.QuestionRender
 import com.example.proyecto1_compi1.modelo.question.SelectQuestion
 import com.example.proyecto1_compi1.modelo.table.*
 import com.example.proyecto1_compi1.ui.question.DropQuestionUI
+import com.example.proyecto1_compi1.ui.utils.RenderElement
 import kotlin.math.log
 
+
+
+@Composable
+fun TableUI(table: TableModel) {
+
+    val rows = table.elements.size
+    val cols = table.elements.firstOrNull()?.size ?: 1
+
+    val cellWidth = if(table.width > 0) table.width / cols else 150
+    val cellHeight = if(table.height > 0) table.height / rows else 80
+
+    Column(
+        modifier = Modifier
+            .width(table.width.dp)
+            .height(table.height.dp)
+    ) {
+
+        table.elements.forEach { row ->
+
+            Row {
+
+                row.forEach { cell ->
+
+                    Box(
+                        modifier = Modifier
+                            .width(cellWidth.dp)
+                            .height(cellHeight.dp)
+                    ) {
+
+                        RenderElement(cell)
+
+                    }
+
+                }
+
+            }
+
+        }
+
+    }
+
+}
+/*
 @Composable
 fun TableUI(table: TableModel) {
 
@@ -125,3 +169,4 @@ fun TableUI(table: TableModel) {
         }
     }
 }
+ */

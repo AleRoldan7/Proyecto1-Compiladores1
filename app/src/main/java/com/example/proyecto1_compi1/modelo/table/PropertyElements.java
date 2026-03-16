@@ -15,8 +15,9 @@ public class PropertyElements implements PropertyTable {
         return matrix;
     }
 
+
     @Override
     public void apply(TableModel tableModel) {
-        tableModel.setElements(matrix);
+        //tableModel.setElements(matrix);
     }
 }

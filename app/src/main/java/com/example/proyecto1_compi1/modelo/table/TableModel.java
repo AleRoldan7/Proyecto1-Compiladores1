@@ -1,83 +1,84 @@
 package com.example.proyecto1_compi1.modelo.table;
 
+import com.example.proyecto1_compi1.modelo.question.PropertyItem;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class TableModel {
 
-    public int width;
-    public int height;
-    public int pointX;
-    public int pointY;
+    private int width;
+    private int height;
+    private int pointX;
+    private int pointY;
 
-    public List<Style> styles = new ArrayList<>();
-    public List<PropertyTable> properties = new ArrayList<>();
+    private ArrayList<ArrayList<Object>> elements = new ArrayList<>();
+    private ArrayList<Object> styles = new ArrayList<>();
 
-    private ArrayList<ArrayList<TableCell>> elements = new ArrayList<>();
 
-    public void addProperty(PropertyTable propertyTable) {
-        properties.add(propertyTable);
-        propertyTable.apply(this);
+    public TableModel(ArrayList<PropertyItem> props) {
+
+        for (PropertyItem prop : props) {
+
+            addProperty(prop);
+
+        }
+
     }
 
-    public void addStyle(Style style) {
-        styles.add(style);
+
+    public void addProperty(PropertyItem prop){
+
+        switch(prop.getKey()){
+
+            case "width":
+                width = Integer.parseInt(prop.getValue().toString());
+                break;
+
+            case "height":
+                height = Integer.parseInt(prop.getValue().toString());
+                break;
+
+            case "pointX":
+                pointX = Integer.parseInt(prop.getValue().toString());
+                break;
+
+            case "pointY":
+                pointY = Integer.parseInt(prop.getValue().toString());
+                break;
+
+            case "elements":
+                elements = (ArrayList<ArrayList<Object>>) prop.getValue();
+                break;
+
+            case "styles":
+                styles = (ArrayList<Object>) prop.getValue();
+                break;
+        }
+
     }
 
     public int getWidth() {
         return width;
     }
 
-    public void setWidth(int width) {
-        this.width = width;
-    }
-
-
     public int getHeight() {
         return height;
-    }
-
-    public void setHeight(int height) {
-        this.height = height;
     }
 
     public int getPointX() {
         return pointX;
     }
 
-    public void setPointX(int pointX) {
-        this.pointX = pointX;
-    }
-
     public int getPointY() {
         return pointY;
     }
 
-    public void setPointY(int pointY) {
-        this.pointY = pointY;
-    }
-
-    public List<Style> getStyles() {
+    public ArrayList<Object> getStyles() {
         return styles;
     }
 
-    public void setStyles(List<Style> styles) {
-        this.styles = styles;
-    }
-
-    public List<PropertyTable> getProperties() {
-        return properties;
-    }
-
-    public void setProperties(List<PropertyTable> properties) {
-        this.properties = properties;
-    }
-
-    public ArrayList<ArrayList<TableCell>> getElements() {
+    public ArrayList<ArrayList<Object>> getElements() {
         return elements;
-    }
-
-    public void setElements(ArrayList<ArrayList<TableCell>> elements) {
-        this.elements = elements;
     }
 }

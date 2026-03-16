@@ -48,8 +48,8 @@ public class ResultParser {
         System.out.println("forms size: " + (forms != null ? forms.size() : 0));
         System.out.println("currentForm: " + currentForm);
         if (currentForm != null) {
-            System.out.println("preguntas: " + currentForm.getQuestions().size());
-            System.out.println("textos: " + currentForm.getTexts().size());
+           // System.out.println("preguntas: " + currentForm.getQuestions().size());
+            //System.out.println("textos: " + currentForm.getTexts().size());
         }
     }
 }

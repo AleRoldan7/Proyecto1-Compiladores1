@@ -1,7 +1,7 @@
 package com.example.proyecto1_compi1.modelo.forms;
 
 import com.example.proyecto1_compi1.modelo.question.QuestionModel;
-import com.example.proyecto1_compi1.modelo.question.SectionModel;
+import com.example.proyecto1_compi1.modelo.question.SectionsModel;
 import com.example.proyecto1_compi1.modelo.question.SpecialQuestion;
 import com.example.proyecto1_compi1.modelo.question.TextModel;
 import com.example.proyecto1_compi1.modelo.table.TableModel;
@@ -13,49 +13,31 @@ import java.util.List;
 public class FormsModel {
 
     private String name;
-    private List<QuestionModel> questions = new ArrayList<>();
+    private ArrayList<Object> elements = new ArrayList<>();
     private List<SpecialQuestion> specialQuestions = new ArrayList<>();
     private ArrayList<VariableModel> variables = new ArrayList<>();
-
-    private ArrayList<TableModel> tables = new ArrayList<>();
-
-    private ArrayList<SectionModel> sections = new ArrayList<>();
-
-    private ArrayList<TextModel> texts = new ArrayList<>();
-
-    public FormsModel() {
-    }
+    private List<QuestionModel> questions = new ArrayList<>();
+    public FormsModel(){}
 
     public FormsModel(String name) {
         this.name = name;
     }
 
-    public void addQuestion(QuestionModel q) {
-        questions.add(q);
+    public void addElement(Object element){
+
+        if(element != null){
+            elements.add(element);
+            System.out.println("ELEMENTO AGREGADO " + element.getClass().getSimpleName());
+        }
+
     }
 
-    public void addVariable(VariableModel variableModel) {
-        variables.add(variableModel);
+    public ArrayList<Object> getElements(){
+        return elements;
     }
 
-    public void addTable(TableModel tableModel) {
-        tables.add(tableModel);
-    }
-
-    public String getName() {
+    public String getName(){
         return name;
-    }
-
-    public List<QuestionModel> getQuestions() {
-        return questions;
-    }
-
-    public ArrayList<VariableModel> getVariables() {
-        return variables;
-    }
-
-    public ArrayList<TableModel> getTables() {
-        return tables;
     }
 
     public void addSpecialQuestion(SpecialQuestion sq) {
@@ -87,7 +69,58 @@ public class FormsModel {
         return null;
     }
 
-    public void addSection(SectionModel sectionModel) {
+    public void addQuestion(QuestionModel q) {
+        questions.add(q);
+    }
+
+    public void addVariable(VariableModel variableModel) {
+        variables.add(variableModel);
+    }
+
+}
+
+    /*
+
+
+
+
+    private ArrayList<TableModel> tables = new ArrayList<>();
+
+    private ArrayList<SectionsModel> sections = new ArrayList<>();
+
+    private ArrayList<TextModel> texts = new ArrayList<>();
+
+    public FormsModel() {
+    }
+
+    public FormsModel(String name) {
+        this.name = name;
+    }
+
+
+    public void addTable(TableModel tableModel) {
+        tables.add(tableModel);
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public List<QuestionModel> getQuestions() {
+        return questions;
+    }
+
+    public ArrayList<VariableModel> getVariables() {
+        return variables;
+    }
+
+    public ArrayList<TableModel> getTables() {
+        return tables;
+    }
+
+
+
+    public void addSection(SectionsModel sectionModel) {
         sections.add(sectionModel);
     }
 
@@ -102,5 +135,8 @@ public class FormsModel {
         return texts != null ? texts : new ArrayList<>();
     }
 
-    
+    public ArrayList<SectionsModel> getSections() {
+        return sections;
+    }
 }
+*/

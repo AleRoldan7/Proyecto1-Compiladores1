@@ -37,7 +37,7 @@ public class MultipleQuestion extends QuestionModel {
                 options = (ArrayList<String>) (Object) prop.getValue();
                 break;
 
-            case "correcto":
+            case "correct":
                 correct = (ArrayList<Integer>) prop.getValue();
                 break;
         }
@@ -47,6 +47,9 @@ public class MultipleQuestion extends QuestionModel {
         return options;
     }
 
+    public boolean isCorrect(ArrayList<Integer> answers) {
+        return answers.equals(correct);
+    }
     public ArrayList<Integer> getCorrect() {
         return correct;
     }

@@ -27,13 +27,15 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.proyecto1_compi1.token.ErrorItem
+import com.example.proyecto1_compi1.ui.ViewModel.EditViewModel
 import kotlin.math.max
 
 @Composable
-fun EditScreen(navController: NavController? = null) {
+fun EditScreen(navController: NavController? = null, viewModel: EditViewModel = viewModel()) {
 
-    var editorText by remember { mutableStateOf(TextFieldValue("")) }
+    var editorText by viewModel::editText
     var erroresTexto by remember { mutableStateOf("") }
     var errores by remember { mutableStateOf<List<ErrorItem>>(emptyList()) }
     var showErrors by remember { mutableStateOf(false) }
@@ -147,8 +149,8 @@ fun EditScreen(navController: NavController? = null) {
                     }
 
                 } catch (e: Exception) {
-                    //erroresTexto = "Error fatal: ${e.message}"
-                    erroresTexto = "Error fatal:\n${e.stackTraceToString()}"
+                    erroresTexto = "Error fatal: ${e.message}"
+                    //erroresTexto = "Error fatal:\n${e.stackTraceToString()}"
                 }
             }
 
@@ -191,8 +193,27 @@ fun EditScreen(navController: NavController? = null) {
                 }
             }
         }
+
+        Button(
+            modifier = Modifier.fillMaxWidth(),
+            onClick = {
+
+                val nombre = "form_${System.currentTimeMillis()}.form"
+
+                guardarFormulario(
+                    context,
+                    nombre,
+                    editorText.text
+                )
+
+                Toast.makeText(context,"Formulario guardado",Toast.LENGTH_LONG).show()
+            }
+        ) {
+            Text("Guardar .form")
+        }
+
         Log.d("DEBUG_FORM", "formsModel = ${ResultParser.formsModel}")
-        Log.d("DEBUG_FORM", "questions = ${ResultParser.formsModel?.questions?.size}")
+
         Log.d("DEBUG_FORM", "TEXT = ${ResultParser.printStatus()}")
         Spacer(modifier = Modifier.height(12.dp))
 

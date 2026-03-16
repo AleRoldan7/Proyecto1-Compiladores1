@@ -11,7 +11,7 @@ public class PropertyHeigth implements PropertyTable{
     @Override
     public void apply(TableModel table) {
         if(value instanceof Integer) {
-            table.setHeight((Integer) value);
+            //table.setHeight((Integer) value);
         }
     }
 }
