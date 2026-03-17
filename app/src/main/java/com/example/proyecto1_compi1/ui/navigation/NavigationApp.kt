@@ -38,7 +38,7 @@ fun NavigationApp() {
         }
 
         composable("answer") {
-            AnswerScreen(navController)
+            //AnswerScreen(navController)
         }
 
         composable("upload") {

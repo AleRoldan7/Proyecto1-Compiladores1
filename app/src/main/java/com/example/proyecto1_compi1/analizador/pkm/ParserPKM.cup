@@ -1,0 +1,160 @@
+package com.example.proyecto1_compi1.analizador.pkm;
+
+import java.util.*;
+import com.example.proyecto1_compi1.modelo.forms.*;
+import com.example.proyecto1_compi1.modelo.question.*;
+import com.example.proyecto1_compi1.modelo.table.*;
+import java_cup.runtime.*;
+
+parser code {:
+  @Override
+  public void report_error(String message, Object info) {
+      StringBuilder m = new StringBuilder("\nERROR SINTÁCTICO\n");
+      if (info instanceof Symbol) {
+          Symbol s = (Symbol) info;
+          m.append("Mensaje: ").append(message).append("\n");
+          m.append("Línea: ").append(s.left + 1).append("\n");
+          m.append("Columna: ").append(s.right + 1).append("\n");
+          m.append("Token: ").append(s.value).append("\n");
+          m.append("Código token: ").append(s.sym).append("\n");
+      } else {
+          m.append("Mensaje: ").append(message);
+      }
+      System.err.println(m.toString());
+  }
+
+  @Override
+  public void report_fatal_error(String message, Object info) {
+      report_error(message, info);
+      throw new RuntimeException("Parsing detenido");
+  }
+
+  @Override
+  public void syntax_error(Symbol cur_token) {
+      System.err.println("\nTOKEN INESPERADO:");
+      System.err.println("Línea: " + (cur_token.left + 1));
+      System.err.println("Columna: " + (cur_token.right + 1));
+      System.err.println("Token: " + cur_token.value);
+  }
+
+  @Override
+  public void unrecovered_syntax_error(Symbol cur_token) {
+      throw new RuntimeException("Error sintactico en linea: " + (cur_token.left +1) +
+          ", columna: " + (cur_token.right + 1 ) + ", token: " + cur_token.value);
+  }
+:};
+
+/* Terminales */
+terminal METADATA_BLOCK;
+terminal SECTION_OPEN, SECTION_CLOSE;
+terminal CONTENT_OPEN, CONTENT_CLOSE;
+terminal TEXT_ELEMENT;
+terminal OPEN_TAG, OPEN_CLOSE;
+terminal SELECT_TAG, SELECT_CLOSE;
+terminal MULTIPLE_TAG, MULTIPLE_CLOSE;
+terminal DROP_TAG, DROP_CLOSE;
+terminal COMMA, COLON, GUION;
+terminal LBRACE, RBRACE;
+terminal IGUAL, MAYOR_QUE;
+terminal SLASH_CLOSE;
+terminal String STRING;
+terminal Integer NUMBER;
+terminal String ID;
+
+
+
+/* Non terminales */
+non terminal Object pkm_file;
+non terminal Object elementos_principales;
+non terminal Object elemento_principal;
+non terminal Object section;
+non terminal Object content;
+non terminal Object element;
+non terminal Object text_element;
+non terminal Object open_question;
+non terminal Object select_question;
+non terminal Object multiple_question;
+non terminal Object drop_question;
+non terminal Object question_content;
+non terminal Object options;
+non terminal Object string_list;
+non terminal Object int_list;
+non terminal Object int_list_opt;
+non terminal Object parametros_seccion;
+non terminal Object parametros_pregunta;
+
+/* Precedencia */
+precedence left COMMA;
+precedence nonassoc NUMBER;
+
+/* Inicio */
+pkm_file ::= METADATA_BLOCK elementos_principales
+            | elementos_principales
+            ;
+
+/* Elementos principales (secciones o preguntas) */
+elementos_principales ::= elementos_principales elemento_principal
+                         | elemento_principal
+                         ;
+
+elemento_principal ::= section
+                     | open_question
+                     | select_question
+                     | multiple_question
+                     | drop_question
+                     ;
+
+/* Sección */
+section ::= SECTION_OPEN parametros_seccion MAYOR_QUE
+            CONTENT_OPEN content CONTENT_CLOSE
+            SECTION_CLOSE
+            ;
+
+parametros_seccion ::= NUMBER COMMA NUMBER COMMA NUMBER COMMA NUMBER COMMA ID
+                     ;
+
+content ::= content element
+          | element
+          ;
+
+element ::= text_element
+          ;
+
+text_element ::= TEXT_ELEMENT NUMBER COMMA NUMBER COMMA STRING SLASH_CLOSE
+               ;
+
+/* Preguntas */
+open_question ::= OPEN_TAG parametros_pregunta STRING SLASH_CLOSE
+                | OPEN_TAG parametros_pregunta STRING OPEN_CLOSE
+                ;
+
+select_question ::= SELECT_TAG parametros_pregunta STRING COMMA LBRACE options RBRACE COMMA NUMBER SLASH_CLOSE
+                  | SELECT_TAG parametros_pregunta STRING COMMA LBRACE options RBRACE COMMA NUMBER SELECT_CLOSE
+                  ;
+
+multiple_question ::= MULTIPLE_TAG parametros_pregunta STRING COMMA LBRACE options RBRACE COMMA LBRACE int_list RBRACE SLASH_CLOSE
+                    | MULTIPLE_TAG parametros_pregunta STRING COMMA LBRACE options RBRACE COMMA LBRACE int_list RBRACE MULTIPLE_CLOSE
+                    ;
+
+drop_question ::= DROP_TAG parametros_pregunta STRING COMMA LBRACE options RBRACE COMMA NUMBER SLASH_CLOSE
+                | DROP_TAG parametros_pregunta STRING COMMA LBRACE options RBRACE COMMA NUMBER DROP_CLOSE
+                ;
+
+parametros_pregunta ::= NUMBER COMMA NUMBER COMMA
+                      ;
+
+options ::= STRING
+          | options COMMA STRING
+          ;
+
+int_list ::= NUMBER
+           | int_list COMMA NUMBER
+           ;
+
+int_list_opt ::= /* vacío */
+                {:
+                    ArrayList<Integer> list = new ArrayList<Integer>();
+                    RESULT = list;
+                :}
+                | int_list
+                ;

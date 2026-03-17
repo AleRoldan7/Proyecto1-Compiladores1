@@ -6,10 +6,11 @@ import java.util.List;
 public class DropQuestion extends QuestionModel {
 
     private ArrayList<String> options;
-    private int correct = -1;
+    private ArrayList<Integer> correct;
 
     public DropQuestion() {
         options = new ArrayList<>();
+        correct = new ArrayList<>();
     }
 
     @Override
@@ -24,7 +25,7 @@ public class DropQuestion extends QuestionModel {
                 break;
 
             case "correct":
-                correct = (Integer) prop.getValue();
+                correct = (ArrayList<Integer>) prop.getValue();
                 break;
 
             default:
@@ -36,6 +37,11 @@ public class DropQuestion extends QuestionModel {
         return options;
     }
 
+    public ArrayList<Integer> getCorrect() {
+        return correct;
+    }
+
+    /*
     public boolean isCorrect(int answer) {
         return answer == correct;
     }
@@ -44,6 +50,8 @@ public class DropQuestion extends QuestionModel {
         return correct;
     }
 
+
+     */
     /*
     private List<String> options;
 

@@ -6,10 +6,11 @@ import java.util.List;
 public class SelectQuestion extends QuestionModel {
 
     private ArrayList<String> options;
-    private int correct = -1;
+    private ArrayList<Integer> correct;
 
     public SelectQuestion() {
         options = new ArrayList<>();
+        correct = new ArrayList<>();
     }
 
     @Override
@@ -24,7 +25,7 @@ public class SelectQuestion extends QuestionModel {
                 break;
 
             case "correct":
-                correct = (Integer) prop.getValue();
+                correct = (ArrayList<Integer>) prop.getValue();
                 break;
 
         }
@@ -33,7 +34,10 @@ public class SelectQuestion extends QuestionModel {
     public ArrayList<String> getOptions() {
         return options;
     }
-
+    public ArrayList<Integer> getCorrect() {
+        return correct;
+    }
+    /*/
     public boolean validateAnswer(int answer) {
         return answer == correct;
     }

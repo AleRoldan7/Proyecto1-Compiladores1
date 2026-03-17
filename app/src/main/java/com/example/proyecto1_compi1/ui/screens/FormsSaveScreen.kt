@@ -18,8 +18,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.proyecto1_compi1.analizador.Lexer
-import com.example.proyecto1_compi1.analizador.Parser
+import com.example.proyecto1_compi1.analizador.form.Lexer
+import com.example.proyecto1_compi1.analizador.form.Parser
 import com.example.proyecto1_compi1.storage.getFormsStorage
 import java.io.StringReader
 

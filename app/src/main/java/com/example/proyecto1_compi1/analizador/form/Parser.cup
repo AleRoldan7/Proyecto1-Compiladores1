@@ -1,4 +1,4 @@
-package com.example.proyecto1_compi1.analizador;
+package com.example.proyecto1_compi1.analizador.form;
 
 import com.example.proyecto1_compi1.token.Token;
 import com.example.proyecto1_compi1.modelo.question.*;
@@ -200,7 +200,7 @@ non terminal PropertyItem question_prop;
 non terminal ArrayList<String> lista_opciones;
 non terminal ArrayList<String> lista_strings;
 non terminal Object preguntas;
-
+non terminal ArrayList<Integer> int_list;
 /*SECCIONES Y TABLAS*/
 
 non terminal Object section;
@@ -453,7 +453,13 @@ text_prop ::=
         :}
         | CORRECT DOSPUNTOS ENTERO:n
         {:
-            RESULT = new PropertyItem("correct", Integer.parseInt(n.toString()));
+            ArrayList<Integer> list = new ArrayList<>();
+            list.add(Integer.parseInt(n.toString()));
+            RESULT = new PropertyItem("correct", list);
+        :}
+        | CORRECT DOSPUNTOS LLAVE_ABRE int_list:l LLAVE_CIERRA
+        {:
+            RESULT = new PropertyItem("correct", l);
         :}
         | styles_block:s
         {:
@@ -468,19 +474,33 @@ text_prop ::=
         :}
     ;
 
-    lista_strings ::=
-       lista_strings:l COMA CADENA:c
-       {:
-           l.add(c.toString().replace("\"", ""));
-           RESULT = l;
-       :}
-       | CADENA:c
-       {:
-            ArrayList<String> list = new ArrayList<>();
-            list.add(c.toString().replace("\"", ""));
-            RESULT = list;
-       :}
-    ;
+lista_strings ::=
+    lista_strings:l COMA CADENA:c
+    {:
+        l.add(c.toString().replace("\"", ""));
+        RESULT = l;
+    :}
+    | CADENA:c
+    {:
+        ArrayList<String> list = new ArrayList<>();
+        list.add(c.toString().replace("\"", ""));
+        RESULT = list;
+    :}
+;
+
+int_list ::=
+    ENTERO:e
+    {:
+        ArrayList<Integer> list = new ArrayList<>();
+        list.add(Integer.parseInt(e.toString()));
+        RESULT = list;
+    :}
+    | int_list:l COMA ENTERO:e
+    {:
+        l.add(Integer.parseInt(e.toString()));
+        RESULT = l;
+    :}
+;
 /*-------------------------------------------------------*/
 
 lista_instrucciones ::=

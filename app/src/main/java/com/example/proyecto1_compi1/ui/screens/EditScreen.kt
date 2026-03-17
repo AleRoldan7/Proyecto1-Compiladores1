@@ -11,13 +11,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.example.proyecto1_compi1.analizador.Lexer
-import com.example.proyecto1_compi1.analizador.Parser
+import com.example.proyecto1_compi1.analizador.form.Lexer
+import com.example.proyecto1_compi1.analizador.form.Parser
 import com.example.proyecto1_compi1.modelo.forms.ResultParser
 import com.example.proyecto1_compi1.ui.theme.Proyecto1Compi1Theme
 import java.io.StringReader
@@ -194,23 +193,6 @@ fun EditScreen(navController: NavController? = null, viewModel: EditViewModel = 
             }
         }
 
-        Button(
-            modifier = Modifier.fillMaxWidth(),
-            onClick = {
-
-                val nombre = "form_${System.currentTimeMillis()}.form"
-
-                guardarFormulario(
-                    context,
-                    nombre,
-                    editorText.text
-                )
-
-                Toast.makeText(context,"Formulario guardado",Toast.LENGTH_LONG).show()
-            }
-        ) {
-            Text("Guardar .form")
-        }
 
         Log.d("DEBUG_FORM", "formsModel = ${ResultParser.formsModel}")
 

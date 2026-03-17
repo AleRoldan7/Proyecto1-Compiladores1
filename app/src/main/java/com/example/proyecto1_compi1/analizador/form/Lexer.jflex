@@ -1,4 +1,4 @@
-package com.example.proyecto1_compi1.analizador;
+package com.example.proyecto1_compi1.analizador.form;
 
 
 import java_cup.runtime.Symbol;
@@ -196,7 +196,7 @@ HSL = \<{DIGITO}+\,{DECIMAL}|{DIGITO}+\,{DECIMAL}|{DIGITO}+\>
 
 /* IDENTIFICADORES  */
 
-{ID} { return new Symbol(sym.VARIABLE, yyline, yycolumn, yytext()); }
+{ID}    { return new Symbol(sym.VARIABLE, yyline, yycolumn, yytext()); }
 {CADENA}        { return symbol(sym.CADENA, yytext()); }
 
 /* ERRORES */

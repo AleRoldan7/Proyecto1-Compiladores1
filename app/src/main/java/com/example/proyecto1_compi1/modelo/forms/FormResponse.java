@@ -22,11 +22,11 @@ public class FormResponse {
         Object answer = answers.get(questionModel);
 
         if (questionModel instanceof SelectQuestion) {
-            return ((SelectQuestion) questionModel).validateAnswer((Integer) answer);
+           // return ((SelectQuestion) questionModel).validateAnswer((Integer) answer);
         }
 
         if (questionModel instanceof DropQuestion) {
-            return ((DropQuestion) questionModel).isCorrect((Integer) answer);
+            //return ((DropQuestion) questionModel).isCorrect((Integer) answer);
         }
 
         if (questionModel instanceof MultipleQuestion) {
