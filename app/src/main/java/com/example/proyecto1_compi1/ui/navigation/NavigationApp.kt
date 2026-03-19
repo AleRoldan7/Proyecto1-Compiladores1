@@ -1,5 +1,7 @@
 package com.example.proyecto1_compi1.ui.navigation
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -13,6 +15,7 @@ import com.example.proyecto1_compi1.ui.screens.PreviewScreen
 import com.example.proyecto1_compi1.ui.screens.ServerScreen
 import com.example.proyecto1_compi1.ui.screens.UploadFilesScreen
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 
 fun NavigationApp() {
@@ -38,7 +41,7 @@ fun NavigationApp() {
         }
 
         composable("answer") {
-            //AnswerScreen(navController)
+            AnswerScreen(navController)
         }
 
         composable("upload") {

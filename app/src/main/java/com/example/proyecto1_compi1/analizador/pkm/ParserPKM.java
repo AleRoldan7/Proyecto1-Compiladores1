@@ -35,16 +35,16 @@ public class ParserPKM extends java_cup.runtime.lr_parser {
   /** Production table. */
   protected static final short _production_table[][] = 
     unpackFromStrings(new String[] {
-    "\000\037\000\002\002\004\000\002\002\004\000\002\002" +
+    "\000\036\000\002\002\004\000\002\002\004\000\002\002" +
     "\003\000\002\003\004\000\002\003\003\000\002\004\003" +
     "\000\002\004\003\000\002\004\003\000\002\004\003\000" +
-    "\002\004\003\000\002\005\011\000\002\022\013\000\002" +
-    "\006\004\000\002\006\003\000\002\007\003\000\002\010" +
-    "\011\000\002\011\006\000\002\011\006\000\002\012\014" +
-    "\000\002\012\014\000\002\013\016\000\002\013\016\000" +
-    "\002\014\014\000\002\014\014\000\002\023\006\000\002" +
-    "\016\003\000\002\016\005\000\002\020\003\000\002\020" +
-    "\005\000\002\021\002\000\002\021\003" });
+    "\002\004\003\000\002\005\021\000\002\007\004\000\002" +
+    "\007\003\000\002\010\003\000\002\011\011\000\002\021" +
+    "\006\000\002\012\006\000\002\012\006\000\002\013\014" +
+    "\000\002\013\014\000\002\014\016\000\002\014\016\000" +
+    "\002\015\014\000\002\015\014\000\002\016\003\000\002" +
+    "\016\005\000\002\017\003\000\002\017\005\000\002\020" +
+    "\002\000\002\020\003" });
 
   /** Access to production table. */
   public short[][] production_table() {return _production_table;}
@@ -52,7 +52,7 @@ public class ParserPKM extends java_cup.runtime.lr_parser {
   /** Parse-action table. */
   protected static final short[][] _action_table = 
     unpackFromStrings(new String[] {
-    "\000\131\000\016\004\017\005\004\012\012\014\016\016" +
+    "\000\130\000\016\004\017\005\004\012\012\014\016\016" +
     "\021\020\011\001\002\000\004\033\103\001\002\000\016" +
     "\002\ufffd\005\ufffd\012\ufffd\014\ufffd\016\ufffd\020\ufffd\001" +
     "\002\000\016\002\ufffa\005\ufffa\012\ufffa\014\ufffa\016\ufffa" +
@@ -67,18 +67,18 @@ public class ParserPKM extends java_cup.runtime.lr_parser {
     "\001\002\000\016\002\ufffc\005\ufffc\012\ufffc\014\ufffc\016" +
     "\ufffc\020\ufffc\001\002\000\004\033\023\001\002\000\004" +
     "\032\027\001\002\000\004\022\024\001\002\000\004\033" +
-    "\025\001\002\000\004\022\026\001\002\000\004\032\uffe9" +
+    "\025\001\002\000\004\022\026\001\002\000\004\032\ufff2" +
     "\001\002\000\004\022\030\001\002\000\004\025\031\001" +
-    "\002\000\004\032\032\001\002\000\006\022\uffe8\026\uffe8" +
+    "\002\000\004\032\032\001\002\000\006\022\uffe9\026\uffe9" +
     "\001\002\000\006\022\034\026\035\001\002\000\004\032" +
     "\047\001\002\000\004\022\036\001\002\000\004\025\037" +
-    "\001\002\000\004\033\040\001\002\000\006\022\uffe6\026" +
-    "\uffe6\001\002\000\006\022\042\026\043\001\002\000\004" +
+    "\001\002\000\004\033\040\001\002\000\006\022\uffe7\026" +
+    "\uffe7\001\002\000\006\022\042\026\043\001\002\000\004" +
     "\033\046\001\002\000\006\017\044\031\045\001\002\000" +
     "\016\002\uffec\005\uffec\012\uffec\014\uffec\016\uffec\020\uffec" +
     "\001\002\000\016\002\uffed\005\uffed\012\uffed\014\uffed\016" +
-    "\uffed\020\uffed\001\002\000\006\022\uffe5\026\uffe5\001\002" +
-    "\000\006\022\uffe7\026\uffe7\001\002\000\016\002\001\005" +
+    "\uffed\020\uffed\001\002\000\006\022\uffe6\026\uffe6\001\002" +
+    "\000\006\022\uffe8\026\uffe8\001\002\000\016\002\001\005" +
     "\004\012\012\014\016\016\021\020\011\001\002\000\016" +
     "\002\ufffe\005\ufffe\012\ufffe\014\ufffe\016\ufffe\020\ufffe\001" +
     "\002\000\004\032\053\001\002\000\004\022\054\001\002" +
@@ -98,20 +98,19 @@ public class ParserPKM extends java_cup.runtime.lr_parser {
     "\002\000\016\002\uffea\005\uffea\012\uffea\014\uffea\016\uffea" +
     "\020\uffea\001\002\000\016\002\uffeb\005\uffeb\012\uffeb\014" +
     "\uffeb\016\uffeb\020\uffeb\001\002\000\004\002\000\001\002" +
-    "\000\004\022\124\001\002\000\004\030\105\001\002\000" +
-    "\004\007\106\001\002\000\004\011\107\001\002\000\004" +
-    "\033\116\001\002\000\006\010\ufff4\011\ufff4\001\002\000" +
-    "\006\010\113\011\107\001\002\000\006\010\ufff3\011\ufff3" +
-    "\001\002\000\004\006\115\001\002\000\006\010\ufff5\011" +
-    "\ufff5\001\002\000\016\002\ufff7\005\ufff7\012\ufff7\014\ufff7" +
-    "\016\ufff7\020\ufff7\001\002\000\004\022\117\001\002\000" +
-    "\004\033\120\001\002\000\004\022\121\001\002\000\004" +
-    "\032\122\001\002\000\004\031\123\001\002\000\006\010" +
-    "\ufff2\011\ufff2\001\002\000\004\033\125\001\002\000\004" +
-    "\022\126\001\002\000\004\033\127\001\002\000\004\022" +
-    "\130\001\002\000\004\033\131\001\002\000\004\022\132" +
-    "\001\002\000\004\034\133\001\002\000\004\030\ufff6\001" +
-    "\002" });
+    "\000\004\022\104\001\002\000\004\033\105\001\002\000" +
+    "\004\022\106\001\002\000\004\033\107\001\002\000\004" +
+    "\022\110\001\002\000\004\033\111\001\002\000\004\022" +
+    "\112\001\002\000\004\034\113\001\002\000\004\030\114" +
+    "\001\002\000\004\007\115\001\002\000\004\011\116\001" +
+    "\002\000\004\033\125\001\002\000\006\010\ufff5\011\ufff5" +
+    "\001\002\000\006\010\122\011\116\001\002\000\006\010" +
+    "\ufff4\011\ufff4\001\002\000\004\006\124\001\002\000\006" +
+    "\010\ufff6\011\ufff6\001\002\000\016\002\ufff7\005\ufff7\012" +
+    "\ufff7\014\ufff7\016\ufff7\020\ufff7\001\002\000\004\022\126" +
+    "\001\002\000\004\033\127\001\002\000\004\022\130\001" +
+    "\002\000\004\032\131\001\002\000\004\031\132\001\002" +
+    "\000\006\010\ufff3\011\ufff3\001\002" });
 
   /** Access to parse-action table. */
   public short[][] action_table() {return _action_table;}
@@ -119,40 +118,40 @@ public class ParserPKM extends java_cup.runtime.lr_parser {
   /** <code>reduce_goto</code> table. */
   protected static final short[][] _reduce_table = 
     unpackFromStrings(new String[] {
-    "\000\131\000\022\002\006\003\007\004\004\005\017\011" +
-    "\012\012\005\013\014\014\013\001\001\000\004\022\103" +
-    "\001\001\000\002\001\001\000\002\001\001\000\002\001" +
-    "\001\000\016\004\050\005\017\011\012\012\005\013\014" +
-    "\014\013\001\001\000\004\023\067\001\001\000\004\023" +
-    "\063\001\001\000\002\001\001\000\002\001\001\000\002" +
-    "\001\001\000\004\023\051\001\001\000\020\003\047\004" +
-    "\004\005\017\011\012\012\005\013\014\014\013\001\001" +
-    "\000\002\001\001\000\004\023\021\001\001\000\002\001" +
+    "\000\130\000\022\002\006\003\007\004\004\005\017\012" +
+    "\012\013\005\014\014\015\013\001\001\000\002\001\001" +
+    "\000\002\001\001\000\002\001\001\000\002\001\001\000" +
+    "\016\004\050\005\017\012\012\013\005\014\014\015\013" +
+    "\001\001\000\004\021\067\001\001\000\004\021\063\001" +
     "\001\000\002\001\001\000\002\001\001\000\002\001\001" +
-    "\000\002\001\001\000\002\001\001\000\002\001\001\000" +
-    "\004\016\032\001\001\000\002\001\001\000\002\001\001" +
-    "\000\002\001\001\000\002\001\001\000\002\001\001\000" +
-    "\004\020\040\001\001\000\002\001\001\000\002\001\001" +
-    "\000\002\001\001\000\002\001\001\000\002\001\001\000" +
-    "\002\001\001\000\002\001\001\000\002\001\001\000\016" +
-    "\004\050\005\017\011\012\012\005\013\014\014\013\001" +
-    "\001\000\002\001\001\000\002\001\001\000\002\001\001" +
-    "\000\002\001\001\000\004\016\055\001\001\000\002\001" +
-    "\001\000\002\001\001\000\002\001\001\000\002\001\001" +
-    "\000\002\001\001\000\002\001\001\000\002\001\001\000" +
+    "\000\004\021\051\001\001\000\020\003\047\004\004\005" +
+    "\017\012\012\013\005\014\014\015\013\001\001\000\002" +
+    "\001\001\000\004\021\021\001\001\000\002\001\001\000" +
     "\002\001\001\000\002\001\001\000\002\001\001\000\002" +
     "\001\001\000\002\001\001\000\002\001\001\000\004\016" +
-    "\073\001\001\000\002\001\001\000\002\001\001\000\002" +
+    "\032\001\001\000\002\001\001\000\002\001\001\000\002" +
+    "\001\001\000\002\001\001\000\002\001\001\000\004\017" +
+    "\040\001\001\000\002\001\001\000\002\001\001\000\002" +
     "\001\001\000\002\001\001\000\002\001\001\000\002\001" +
-    "\001\000\002\001\001\000\002\001\001\000\002\001\001" +
-    "\000\002\001\001\000\010\006\110\007\107\010\111\001" +
-    "\001\000\002\001\001\000\002\001\001\000\006\007\113" +
-    "\010\111\001\001\000\002\001\001\000\002\001\001\000" +
+    "\001\000\002\001\001\000\002\001\001\000\016\004\050" +
+    "\005\017\012\012\013\005\014\014\015\013\001\001\000" +
+    "\002\001\001\000\002\001\001\000\002\001\001\000\002" +
+    "\001\001\000\004\016\055\001\001\000\002\001\001\000" +
     "\002\001\001\000\002\001\001\000\002\001\001\000\002" +
     "\001\001\000\002\001\001\000\002\001\001\000\002\001" +
     "\001\000\002\001\001\000\002\001\001\000\002\001\001" +
+    "\000\002\001\001\000\002\001\001\000\004\016\073\001" +
+    "\001\000\002\001\001\000\002\001\001\000\002\001\001" +
     "\000\002\001\001\000\002\001\001\000\002\001\001\000" +
-    "\002\001\001\000\002\001\001\000\002\001\001" });
+    "\002\001\001\000\002\001\001\000\002\001\001\000\002" +
+    "\001\001\000\002\001\001\000\002\001\001\000\002\001" +
+    "\001\000\002\001\001\000\002\001\001\000\002\001\001" +
+    "\000\002\001\001\000\010\007\117\010\116\011\120\001" +
+    "\001\000\002\001\001\000\002\001\001\000\006\010\122" +
+    "\011\120\001\001\000\002\001\001\000\002\001\001\000" +
+    "\002\001\001\000\002\001\001\000\002\001\001\000\002" +
+    "\001\001\000\002\001\001\000\002\001\001\000\002\001" +
+    "\001\000\002\001\001" });
 
   /** Access to <code>reduce_goto</code> table. */
   public short[][] reduce_table() {return _reduce_table;}
@@ -223,8 +222,8 @@ public class ParserPKM extends java_cup.runtime.lr_parser {
 
   @Override
   public void unrecovered_syntax_error(Symbol cur_token) {
-      throw new RuntimeException("Error sintactico en linea: " + (cur_token.left +1) +
-          ", columna: " + (cur_token.right + 1 ) + ", token: " + cur_token.value);
+      throw new RuntimeException("Error sintactico en linea: " + (cur_token.left + 1) +
+          ", columna: " + (cur_token.right + 1) + ", token: " + cur_token.value);
   }
 
 
@@ -306,7 +305,13 @@ class CUP$ParserPKM$actions {
           case 5: // elemento_principal ::= section 
             {
               Object RESULT =null;
-
+		int sleft = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()).left;
+		int sright = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()).right;
+		SectionsModel s = (SectionsModel)((java_cup.runtime.Symbol) CUP$ParserPKM$stack.peek()).value;
+		
+        if (ResultParser.currentForm != null) ResultParser.currentForm.addElement(s);
+        if (ResultParser.formsModel  != null) ResultParser.formsModel.addElement(s);
+    
               CUP$ParserPKM$result = parser.getSymbolFactory().newSymbol("elemento_principal",2, ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()), ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()), RESULT);
             }
           return CUP$ParserPKM$result;
@@ -315,7 +320,13 @@ class CUP$ParserPKM$actions {
           case 6: // elemento_principal ::= open_question 
             {
               Object RESULT =null;
-
+		int qleft = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()).left;
+		int qright = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()).right;
+		OpenQuestion q = (OpenQuestion)((java_cup.runtime.Symbol) CUP$ParserPKM$stack.peek()).value;
+		
+        if (ResultParser.currentForm != null) ResultParser.currentForm.addElement(q);
+        if (ResultParser.formsModel  != null) ResultParser.formsModel.addElement(q);
+    
               CUP$ParserPKM$result = parser.getSymbolFactory().newSymbol("elemento_principal",2, ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()), ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()), RESULT);
             }
           return CUP$ParserPKM$result;
@@ -324,7 +335,13 @@ class CUP$ParserPKM$actions {
           case 7: // elemento_principal ::= select_question 
             {
               Object RESULT =null;
-
+		int qleft = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()).left;
+		int qright = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()).right;
+		SelectQuestion q = (SelectQuestion)((java_cup.runtime.Symbol) CUP$ParserPKM$stack.peek()).value;
+		
+        if (ResultParser.currentForm != null) ResultParser.currentForm.addElement(q);
+        if (ResultParser.formsModel  != null) ResultParser.formsModel.addElement(q);
+    
               CUP$ParserPKM$result = parser.getSymbolFactory().newSymbol("elemento_principal",2, ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()), ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()), RESULT);
             }
           return CUP$ParserPKM$result;
@@ -333,7 +350,13 @@ class CUP$ParserPKM$actions {
           case 8: // elemento_principal ::= multiple_question 
             {
               Object RESULT =null;
-
+		int qleft = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()).left;
+		int qright = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()).right;
+		MultipleQuestion q = (MultipleQuestion)((java_cup.runtime.Symbol) CUP$ParserPKM$stack.peek()).value;
+		
+        if (ResultParser.currentForm != null) ResultParser.currentForm.addElement(q);
+        if (ResultParser.formsModel  != null) ResultParser.formsModel.addElement(q);
+    
               CUP$ParserPKM$result = parser.getSymbolFactory().newSymbol("elemento_principal",2, ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()), ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()), RESULT);
             }
           return CUP$ParserPKM$result;
@@ -342,200 +365,473 @@ class CUP$ParserPKM$actions {
           case 9: // elemento_principal ::= drop_question 
             {
               Object RESULT =null;
-
+		int qleft = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()).left;
+		int qright = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()).right;
+		DropQuestion q = (DropQuestion)((java_cup.runtime.Symbol) CUP$ParserPKM$stack.peek()).value;
+		
+        if (ResultParser.currentForm != null) ResultParser.currentForm.addElement(q);
+        if (ResultParser.formsModel  != null) ResultParser.formsModel.addElement(q);
+    
               CUP$ParserPKM$result = parser.getSymbolFactory().newSymbol("elemento_principal",2, ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()), ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()), RESULT);
             }
           return CUP$ParserPKM$result;
 
           /*. . . . . . . . . . . . . . . . . . . .*/
-          case 10: // section ::= SECTION_OPEN parametros_seccion MAYOR_QUE CONTENT_OPEN content CONTENT_CLOSE SECTION_CLOSE 
+          case 10: // section ::= SECTION_OPEN NUMBER COMMA NUMBER COMMA NUMBER COMMA NUMBER COMMA ID MAYOR_QUE CONTENT_OPEN content CONTENT_CLOSE SECTION_CLOSE 
             {
-              Object RESULT =null;
+              SectionsModel RESULT =null;
+		int wleft = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-13)).left;
+		int wright = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-13)).right;
+		Integer w = (Integer)((java_cup.runtime.Symbol) CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-13)).value;
+		int hleft = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-11)).left;
+		int hright = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-11)).right;
+		Integer h = (Integer)((java_cup.runtime.Symbol) CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-11)).value;
+		int xleft = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-9)).left;
+		int xright = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-9)).right;
+		Integer x = (Integer)((java_cup.runtime.Symbol) CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-9)).value;
+		int yleft = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-7)).left;
+		int yright = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-7)).right;
+		Integer y = (Integer)((java_cup.runtime.Symbol) CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-7)).value;
+		int idleft = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-5)).left;
+		int idright = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-5)).right;
+		String id = (String)((java_cup.runtime.Symbol) CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-5)).value;
+		int cleft = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-2)).left;
+		int cright = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-2)).right;
+		Object c = (Object)((java_cup.runtime.Symbol) CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-2)).value;
+		
+        /*
+         * Construimos la lista de PropertyItem que SectionsModel
+         * necesita en su constructor.
+         */
+        ArrayList<PropertyItem> props = new ArrayList<>();
+        props.add(new PropertyItem("width",       w));
+        props.add(new PropertyItem("height",      h));
+        props.add(new PropertyItem("pointX",      x));
+        props.add(new PropertyItem("pointY",      y));
+        /*
+         * El quinto campo (ID) se guarda como "orientation".
+         * SectionsModel llama Orientation.valueOf() sobre este
+         * string, así que el lexer debe producir "VERTICAL" o
+         * "HORIZONTAL".  Si el ID es el nombre de la sección,
+         * cambia la clave a "name" aquí.
+         */
+        props.add(new PropertyItem("orientation", id.toString()));
+        /*
+         * Los elementos internos van como propiedad "elements".
+         * c es un ArrayList<Object> acumulado por la regla content.
+         */
+        props.add(new PropertyItem("elements", c));
 
-              CUP$ParserPKM$result = parser.getSymbolFactory().newSymbol("section",3, ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-6)), ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()), RESULT);
+        RESULT = new SectionsModel(props);
+    
+              CUP$ParserPKM$result = parser.getSymbolFactory().newSymbol("section",3, ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-14)), ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()), RESULT);
             }
           return CUP$ParserPKM$result;
 
           /*. . . . . . . . . . . . . . . . . . . .*/
-          case 11: // parametros_seccion ::= NUMBER COMMA NUMBER COMMA NUMBER COMMA NUMBER COMMA ID 
+          case 11: // content ::= content element 
             {
               Object RESULT =null;
-
-              CUP$ParserPKM$result = parser.getSymbolFactory().newSymbol("parametros_seccion",16, ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-8)), ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()), RESULT);
+		int cleft = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-1)).left;
+		int cright = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-1)).right;
+		Object c = (Object)((java_cup.runtime.Symbol) CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-1)).value;
+		int eleft = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()).left;
+		int eright = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()).right;
+		Object e = (Object)((java_cup.runtime.Symbol) CUP$ParserPKM$stack.peek()).value;
+		
+        ArrayList<Object> list = (ArrayList<Object>) c;
+        list.add(e);
+        RESULT = list;
+    
+              CUP$ParserPKM$result = parser.getSymbolFactory().newSymbol("content",5, ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-1)), ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()), RESULT);
             }
           return CUP$ParserPKM$result;
 
           /*. . . . . . . . . . . . . . . . . . . .*/
-          case 12: // content ::= content element 
+          case 12: // content ::= element 
             {
               Object RESULT =null;
-
-              CUP$ParserPKM$result = parser.getSymbolFactory().newSymbol("content",4, ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-1)), ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()), RESULT);
+		int eleft = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()).left;
+		int eright = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()).right;
+		Object e = (Object)((java_cup.runtime.Symbol) CUP$ParserPKM$stack.peek()).value;
+		
+        ArrayList<Object> list = new ArrayList<>();
+        list.add(e);
+        RESULT = list;
+    
+              CUP$ParserPKM$result = parser.getSymbolFactory().newSymbol("content",5, ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()), ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()), RESULT);
             }
           return CUP$ParserPKM$result;
 
           /*. . . . . . . . . . . . . . . . . . . .*/
-          case 13: // content ::= element 
+          case 13: // element ::= text_element 
             {
               Object RESULT =null;
-
-              CUP$ParserPKM$result = parser.getSymbolFactory().newSymbol("content",4, ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()), ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()), RESULT);
+		int tleft = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()).left;
+		int tright = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()).right;
+		TextModel t = (TextModel)((java_cup.runtime.Symbol) CUP$ParserPKM$stack.peek()).value;
+		 RESULT = t; 
+              CUP$ParserPKM$result = parser.getSymbolFactory().newSymbol("element",6, ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()), ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()), RESULT);
             }
           return CUP$ParserPKM$result;
 
           /*. . . . . . . . . . . . . . . . . . . .*/
-          case 14: // element ::= text_element 
+          case 14: // text_element ::= TEXT_ELEMENT NUMBER COMMA NUMBER COMMA STRING SLASH_CLOSE 
             {
-              Object RESULT =null;
-
-              CUP$ParserPKM$result = parser.getSymbolFactory().newSymbol("element",5, ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()), ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()), RESULT);
+              TextModel RESULT =null;
+		int wleft = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-5)).left;
+		int wright = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-5)).right;
+		Integer w = (Integer)((java_cup.runtime.Symbol) CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-5)).value;
+		int hleft = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-3)).left;
+		int hright = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-3)).right;
+		Integer h = (Integer)((java_cup.runtime.Symbol) CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-3)).value;
+		int sleft = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-1)).left;
+		int sright = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-1)).right;
+		String s = (String)((java_cup.runtime.Symbol) CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-1)).value;
+		
+        TextModel text = new TextModel();
+        text.addProperty(new PropertyItem("width",  w));
+        text.addProperty(new PropertyItem("height", h));
+        /*
+         * TextModel.addProperty maneja "content" y "label".
+         * Usa "label" si el parser .form guardó el texto con LABEL;
+         * cámbialo a "content" si lo guardó con CONTENT.
+         */
+        text.addProperty(new PropertyItem("label",  s.toString().replace("\"", "").trim()));
+        RESULT = text;
+    
+              CUP$ParserPKM$result = parser.getSymbolFactory().newSymbol("text_element",7, ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-6)), ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()), RESULT);
             }
           return CUP$ParserPKM$result;
 
           /*. . . . . . . . . . . . . . . . . . . .*/
-          case 15: // text_element ::= TEXT_ELEMENT NUMBER COMMA NUMBER COMMA STRING SLASH_CLOSE 
+          case 15: // parametros_pregunta ::= NUMBER COMMA NUMBER COMMA 
             {
-              Object RESULT =null;
-
-              CUP$ParserPKM$result = parser.getSymbolFactory().newSymbol("text_element",6, ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-6)), ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()), RESULT);
+              ArrayList<PropertyItem> RESULT =null;
+		int wleft = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-3)).left;
+		int wright = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-3)).right;
+		Integer w = (Integer)((java_cup.runtime.Symbol) CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-3)).value;
+		int hleft = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-1)).left;
+		int hright = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-1)).right;
+		Integer h = (Integer)((java_cup.runtime.Symbol) CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-1)).value;
+		
+        ArrayList<PropertyItem> props = new ArrayList<>();
+        props.add(new PropertyItem("width",  w));
+        props.add(new PropertyItem("height", h));
+        RESULT = props;
+    
+              CUP$ParserPKM$result = parser.getSymbolFactory().newSymbol("parametros_pregunta",15, ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-3)), ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()), RESULT);
             }
           return CUP$ParserPKM$result;
 
           /*. . . . . . . . . . . . . . . . . . . .*/
           case 16: // open_question ::= OPEN_TAG parametros_pregunta STRING SLASH_CLOSE 
             {
-              Object RESULT =null;
-
-              CUP$ParserPKM$result = parser.getSymbolFactory().newSymbol("open_question",7, ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-3)), ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()), RESULT);
+              OpenQuestion RESULT =null;
+		int pleft = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-2)).left;
+		int pright = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-2)).right;
+		ArrayList<PropertyItem> p = (ArrayList<PropertyItem>)((java_cup.runtime.Symbol) CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-2)).value;
+		int sleft = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-1)).left;
+		int sright = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-1)).right;
+		String s = (String)((java_cup.runtime.Symbol) CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-1)).value;
+		
+        OpenQuestion open = new OpenQuestion();
+        for (PropertyItem prop : p) open.addProperty(prop);
+        String label = s.toString().replace("\"", "").trim();
+        open.addProperty(new PropertyItem("label", label));
+        RESULT = open;
+    
+              CUP$ParserPKM$result = parser.getSymbolFactory().newSymbol("open_question",8, ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-3)), ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()), RESULT);
             }
           return CUP$ParserPKM$result;
 
           /*. . . . . . . . . . . . . . . . . . . .*/
           case 17: // open_question ::= OPEN_TAG parametros_pregunta STRING OPEN_CLOSE 
             {
-              Object RESULT =null;
-
-              CUP$ParserPKM$result = parser.getSymbolFactory().newSymbol("open_question",7, ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-3)), ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()), RESULT);
+              OpenQuestion RESULT =null;
+		int pleft = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-2)).left;
+		int pright = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-2)).right;
+		ArrayList<PropertyItem> p = (ArrayList<PropertyItem>)((java_cup.runtime.Symbol) CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-2)).value;
+		int sleft = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-1)).left;
+		int sright = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-1)).right;
+		String s = (String)((java_cup.runtime.Symbol) CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-1)).value;
+		
+        OpenQuestion open = new OpenQuestion();
+        for (PropertyItem prop : p) open.addProperty(prop);
+        String label = s.toString().replace("\"", "").trim();
+        open.addProperty(new PropertyItem("label", label));
+        RESULT = open;
+    
+              CUP$ParserPKM$result = parser.getSymbolFactory().newSymbol("open_question",8, ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-3)), ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()), RESULT);
             }
           return CUP$ParserPKM$result;
 
           /*. . . . . . . . . . . . . . . . . . . .*/
           case 18: // select_question ::= SELECT_TAG parametros_pregunta STRING COMMA LBRACE options RBRACE COMMA NUMBER SLASH_CLOSE 
             {
-              Object RESULT =null;
-
-              CUP$ParserPKM$result = parser.getSymbolFactory().newSymbol("select_question",8, ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-9)), ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()), RESULT);
+              SelectQuestion RESULT =null;
+		int pleft = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-8)).left;
+		int pright = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-8)).right;
+		ArrayList<PropertyItem> p = (ArrayList<PropertyItem>)((java_cup.runtime.Symbol) CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-8)).value;
+		int sleft = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-7)).left;
+		int sright = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-7)).right;
+		String s = (String)((java_cup.runtime.Symbol) CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-7)).value;
+		int oleft = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-4)).left;
+		int oright = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-4)).right;
+		ArrayList<String> o = (ArrayList<String>)((java_cup.runtime.Symbol) CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-4)).value;
+		int nleft = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-1)).left;
+		int nright = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-1)).right;
+		Integer n = (Integer)((java_cup.runtime.Symbol) CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-1)).value;
+		
+        SelectQuestion select = new SelectQuestion();
+        for (PropertyItem prop : p) select.addProperty(prop);
+        select.addProperty(new PropertyItem("label",   s.toString()));
+        select.addProperty(new PropertyItem("options", o));
+        ArrayList<Integer> correct = new ArrayList<>();
+        correct.add(n);
+        select.addProperty(new PropertyItem("correct", correct));
+        RESULT = select;
+    
+              CUP$ParserPKM$result = parser.getSymbolFactory().newSymbol("select_question",9, ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-9)), ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()), RESULT);
             }
           return CUP$ParserPKM$result;
 
           /*. . . . . . . . . . . . . . . . . . . .*/
           case 19: // select_question ::= SELECT_TAG parametros_pregunta STRING COMMA LBRACE options RBRACE COMMA NUMBER SELECT_CLOSE 
             {
-              Object RESULT =null;
-
-              CUP$ParserPKM$result = parser.getSymbolFactory().newSymbol("select_question",8, ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-9)), ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()), RESULT);
+              SelectQuestion RESULT =null;
+		int pleft = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-8)).left;
+		int pright = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-8)).right;
+		ArrayList<PropertyItem> p = (ArrayList<PropertyItem>)((java_cup.runtime.Symbol) CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-8)).value;
+		int sleft = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-7)).left;
+		int sright = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-7)).right;
+		String s = (String)((java_cup.runtime.Symbol) CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-7)).value;
+		int oleft = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-4)).left;
+		int oright = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-4)).right;
+		ArrayList<String> o = (ArrayList<String>)((java_cup.runtime.Symbol) CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-4)).value;
+		int nleft = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-1)).left;
+		int nright = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-1)).right;
+		Integer n = (Integer)((java_cup.runtime.Symbol) CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-1)).value;
+		
+        SelectQuestion select = new SelectQuestion();
+        for (PropertyItem prop : p) select.addProperty(prop);
+        select.addProperty(new PropertyItem("label",   s.toString()));
+        select.addProperty(new PropertyItem("options", o));
+        ArrayList<Integer> correct = new ArrayList<>();
+        correct.add(n);
+        select.addProperty(new PropertyItem("correct", correct));
+        RESULT = select;
+    
+              CUP$ParserPKM$result = parser.getSymbolFactory().newSymbol("select_question",9, ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-9)), ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()), RESULT);
             }
           return CUP$ParserPKM$result;
 
           /*. . . . . . . . . . . . . . . . . . . .*/
           case 20: // multiple_question ::= MULTIPLE_TAG parametros_pregunta STRING COMMA LBRACE options RBRACE COMMA LBRACE int_list RBRACE SLASH_CLOSE 
             {
-              Object RESULT =null;
-
-              CUP$ParserPKM$result = parser.getSymbolFactory().newSymbol("multiple_question",9, ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-11)), ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()), RESULT);
+              MultipleQuestion RESULT =null;
+		int pleft = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-10)).left;
+		int pright = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-10)).right;
+		ArrayList<PropertyItem> p = (ArrayList<PropertyItem>)((java_cup.runtime.Symbol) CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-10)).value;
+		int sleft = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-9)).left;
+		int sright = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-9)).right;
+		String s = (String)((java_cup.runtime.Symbol) CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-9)).value;
+		int oleft = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-6)).left;
+		int oright = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-6)).right;
+		ArrayList<String> o = (ArrayList<String>)((java_cup.runtime.Symbol) CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-6)).value;
+		int clleft = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-2)).left;
+		int clright = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-2)).right;
+		ArrayList<Integer> cl = (ArrayList<Integer>)((java_cup.runtime.Symbol) CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-2)).value;
+		
+        MultipleQuestion multiple = new MultipleQuestion();
+        for (PropertyItem prop : p) multiple.addProperty(prop);
+        multiple.addProperty(new PropertyItem("label",   s.toString()));
+        multiple.addProperty(new PropertyItem("options", o));
+        multiple.addProperty(new PropertyItem("correct", cl));
+        RESULT = multiple;
+    
+              CUP$ParserPKM$result = parser.getSymbolFactory().newSymbol("multiple_question",10, ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-11)), ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()), RESULT);
             }
           return CUP$ParserPKM$result;
 
           /*. . . . . . . . . . . . . . . . . . . .*/
           case 21: // multiple_question ::= MULTIPLE_TAG parametros_pregunta STRING COMMA LBRACE options RBRACE COMMA LBRACE int_list RBRACE MULTIPLE_CLOSE 
             {
-              Object RESULT =null;
-
-              CUP$ParserPKM$result = parser.getSymbolFactory().newSymbol("multiple_question",9, ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-11)), ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()), RESULT);
+              MultipleQuestion RESULT =null;
+		int pleft = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-10)).left;
+		int pright = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-10)).right;
+		ArrayList<PropertyItem> p = (ArrayList<PropertyItem>)((java_cup.runtime.Symbol) CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-10)).value;
+		int sleft = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-9)).left;
+		int sright = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-9)).right;
+		String s = (String)((java_cup.runtime.Symbol) CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-9)).value;
+		int oleft = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-6)).left;
+		int oright = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-6)).right;
+		ArrayList<String> o = (ArrayList<String>)((java_cup.runtime.Symbol) CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-6)).value;
+		int clleft = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-2)).left;
+		int clright = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-2)).right;
+		ArrayList<Integer> cl = (ArrayList<Integer>)((java_cup.runtime.Symbol) CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-2)).value;
+		
+        MultipleQuestion multiple = new MultipleQuestion();
+        for (PropertyItem prop : p) multiple.addProperty(prop);
+        multiple.addProperty(new PropertyItem("label",   s.toString()));
+        multiple.addProperty(new PropertyItem("options", o));
+        multiple.addProperty(new PropertyItem("correct", cl));
+        RESULT = multiple;
+    
+              CUP$ParserPKM$result = parser.getSymbolFactory().newSymbol("multiple_question",10, ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-11)), ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()), RESULT);
             }
           return CUP$ParserPKM$result;
 
           /*. . . . . . . . . . . . . . . . . . . .*/
           case 22: // drop_question ::= DROP_TAG parametros_pregunta STRING COMMA LBRACE options RBRACE COMMA NUMBER SLASH_CLOSE 
             {
-              Object RESULT =null;
-
-              CUP$ParserPKM$result = parser.getSymbolFactory().newSymbol("drop_question",10, ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-9)), ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()), RESULT);
+              DropQuestion RESULT =null;
+		int pleft = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-8)).left;
+		int pright = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-8)).right;
+		ArrayList<PropertyItem> p = (ArrayList<PropertyItem>)((java_cup.runtime.Symbol) CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-8)).value;
+		int sleft = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-7)).left;
+		int sright = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-7)).right;
+		String s = (String)((java_cup.runtime.Symbol) CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-7)).value;
+		int oleft = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-4)).left;
+		int oright = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-4)).right;
+		ArrayList<String> o = (ArrayList<String>)((java_cup.runtime.Symbol) CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-4)).value;
+		int nleft = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-1)).left;
+		int nright = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-1)).right;
+		Integer n = (Integer)((java_cup.runtime.Symbol) CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-1)).value;
+		
+        DropQuestion drop = new DropQuestion();
+        for (PropertyItem prop : p) drop.addProperty(prop);
+        drop.addProperty(new PropertyItem("label",   s.toString()));
+        drop.addProperty(new PropertyItem("options", o));
+        ArrayList<Integer> correct = new ArrayList<>();
+        correct.add(n);
+        drop.addProperty(new PropertyItem("correct", correct));
+        RESULT = drop;
+    
+              CUP$ParserPKM$result = parser.getSymbolFactory().newSymbol("drop_question",11, ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-9)), ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()), RESULT);
             }
           return CUP$ParserPKM$result;
 
           /*. . . . . . . . . . . . . . . . . . . .*/
           case 23: // drop_question ::= DROP_TAG parametros_pregunta STRING COMMA LBRACE options RBRACE COMMA NUMBER DROP_CLOSE 
             {
-              Object RESULT =null;
-
-              CUP$ParserPKM$result = parser.getSymbolFactory().newSymbol("drop_question",10, ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-9)), ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()), RESULT);
+              DropQuestion RESULT =null;
+		int pleft = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-8)).left;
+		int pright = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-8)).right;
+		ArrayList<PropertyItem> p = (ArrayList<PropertyItem>)((java_cup.runtime.Symbol) CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-8)).value;
+		int sleft = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-7)).left;
+		int sright = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-7)).right;
+		String s = (String)((java_cup.runtime.Symbol) CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-7)).value;
+		int oleft = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-4)).left;
+		int oright = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-4)).right;
+		ArrayList<String> o = (ArrayList<String>)((java_cup.runtime.Symbol) CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-4)).value;
+		int nleft = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-1)).left;
+		int nright = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-1)).right;
+		Integer n = (Integer)((java_cup.runtime.Symbol) CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-1)).value;
+		
+        DropQuestion drop = new DropQuestion();
+        for (PropertyItem prop : p) drop.addProperty(prop);
+        drop.addProperty(new PropertyItem("label",   s.toString()));
+        drop.addProperty(new PropertyItem("options", o));
+        ArrayList<Integer> correct = new ArrayList<>();
+        correct.add(n);
+        drop.addProperty(new PropertyItem("correct", correct));
+        RESULT = drop;
+    
+              CUP$ParserPKM$result = parser.getSymbolFactory().newSymbol("drop_question",11, ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-9)), ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()), RESULT);
             }
           return CUP$ParserPKM$result;
 
           /*. . . . . . . . . . . . . . . . . . . .*/
-          case 24: // parametros_pregunta ::= NUMBER COMMA NUMBER COMMA 
+          case 24: // options ::= STRING 
             {
-              Object RESULT =null;
-
-              CUP$ParserPKM$result = parser.getSymbolFactory().newSymbol("parametros_pregunta",17, ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-3)), ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()), RESULT);
-            }
-          return CUP$ParserPKM$result;
-
-          /*. . . . . . . . . . . . . . . . . . . .*/
-          case 25: // options ::= STRING 
-            {
-              Object RESULT =null;
-
+              ArrayList<String> RESULT =null;
+		int sleft = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()).left;
+		int sright = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()).right;
+		String s = (String)((java_cup.runtime.Symbol) CUP$ParserPKM$stack.peek()).value;
+		
+        ArrayList<String> list = new ArrayList<>();
+        list.add(s.toString());
+        RESULT = list;
+    
               CUP$ParserPKM$result = parser.getSymbolFactory().newSymbol("options",12, ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()), ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()), RESULT);
             }
           return CUP$ParserPKM$result;
 
           /*. . . . . . . . . . . . . . . . . . . .*/
-          case 26: // options ::= options COMMA STRING 
+          case 25: // options ::= options COMMA STRING 
             {
-              Object RESULT =null;
-
+              ArrayList<String> RESULT =null;
+		int oleft = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-2)).left;
+		int oright = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-2)).right;
+		ArrayList<String> o = (ArrayList<String>)((java_cup.runtime.Symbol) CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-2)).value;
+		int sleft = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()).left;
+		int sright = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()).right;
+		String s = (String)((java_cup.runtime.Symbol) CUP$ParserPKM$stack.peek()).value;
+		
+        o.add(s.toString());
+        RESULT = o;
+    
               CUP$ParserPKM$result = parser.getSymbolFactory().newSymbol("options",12, ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-2)), ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()), RESULT);
             }
           return CUP$ParserPKM$result;
 
           /*. . . . . . . . . . . . . . . . . . . .*/
-          case 27: // int_list ::= NUMBER 
+          case 26: // int_list ::= NUMBER 
             {
-              Object RESULT =null;
-
-              CUP$ParserPKM$result = parser.getSymbolFactory().newSymbol("int_list",14, ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()), ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()), RESULT);
-            }
-          return CUP$ParserPKM$result;
-
-          /*. . . . . . . . . . . . . . . . . . . .*/
-          case 28: // int_list ::= int_list COMMA NUMBER 
-            {
-              Object RESULT =null;
-
-              CUP$ParserPKM$result = parser.getSymbolFactory().newSymbol("int_list",14, ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-2)), ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()), RESULT);
-            }
-          return CUP$ParserPKM$result;
-
-          /*. . . . . . . . . . . . . . . . . . . .*/
-          case 29: // int_list_opt ::= 
-            {
-              Object RESULT =null;
+              ArrayList<Integer> RESULT =null;
+		int nleft = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()).left;
+		int nright = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()).right;
+		Integer n = (Integer)((java_cup.runtime.Symbol) CUP$ParserPKM$stack.peek()).value;
 		
-                    ArrayList<Integer> list = new ArrayList<Integer>();
-                    RESULT = list;
-                
-              CUP$ParserPKM$result = parser.getSymbolFactory().newSymbol("int_list_opt",15, ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()), RESULT);
+        ArrayList<Integer> list = new ArrayList<>();
+        list.add(n);
+        RESULT = list;
+    
+              CUP$ParserPKM$result = parser.getSymbolFactory().newSymbol("int_list",13, ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()), ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()), RESULT);
             }
           return CUP$ParserPKM$result;
 
           /*. . . . . . . . . . . . . . . . . . . .*/
-          case 30: // int_list_opt ::= int_list 
+          case 27: // int_list ::= int_list COMMA NUMBER 
             {
-              Object RESULT =null;
+              ArrayList<Integer> RESULT =null;
+		int lleft = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-2)).left;
+		int lright = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-2)).right;
+		ArrayList<Integer> l = (ArrayList<Integer>)((java_cup.runtime.Symbol) CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-2)).value;
+		int nleft = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()).left;
+		int nright = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()).right;
+		Integer n = (Integer)((java_cup.runtime.Symbol) CUP$ParserPKM$stack.peek()).value;
+		
+        l.add(n);
+        RESULT = l;
+    
+              CUP$ParserPKM$result = parser.getSymbolFactory().newSymbol("int_list",13, ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.elementAt(CUP$ParserPKM$top-2)), ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()), RESULT);
+            }
+          return CUP$ParserPKM$result;
 
-              CUP$ParserPKM$result = parser.getSymbolFactory().newSymbol("int_list_opt",15, ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()), ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()), RESULT);
+          /*. . . . . . . . . . . . . . . . . . . .*/
+          case 28: // int_list_opt ::= 
+            {
+              ArrayList<Integer> RESULT =null;
+		
+        RESULT = new ArrayList<Integer>();
+    
+              CUP$ParserPKM$result = parser.getSymbolFactory().newSymbol("int_list_opt",14, ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()), RESULT);
+            }
+          return CUP$ParserPKM$result;
+
+          /*. . . . . . . . . . . . . . . . . . . .*/
+          case 29: // int_list_opt ::= int_list 
+            {
+              ArrayList<Integer> RESULT =null;
+		int lleft = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()).left;
+		int lright = ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()).right;
+		ArrayList<Integer> l = (ArrayList<Integer>)((java_cup.runtime.Symbol) CUP$ParserPKM$stack.peek()).value;
+		
+        RESULT = l;
+    
+              CUP$ParserPKM$result = parser.getSymbolFactory().newSymbol("int_list_opt",14, ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()), ((java_cup.runtime.Symbol)CUP$ParserPKM$stack.peek()), RESULT);
             }
           return CUP$ParserPKM$result;
 

@@ -55,10 +55,10 @@ fun UploadFilesScreen(navController: NavController) {
                                 // Cargar el archivo .pkm
                                 PKMCache.elements = loader.loadPKM(file)
                                 // Navegar a preview
-                                navController.navigate("preview")
+                                navController.navigate("answer")
                             }
                         ) {
-                            Text("Cargar formulario")
+                            Text("Responder formulario")
                         }
                     }
                 }

@@ -314,7 +314,8 @@ text_prop ::=
 
     CONTENT DOSPUNTOS CADENA:c
     {:
-        RESULT = new PropertyItem("content", c);
+        String clean = c.toString().trim();
+        RESULT = new PropertyItem("content", clean);
     :}
     | WIDTH DOSPUNTOS ENTERO:n
     {:
@@ -330,7 +331,8 @@ text_prop ::=
     :}
     | LABEL DOSPUNTOS CADENA:c
     {:
-        RESULT = new PropertyItem("label", c);
+        String clean = c.toString().trim();
+        RESULT = new PropertyItem("label", clean);
     :}
 ;
 
@@ -437,7 +439,8 @@ text_prop ::=
     question_prop ::=
         LABEL DOSPUNTOS CADENA:c
         {:
-            RESULT = new PropertyItem("label", c.toString().replace("\"", ""));
+            String clean = c.toString().trim();
+            RESULT = new PropertyItem("label", clean);
         :}
         | WIDTH DOSPUNTOS ENTERO:n
         {:

@@ -5,6 +5,7 @@ import android.util.Log
 import com.example.proyecto1_compi1.analizador.pkm.LexerPKM
 import com.example.proyecto1_compi1.analizador.pkm.ParserPKM
 import com.example.proyecto1_compi1.analizador.pkm.sym
+import com.example.proyecto1_compi1.modelo.forms.ResultParser
 import java_cup.runtime.Symbol
 import java.io.File
 import java.io.FileReader
@@ -18,63 +19,58 @@ class ReadPKM(private val context: Context) {
 
         Log.d("PKMLOADER", "=== INICIANDO CARGA DEL ARCHIVO: ${file.name} ===")
         Log.d("PKMLOADER", "Tamaño del archivo: ${file.length()} bytes")
-        Log.d("PKMLOADER", "Primeros 500 caracteres:\n${fileContent.take(500)}")
-
 
         val tokens = analyzeLexerDetailed(fileContent)
-
 
         if (tokens.isEmpty()) {
             Log.e("PKMLOADER", "No se generaron tokens")
             return elements
         }
 
-        val hasErrorTokens = tokens.any { it.sym == sym.error }
-        if (hasErrorTokens) {
+        if (tokens.any { it.sym == sym.error }) {
             Log.e("PKMLOADER", "Tokens de error detectados")
             return elements
         }
 
-
         Log.d("PKMLOADER", "--- INICIANDO PARSEO ---")
 
         runCatching {
+
+            // ✅ FIX 1: inicializar ResultParser ANTES de parsear
+            ResultParser.reset()
+            Log.d("PKMLOADER", "ResultParser.reset() OK - currentForm: ${ResultParser.currentForm}")
+
             val lexer = LexerPKM(StringReader(fileContent))
-            val first = lexer.next_token()
-            Log.d("DEBUGPKM", "PRIMER TOKEN: ${first.sym} VALUE: ${first.value}")
             val parser = ParserPKM(lexer)
 
+            parser.parse() // el valor de retorno no importa, los elementos van a ResultParser
 
-            //Log.d("PKMLOADER", "Ejecutando parser.parse()")
+            Log.d("PKMLOADER", "Parser completado")
 
-            val result = parser.parse().value
-
-            Log.d("PKMLOADER", "Parser completado con exito. Resultado tipo: ${result}")
-
-            when (result) {
-                is List<*> -> {
-                    result.filterNotNull().forEach { item ->
-                        elements.add(item)
-                        Log.d("PKMLOADER", "Elemento agregado: ${item.javaClass.simpleName}")
-                    }
-                }
-                else -> {
-                    //Log.w("PKMLOADER", "Resultado no es lista: $result")
-                }
+            // ✅ FIX 2: leer los elementos desde ResultParser, no desde parser.parse().value
+            val form = ResultParser.currentForm
+            if (form == null) {
+                Log.e("PKMLOADER", "currentForm es null después del parse")
+                return@runCatching
             }
 
-            //Log.d("PKMLOADER", "Cargados ${elements.size} elementos")
+            Log.d("PKMLOADER", "currentForm tiene ${form.getElements().size} elementos")
+
+            form.getElements().forEach { item ->
+                elements.add(item)
+                Log.d("PKMLOADER", "Elemento cargado: ${item.javaClass.simpleName}")
+            }
+
         }.onFailure { e ->
             Log.e("PKMLOADER", "Error durante parseo: ${e.message}", e)
             logDetailedError(e, fileContent, tokens)
         }
 
+        Log.d("PKMLOADER", "Total elementos retornados: ${elements.size}")
         return elements
     }
 
-    /**
-     * Analiza el lexer en detalle y muestra TODOS los tokens con información completa
-     */
+
     private fun analyzeLexerDetailed(content: String): List<TokenInfo> {
         Log.d("PKMLOADER", "=== ANÁLISIS LÉXICO DETALLADO ===")
 

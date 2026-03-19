@@ -39,122 +39,390 @@ parser code {:
 
   @Override
   public void unrecovered_syntax_error(Symbol cur_token) {
-      throw new RuntimeException("Error sintactico en linea: " + (cur_token.left +1) +
-          ", columna: " + (cur_token.right + 1 ) + ", token: " + cur_token.value);
+      throw new RuntimeException("Error sintactico en linea: " + (cur_token.left + 1) +
+          ", columna: " + (cur_token.right + 1) + ", token: " + cur_token.value);
   }
 :};
 
-/* Terminales */
+/* ── Terminales ── */
 terminal METADATA_BLOCK;
 terminal SECTION_OPEN, SECTION_CLOSE;
 terminal CONTENT_OPEN, CONTENT_CLOSE;
 terminal TEXT_ELEMENT;
-terminal OPEN_TAG, OPEN_CLOSE;
-terminal SELECT_TAG, SELECT_CLOSE;
+terminal OPEN_TAG,     OPEN_CLOSE;
+terminal SELECT_TAG,   SELECT_CLOSE;
 terminal MULTIPLE_TAG, MULTIPLE_CLOSE;
-terminal DROP_TAG, DROP_CLOSE;
+terminal DROP_TAG,     DROP_CLOSE;
 terminal COMMA, COLON, GUION;
 terminal LBRACE, RBRACE;
 terminal IGUAL, MAYOR_QUE;
 terminal SLASH_CLOSE;
-terminal String STRING;
+terminal String  STRING;
 terminal Integer NUMBER;
-terminal String ID;
+terminal String  ID;
 
+/* ── No terminales ── */
+non terminal Object                  pkm_file;
+non terminal Object                  elementos_principales;
+non terminal Object                  elemento_principal;
 
+non terminal SectionsModel           section;
+non terminal ArrayList               section_props;   // ArrayList<PropertyItem>
+non terminal Object                  content;         // ArrayList<Object> de elementos internos
+non terminal Object                  element;
 
-/* Non terminales */
-non terminal Object pkm_file;
-non terminal Object elementos_principales;
-non terminal Object elemento_principal;
-non terminal Object section;
-non terminal Object content;
-non terminal Object element;
-non terminal Object text_element;
-non terminal Object open_question;
-non terminal Object select_question;
-non terminal Object multiple_question;
-non terminal Object drop_question;
-non terminal Object question_content;
-non terminal Object options;
-non terminal Object string_list;
-non terminal Object int_list;
-non terminal Object int_list_opt;
-non terminal Object parametros_seccion;
-non terminal Object parametros_pregunta;
+non terminal TextModel               text_element;
 
-/* Precedencia */
+non terminal OpenQuestion            open_question;
+non terminal SelectQuestion          select_question;
+non terminal MultipleQuestion        multiple_question;
+non terminal DropQuestion            drop_question;
+
+non terminal ArrayList<String>       options;
+non terminal ArrayList<Integer>      int_list;
+non terminal ArrayList<Integer>      int_list_opt;
+
+non terminal ArrayList<PropertyItem> parametros_pregunta;
+
+/* ── Precedencia ── */
 precedence left COMMA;
 precedence nonassoc NUMBER;
 
-/* Inicio */
-pkm_file ::= METADATA_BLOCK elementos_principales
-            | elementos_principales
-            ;
+/* ══════════════════════════════════════════════════
+   INICIO
+   ══════════════════════════════════════════════════ */
+pkm_file ::=
+    METADATA_BLOCK elementos_principales
+    | elementos_principales
+    ;
 
-/* Elementos principales (secciones o preguntas) */
-elementos_principales ::= elementos_principales elemento_principal
-                         | elemento_principal
-                         ;
+/* ══════════════════════════════════════════════════
+   ELEMENTOS PRINCIPALES
+   Cada elemento se agrega a ResultParser.currentForm
+   (y a formsModel si no es null) usando addElement()
+   ══════════════════════════════════════════════════ */
+elementos_principales ::=
+    elementos_principales elemento_principal
+    | elemento_principal
+    ;
 
-elemento_principal ::= section
-                     | open_question
-                     | select_question
-                     | multiple_question
-                     | drop_question
-                     ;
+elemento_principal ::=
 
-/* Sección */
-section ::= SECTION_OPEN parametros_seccion MAYOR_QUE
-            CONTENT_OPEN content CONTENT_CLOSE
-            SECTION_CLOSE
-            ;
+    section:s
+    {:
+        if (ResultParser.currentForm != null) ResultParser.currentForm.addElement(s);
+        if (ResultParser.formsModel  != null) ResultParser.formsModel.addElement(s);
+    :}
 
-parametros_seccion ::= NUMBER COMMA NUMBER COMMA NUMBER COMMA NUMBER COMMA ID
-                     ;
+    | open_question:q
+    {:
+        if (ResultParser.currentForm != null) ResultParser.currentForm.addElement(q);
+        if (ResultParser.formsModel  != null) ResultParser.formsModel.addElement(q);
+    :}
 
-content ::= content element
-          | element
-          ;
+    | select_question:q
+    {:
+        if (ResultParser.currentForm != null) ResultParser.currentForm.addElement(q);
+        if (ResultParser.formsModel  != null) ResultParser.formsModel.addElement(q);
+    :}
 
-element ::= text_element
-          ;
+    | multiple_question:q
+    {:
+        if (ResultParser.currentForm != null) ResultParser.currentForm.addElement(q);
+        if (ResultParser.formsModel  != null) ResultParser.formsModel.addElement(q);
+    :}
 
-text_element ::= TEXT_ELEMENT NUMBER COMMA NUMBER COMMA STRING SLASH_CLOSE
-               ;
+    | drop_question:q
+    {:
+        if (ResultParser.currentForm != null) ResultParser.currentForm.addElement(q);
+        if (ResultParser.formsModel  != null) ResultParser.formsModel.addElement(q);
+    :}
+    ;
 
-/* Preguntas */
-open_question ::= OPEN_TAG parametros_pregunta STRING SLASH_CLOSE
-                | OPEN_TAG parametros_pregunta STRING OPEN_CLOSE
-                ;
+/* ══════════════════════════════════════════════════
+   SECCIÓN
+   Sintaxis PKM:
+     SECTION_OPEN w,h,x,y,ID >
+       CONTENT_OPEN
+         <elementos internos>
+       CONTENT_CLOSE
+     SECTION_CLOSE
 
-select_question ::= SELECT_TAG parametros_pregunta STRING COMMA LBRACE options RBRACE COMMA NUMBER SLASH_CLOSE
-                  | SELECT_TAG parametros_pregunta STRING COMMA LBRACE options RBRACE COMMA NUMBER SELECT_CLOSE
-                  ;
+   SectionsModel espera ArrayList<PropertyItem> en su
+   constructor, por eso section_props acumula PropertyItems.
+   Los elementos del contenido se agregan como último prop
+   con clave "elements".
+   ══════════════════════════════════════════════════ */
+section ::=
+    SECTION_OPEN
+        NUMBER:w COMMA NUMBER:h COMMA NUMBER:x COMMA NUMBER:y COMMA ID:id
+    MAYOR_QUE
+        CONTENT_OPEN content:c CONTENT_CLOSE
+    SECTION_CLOSE
+    {:
+        /*
+         * Construimos la lista de PropertyItem que SectionsModel
+         * necesita en su constructor.
+         */
+        ArrayList<PropertyItem> props = new ArrayList<>();
+        props.add(new PropertyItem("width",       w));
+        props.add(new PropertyItem("height",      h));
+        props.add(new PropertyItem("pointX",      x));
+        props.add(new PropertyItem("pointY",      y));
+        /*
+         * El quinto campo (ID) se guarda como "orientation".
+         * SectionsModel llama Orientation.valueOf() sobre este
+         * string, así que el lexer debe producir "VERTICAL" o
+         * "HORIZONTAL".  Si el ID es el nombre de la sección,
+         * cambia la clave a "name" aquí.
+         */
+        props.add(new PropertyItem("orientation", id.toString()));
+        /*
+         * Los elementos internos van como propiedad "elements".
+         * c es un ArrayList<Object> acumulado por la regla content.
+         */
+        props.add(new PropertyItem("elements", c));
 
-multiple_question ::= MULTIPLE_TAG parametros_pregunta STRING COMMA LBRACE options RBRACE COMMA LBRACE int_list RBRACE SLASH_CLOSE
-                    | MULTIPLE_TAG parametros_pregunta STRING COMMA LBRACE options RBRACE COMMA LBRACE int_list RBRACE MULTIPLE_CLOSE
-                    ;
+        RESULT = new SectionsModel(props);
+    :}
+    ;
 
-drop_question ::= DROP_TAG parametros_pregunta STRING COMMA LBRACE options RBRACE COMMA NUMBER SLASH_CLOSE
-                | DROP_TAG parametros_pregunta STRING COMMA LBRACE options RBRACE COMMA NUMBER DROP_CLOSE
-                ;
+/* ══════════════════════════════════════════════════
+   CONTENT  — elementos dentro de una sección
+   ══════════════════════════════════════════════════ */
+content ::=
+    content:c element:e
+    {:
+        ArrayList<Object> list = (ArrayList<Object>) c;
+        list.add(e);
+        RESULT = list;
+    :}
+    | element:e
+    {:
+        ArrayList<Object> list = new ArrayList<>();
+        list.add(e);
+        RESULT = list;
+    :}
+    ;
 
-parametros_pregunta ::= NUMBER COMMA NUMBER COMMA
-                      ;
+element ::=
+    text_element:t  {: RESULT = t; :}
+    ;
 
-options ::= STRING
-          | options COMMA STRING
-          ;
+/* ══════════════════════════════════════════════════
+   TEXT ELEMENT
+   Sintaxis PKM:  TEXT_ELEMENT w,h,"label" />
+   TextModel usa addProperty() con claves:
+     "width", "height", "label"
+   Nota: "label" en vez de "content" — coincide con
+   el TextModel del parser .form (text_prop acepta LABEL).
+   ══════════════════════════════════════════════════ */
+text_element ::=
+    TEXT_ELEMENT NUMBER:w COMMA NUMBER:h COMMA STRING:s SLASH_CLOSE
+    {:
+        TextModel text = new TextModel();
+        text.addProperty(new PropertyItem("width",  w));
+        text.addProperty(new PropertyItem("height", h));
+        /*
+         * TextModel.addProperty maneja "content" y "label".
+         * Usa "label" si el parser .form guardó el texto con LABEL;
+         * cámbialo a "content" si lo guardó con CONTENT.
+         */
+        text.addProperty(new PropertyItem("label",  s.toString().replace("\"", "").trim()));
+        RESULT = text;
+    :}
+    ;
 
-int_list ::= NUMBER
-           | int_list COMMA NUMBER
-           ;
+/* ══════════════════════════════════════════════════
+   PARÁMETROS COMUNES DE PREGUNTA
+   Sintaxis PKM: w , h ,
+   Devuelve ArrayList<PropertyItem> con "width" y "height"
+   listo para pasarlo a addProperty() de cada pregunta.
+   ══════════════════════════════════════════════════ */
+parametros_pregunta ::=
+    NUMBER:w COMMA NUMBER:h COMMA
+    {:
+        ArrayList<PropertyItem> props = new ArrayList<>();
+        props.add(new PropertyItem("width",  w));
+        props.add(new PropertyItem("height", h));
+        RESULT = props;
+    :}
+    ;
 
-int_list_opt ::= /* vacío */
-                {:
-                    ArrayList<Integer> list = new ArrayList<Integer>();
-                    RESULT = list;
-                :}
-                | int_list
-                ;
+/* ══════════════════════════════════════════════════
+   OPEN QUESTION
+   Sintaxis PKM:
+     OPEN_TAG w,h,"label" />
+     OPEN_TAG w,h,"label" OPEN_CLOSE
+
+   OpenQuestion hereda QuestionModel; usa addProperty().
+   ══════════════════════════════════════════════════ */
+open_question ::=
+    OPEN_TAG parametros_pregunta:p STRING:s SLASH_CLOSE
+    {:
+        OpenQuestion open = new OpenQuestion();
+        for (PropertyItem prop : p) open.addProperty(prop);
+        String label = s.toString().replace("\"", "").trim();
+        open.addProperty(new PropertyItem("label", label));
+        RESULT = open;
+    :}
+    | OPEN_TAG parametros_pregunta:p STRING:s OPEN_CLOSE
+    {:
+        OpenQuestion open = new OpenQuestion();
+        for (PropertyItem prop : p) open.addProperty(prop);
+        String label = s.toString().replace("\"", "").trim();
+        open.addProperty(new PropertyItem("label", label));
+        RESULT = open;
+    :}
+    ;
+
+/* ══════════════════════════════════════════════════
+   SELECT QUESTION
+   Sintaxis PKM:
+     SELECT_TAG w,h,"label",{opt,...},correctIdx />
+     SELECT_TAG w,h,"label",{opt,...},correctIdx SELECT_CLOSE
+
+   correct se guarda como ArrayList<Integer> de un elemento
+   para coincidir con lo que espera SelectQuestion.addProperty.
+   ══════════════════════════════════════════════════ */
+select_question ::=
+    SELECT_TAG parametros_pregunta:p STRING:s COMMA
+               LBRACE options:o RBRACE COMMA NUMBER:n SLASH_CLOSE
+    {:
+        SelectQuestion select = new SelectQuestion();
+        for (PropertyItem prop : p) select.addProperty(prop);
+        select.addProperty(new PropertyItem("label",   s.toString()));
+        select.addProperty(new PropertyItem("options", o));
+        ArrayList<Integer> correct = new ArrayList<>();
+        correct.add(n);
+        select.addProperty(new PropertyItem("correct", correct));
+        RESULT = select;
+    :}
+    | SELECT_TAG parametros_pregunta:p STRING:s COMMA
+                 LBRACE options:o RBRACE COMMA NUMBER:n SELECT_CLOSE
+    {:
+        SelectQuestion select = new SelectQuestion();
+        for (PropertyItem prop : p) select.addProperty(prop);
+        select.addProperty(new PropertyItem("label",   s.toString()));
+        select.addProperty(new PropertyItem("options", o));
+        ArrayList<Integer> correct = new ArrayList<>();
+        correct.add(n);
+        select.addProperty(new PropertyItem("correct", correct));
+        RESULT = select;
+    :}
+    ;
+
+/* ══════════════════════════════════════════════════
+   MULTIPLE QUESTION
+   Sintaxis PKM:
+     MULTIPLE_TAG w,h,"label",{opt,...},{c1,c2,...} />
+     MULTIPLE_TAG w,h,"label",{opt,...},{c1,c2,...} MULTIPLE_CLOSE
+
+   correct es un ArrayList<Integer> con todas las respuestas
+   correctas, igual que CORRECT: { ... } en el .form.
+   ══════════════════════════════════════════════════ */
+multiple_question ::=
+    MULTIPLE_TAG parametros_pregunta:p STRING:s COMMA
+                 LBRACE options:o RBRACE COMMA
+                 LBRACE int_list:cl RBRACE SLASH_CLOSE
+    {:
+        MultipleQuestion multiple = new MultipleQuestion();
+        for (PropertyItem prop : p) multiple.addProperty(prop);
+        multiple.addProperty(new PropertyItem("label",   s.toString()));
+        multiple.addProperty(new PropertyItem("options", o));
+        multiple.addProperty(new PropertyItem("correct", cl));
+        RESULT = multiple;
+    :}
+    | MULTIPLE_TAG parametros_pregunta:p STRING:s COMMA
+                   LBRACE options:o RBRACE COMMA
+                   LBRACE int_list:cl RBRACE MULTIPLE_CLOSE
+    {:
+        MultipleQuestion multiple = new MultipleQuestion();
+        for (PropertyItem prop : p) multiple.addProperty(prop);
+        multiple.addProperty(new PropertyItem("label",   s.toString()));
+        multiple.addProperty(new PropertyItem("options", o));
+        multiple.addProperty(new PropertyItem("correct", cl));
+        RESULT = multiple;
+    :}
+    ;
+
+/* ══════════════════════════════════════════════════
+   DROP QUESTION
+   Sintaxis PKM:
+     DROP_TAG w,h,"label",{opt,...},correctIdx />
+     DROP_TAG w,h,"label",{opt,...},correctIdx DROP_CLOSE
+
+   Mismo patrón que SelectQuestion.
+   ══════════════════════════════════════════════════ */
+drop_question ::=
+    DROP_TAG parametros_pregunta:p STRING:s COMMA
+             LBRACE options:o RBRACE COMMA NUMBER:n SLASH_CLOSE
+    {:
+        DropQuestion drop = new DropQuestion();
+        for (PropertyItem prop : p) drop.addProperty(prop);
+        drop.addProperty(new PropertyItem("label",   s.toString()));
+        drop.addProperty(new PropertyItem("options", o));
+        ArrayList<Integer> correct = new ArrayList<>();
+        correct.add(n);
+        drop.addProperty(new PropertyItem("correct", correct));
+        RESULT = drop;
+    :}
+    | DROP_TAG parametros_pregunta:p STRING:s COMMA
+               LBRACE options:o RBRACE COMMA NUMBER:n DROP_CLOSE
+    {:
+        DropQuestion drop = new DropQuestion();
+        for (PropertyItem prop : p) drop.addProperty(prop);
+        drop.addProperty(new PropertyItem("label",   s.toString()));
+        drop.addProperty(new PropertyItem("options", o));
+        ArrayList<Integer> correct = new ArrayList<>();
+        correct.add(n);
+        drop.addProperty(new PropertyItem("correct", correct));
+        RESULT = drop;
+    :}
+    ;
+
+/* ══════════════════════════════════════════════════
+   LISTAS AUXILIARES
+   ══════════════════════════════════════════════════ */
+
+/* Opciones de texto para preguntas */
+options ::=
+    STRING:s
+    {:
+        ArrayList<String> list = new ArrayList<>();
+        list.add(s.toString());
+        RESULT = list;
+    :}
+    | options:o COMMA STRING:s
+    {:
+        o.add(s.toString());
+        RESULT = o;
+    :}
+    ;
+
+/* Lista de enteros para respuestas correctas (MultipleQuestion) */
+int_list ::=
+    NUMBER:n
+    {:
+        ArrayList<Integer> list = new ArrayList<>();
+        list.add(n);
+        RESULT = list;
+    :}
+    | int_list:l COMMA NUMBER:n
+    {:
+        l.add(n);
+        RESULT = l;
+    :}
+    ;
+
+/* Lista vacía opcional — mantenida por compatibilidad */
+int_list_opt ::=
+    /* vacío */
+    {:
+        RESULT = new ArrayList<Integer>();
+    :}
+    | int_list:l
+    {:
+        RESULT = l;
+    :}
+    ;

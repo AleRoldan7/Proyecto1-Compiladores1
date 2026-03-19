@@ -204,41 +204,43 @@ fun generarPKMCompleto(
 
     var totalSecciones = 0
     var totalPreguntas = 0
+    var totalAbiertas  = 0
+    var totalDrop      = 0
+    var totalSelect    = 0
+    var totalMultiple  = 0
 
     val contenido = StringBuilder()
 
     forms.forEach { form ->
-
         form.elements.forEach { element ->
 
-            // --- Section ---
-            if (element is com.example.proyecto1_compi1.modelo.question.SectionsModel) {
-                totalSecciones++
+            when (element) {
 
-                contenido.append("<section=${element.width},${element.height},${element.pointX},${element.pointY},${element.orientation}>\n")
-
-                // Agrega estilos si hay
-                if (!element.styles.isNullOrEmpty()) {
-                    contenido.append("<style>\n")
-                    element.styles.forEach { s -> contenido.append("$s\n") }
-                    contenido.append("</style>\n")
+                is com.example.proyecto1_compi1.modelo.question.SectionsModel -> {
+                    totalSecciones++
+                    contenido.append(serializeSection(element))
                 }
 
-                // Contenido de la sección
-                contenido.append("<content>\n")
-                element.elements.forEach { subElement ->
-                    contenido.append(serializeElement(subElement))
+                is com.example.proyecto1_compi1.modelo.question.OpenQuestion -> {
+                    totalPreguntas++; totalAbiertas++
+                    contenido.append(serializeElement(element))
                 }
-                contenido.append("</content>\n")
-                contenido.append("</section>\n\n")
-            }
 
-            // --- Preguntas fuera de sección ---
-            if (element is com.example.proyecto1_compi1.modelo.question.QuestionModel) {
-                totalPreguntas++
-                contenido.append(serializeElement(element))
-            }
+                is com.example.proyecto1_compi1.modelo.question.SelectQuestion -> {
+                    totalPreguntas++; totalSelect++
+                    contenido.append(serializeElement(element))
+                }
 
+                is com.example.proyecto1_compi1.modelo.question.DropQuestion -> {
+                    totalPreguntas++; totalDrop++
+                    contenido.append(serializeElement(element))
+                }
+
+                is com.example.proyecto1_compi1.modelo.question.MultipleQuestion -> {
+                    totalPreguntas++; totalMultiple++
+                    contenido.append(serializeElement(element))
+                }
+            }
         }
     }
 
@@ -251,41 +253,85 @@ fun generarPKMCompleto(
         appendLine("Description: $descripcion")
         appendLine("Sections: $totalSecciones")
         appendLine("Questions: $totalPreguntas")
+        appendLine("Abiertas: $totalAbiertas")
+        appendLine("Desplegables: $totalDrop")
+        appendLine("Seleccion: $totalSelect")
+        appendLine("Multiples: $totalMultiple")
         appendLine("###")
         appendLine()
-
         append(contenido.toString())
     }
 }
 
-fun serializeElement(element: Any): String {
-    return when (element) {
-        is com.example.proyecto1_compi1.modelo.question.TextModel -> {
-            "<open=${element.width},${element.height},\${element.content}/open>\n"
-        }
+fun serializeSection(
+    element: com.example.proyecto1_compi1.modelo.question.SectionsModel
+): String = buildString {
+
+    // <section=100,200,0,0,VERTICAL>
+    append("<section=${element.width},${element.height},")
+    append("${element.pointX},${element.pointY},")
+    append("${element.orientation}>\n")
+
+    // estilos opcionales
+    if (!element.styles.isNullOrEmpty()) {
+        append(serializeStyles(element.styles))
+    }
+
+    // contenido
+    append("<content>\n")
+    element.elements?.forEach { sub -> append(serializeElement(sub)) }
+    append("</content>\n")
+
+    append("</section>\n\n")
+}
+
+fun serializeElement(element: Any): String = buildString {
+    when (element) {
 
         is com.example.proyecto1_compi1.modelo.question.OpenQuestion -> {
-            "<open=${element.width},${element.height},\"${element.label}\"/open>\n"
+            // ✅ limpia comillas del label antes de serializarlo
+            val label = element.label?.replace("\"", "")?.trim() ?: ""
+            append("<open=${element.width},${element.height},\"${label}\"/>")
+            append("\n")
         }
 
         is com.example.proyecto1_compi1.modelo.question.SelectQuestion -> {
-            val options = element.options.joinToString(",") { "\"$it\"" }
-            val correct = element.correct.joinToString(",")
-            "<select=${element.width},${element.height},\"${element.label}\",{${options}},${correct}/select>\n"
+            val label   = element.label?.replace("\"", "")?.trim() ?: ""
+            val opts    = element.options.joinToString(",") { "\"${it.replace("\"", "")}\"" }
+            val correct = element.correct.firstOrNull() ?: -1
+            append("<select=${element.width},${element.height},")
+            append("\"${label}\",{${opts}},${correct}/>")
+            append("\n")
         }
 
         is com.example.proyecto1_compi1.modelo.question.DropQuestion -> {
-            val options = element.options.joinToString(",") { "\"$it\"" }
-            val correct = element.correct.joinToString(",")
-            "<drop=${element.width},${element.height},\"${element.label}\",{${options}},${correct}/drop>\n"
+            val label   = element.label?.replace("\"", "")?.trim() ?: ""
+            val opts    = element.options.joinToString(",") { "\"${it.replace("\"", "")}\"" }
+            val correct = element.correct.firstOrNull() ?: -1
+            append("<drop=${element.width},${element.height},")
+            append("\"${label}\",{${opts}},${correct}/>")
+            append("\n")
         }
 
         is com.example.proyecto1_compi1.modelo.question.MultipleQuestion -> {
-            val options = element.options.joinToString(",") { "\"$it\"" }
+            val label   = element.label?.replace("\"", "")?.trim() ?: ""
+            val opts    = element.options.joinToString(",") { "\"${it.replace("\"", "")}\"" }
             val correct = element.correct.joinToString(",")
-            "<multiple=${element.width},${element.height},\"${element.label}\",{${options}},{${correct}}/multiple>\n"
+            append("<multiple=${element.width},${element.height},")
+            append("\"${label}\",{${opts}},{${correct}}/>")
+            append("\n")
         }
 
-        else -> ""
+        is com.example.proyecto1_compi1.modelo.question.TextModel -> {
+            val label = (element.content ?: "").replace("\"", "").trim()
+            append("<text=${element.width},${element.height},\"${label}\"/>")
+            append("\n")
+        }
     }
+}
+
+fun serializeStyles(styles: List<Any>): String = buildString {
+    append("<style>\n")
+    styles.forEach { s -> append("  $s\n") }
+    append("</style>\n")
 }
