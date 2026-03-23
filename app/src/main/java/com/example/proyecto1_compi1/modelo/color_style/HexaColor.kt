@@ -4,6 +4,8 @@ import androidx.compose.ui.graphics.Color
 
 class HexaColor(private val hexaColor: String) : ColorValue {
 
+    fun toPKM(): String = hexaColor
+
     override fun colorCompose(): Color {
 
         val colorLong = hexaColor.removePrefix("#").toLong(16)

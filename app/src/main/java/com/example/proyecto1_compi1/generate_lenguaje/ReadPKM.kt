@@ -43,11 +43,10 @@ class ReadPKM(private val context: Context) {
             val lexer = LexerPKM(StringReader(fileContent))
             val parser = ParserPKM(lexer)
 
-            parser.parse() // el valor de retorno no importa, los elementos van a ResultParser
+            parser.parse()
 
             Log.d("PKMLOADER", "Parser completado")
 
-            // ✅ FIX 2: leer los elementos desde ResultParser, no desde parser.parse().value
             val form = ResultParser.currentForm
             if (form == null) {
                 Log.e("PKMLOADER", "currentForm es null después del parse")
@@ -111,7 +110,6 @@ class ReadPKM(private val context: Context) {
                     )
                 )
 
-                // Marcar tokens de error
                 val isError = token.sym == sym.error
                 if (isError) errorCount++
 
@@ -139,7 +137,6 @@ class ReadPKM(private val context: Context) {
             Log.d("PKMLOADER", "  - Tokens de error: $errorCount")
             Log.d("PKMLOADER", "  - Tokens válidos: ${tokenCount - errorCount}")
 
-            // Mostrar secuencia de tokens para debugging
             showTokenSequence(tokens)
 
         } catch (e: Exception) {
@@ -179,6 +176,7 @@ class ReadPKM(private val context: Context) {
                 sym.GUION -> "-"
                 sym.COLON -> ":"
                 sym.TEXT_ELEMENT -> "<text="
+
                 sym.STRING -> "\"${token.value}\""
                 sym.NUMBER -> token.value.toString()
                 sym.ID -> token.value.toString()
@@ -198,12 +196,27 @@ class ReadPKM(private val context: Context) {
     private fun getTokenTypeName(tokenSym: Int): String {
         return when (tokenSym) {
             sym.METADATA_BLOCK -> "HASHES"
-            //sym.STYLE_OPEN -> "STYLE_OPEN"
-            //sym.STYLE_CLOSE -> "STYLE_CLOSE"
+            /* Tokens de estilo - DESCOMENTADOS */
+            sym.STYLE_OPEN -> "STYLE_OPEN"
+            sym.STYLE_CLOSE -> "STYLE_CLOSE"
+            sym.STYLE_COLOR -> "STYLE_COLOR"
+            sym.STYLE_BG -> "STYLE_BG"
+            sym.STYLE_FONT -> "STYLE_FONT"
+            sym.STYLE_TEXT -> "STYLE_TEXT"
+            sym.STYLE_BORDER -> "STYLE_BORDER"
+            sym.FAMILY_EQ -> "FAMILY_EQ"
+            sym.SIZE_EQ -> "SIZE_EQ"
+            sym.COLOR_EQ -> "COLOR_EQ"
+
+            /* Tokens de estructura */
             sym.SECTION_OPEN -> "SECTION_OPEN"
             sym.SECTION_CLOSE -> "SECTION_CLOSE"
             sym.CONTENT_OPEN -> "CONTENT_OPEN"
             sym.CONTENT_CLOSE -> "CONTENT_CLOSE"
+            sym.TEXT_ELEMENT -> "TEXT_ELEMENT"
+            sym.TEXT_CLOSE -> "TEXT_CLOSE"
+
+            /* Tokens de preguntas */
             sym.OPEN_TAG -> "OPEN_TAG"
             sym.OPEN_CLOSE -> "OPEN_CLOSE"
             sym.SELECT_TAG -> "SELECT_TAG"
@@ -212,36 +225,76 @@ class ReadPKM(private val context: Context) {
             sym.MULTIPLE_CLOSE -> "MULTIPLE_CLOSE"
             sym.DROP_TAG -> "DROP_TAG"
             sym.DROP_CLOSE -> "DROP_CLOSE"
+
+            /* Tokens de tablas */
+            sym.TABLE_OPEN -> "TABLE_OPEN"
+            sym.TABLE_CLOSE -> "TABLE_CLOSE"
+            sym.LINE_OPEN -> "LINE_OPEN"
+            sym.LINE_CLOSE -> "LINE_CLOSE"
+            sym.ELEMENT_OPEN -> "ELEMENT_OPEN"
+            sym.ELEMENT_CLOSE -> "ELEMENT_CLOSE"
+
+            /* Tokens de orientación y tipos */
+
+            sym.MONO -> "MONO"
+            sym.SANS_SERIF -> "SANS_SERIF"
+            sym.CURSIVE -> "CURSIVE"
+            sym.SOLID -> "SOLID"
+            sym.DASHED -> "DASHED"
+            sym.DOTTED -> "DOTTED"
+
+            /* Tokens de colores */
+            sym.COLOR_NAME -> "COLOR_NAME"
+            sym.HEX_COLOR -> "HEX_COLOR"
+            sym.RGB_COLOR -> "RGB_COLOR"
+            sym.HSL_COLOR -> "HSL_COLOR"
+
+            /* Tokens de símbolos */
+            sym.SLASH_CLOSE -> "SLASH_CLOSE"
+            sym.MAYOR_QUE -> "MAYOR_QUE"
+            sym.MENOR_QUE -> "MENOR_QUE"
+            sym.COMMA -> "COMMA"
+            sym.COLON -> "COLON"
+            sym.GUION -> "GUION"
+            sym.LBRACE -> "LBRACE"
+            sym.RBRACE -> "RBRACE"
+            sym.IGUAL -> "IGUAL"
+
+            /* Tokens de valores */
             sym.STRING -> "STRING"
             sym.NUMBER -> "NUMBER"
             sym.ID -> "ID"
-            sym.SLASH_CLOSE -> "SLASH_CLOSE"
-            sym.MAYOR_QUE -> "MAYOR_QUE"
-            sym.COMMA -> "COMMA"
-            sym.LBRACE -> "LBRACE"
-            sym.RBRACE -> "RBRACE"
-            //sym.LPAREN -> "LPAREN"
-            //sym.RPAREN -> "RPAREN"
-            sym.COLON -> "COLON"
-            sym.GUION -> "GUION"
-            sym.TEXT_ELEMENT -> "TEXT"
-            //sym.AT -> "AT"
 
             sym.error -> "ERROR"
             else -> "DESCONOCIDO($tokenSym)"
         }
     }
 
-    /**
-     * Obtiene una descripción del token - CORREGIDO: usando when con sym directamente
-     */
     private fun getTokenDescription(tokenSym: Int, value: Any?): String {
         return when (tokenSym) {
             sym.METADATA_BLOCK -> "Inicio/Fin de metadatos"
+
+            /* Descripciones de estilo */
+            sym.STYLE_OPEN -> "Inicio de bloque de estilo"
+            sym.STYLE_CLOSE -> "Fin de bloque de estilo"
+            sym.STYLE_COLOR -> "Definición de color"
+            sym.STYLE_BG -> "Definición de fondo"
+            sym.STYLE_FONT -> "Definición de fuente"
+            sym.STYLE_TEXT -> "Definición de tamaño de texto"
+            sym.STYLE_BORDER -> "Definición de borde"
+            sym.FAMILY_EQ -> "Atributo family"
+            sym.SIZE_EQ -> "Atributo size"
+            sym.COLOR_EQ -> "Atributo color"
+
+            /* Descripciones de estructura */
             sym.SECTION_OPEN -> "Apertura de sección"
             sym.SECTION_CLOSE -> "Cierre de sección"
             sym.CONTENT_OPEN -> "Apertura de contenido"
             sym.CONTENT_CLOSE -> "Cierre de contenido"
+            sym.TEXT_ELEMENT -> "Elemento de texto"
+            sym.TEXT_CLOSE -> "Cierre de elemento de texto"
+
+            /* Descripciones de preguntas */
             sym.OPEN_TAG -> "Tag de pregunta abierta"
             sym.OPEN_CLOSE -> "Cierre de pregunta abierta"
             sym.SELECT_TAG -> "Tag de selección"
@@ -250,16 +303,45 @@ class ReadPKM(private val context: Context) {
             sym.MULTIPLE_CLOSE -> "Cierre de opción múltiple"
             sym.DROP_TAG -> "Tag de lista desplegable"
             sym.DROP_CLOSE -> "Cierre de lista desplegable"
+
+            /* Descripciones de tablas */
+            sym.TABLE_OPEN -> "Apertura de tabla"
+            sym.TABLE_CLOSE -> "Cierre de tabla"
+            sym.LINE_OPEN -> "Apertura de línea"
+            sym.LINE_CLOSE -> "Cierre de línea"
+            sym.ELEMENT_OPEN -> "Apertura de elemento"
+            sym.ELEMENT_CLOSE -> "Cierre de elemento"
+
+            /* Orientación y tipos */
+
+            sym.MONO -> "Fuente monoespaciada"
+            sym.SANS_SERIF -> "Fuente sans-serif"
+            sym.CURSIVE -> "Fuente cursiva"
+            sym.SOLID -> "Borde sólido"
+            sym.DASHED -> "Borde discontinuo"
+            sym.DOTTED -> "Borde punteado"
+
+            /* Colores */
+            sym.COLOR_NAME -> "Nombre de color"
+            sym.HEX_COLOR -> "Color hexadecimal"
+            sym.RGB_COLOR -> "Color RGB"
+            sym.HSL_COLOR -> "Color HSL"
+
+            /* Símbolos */
+            sym.SLASH_CLOSE -> "Cierre de tag"
+            sym.MAYOR_QUE -> "Mayor que"
+            sym.MENOR_QUE -> "Menor que"
+            sym.COMMA -> "Separador"
+            sym.COLON -> "Dos puntos"
+            sym.GUION -> "Guión"
+            sym.LBRACE -> "Inicio de lista"
+            sym.RBRACE -> "Fin de lista"
+            sym.IGUAL -> "Igual"
+
+            /* Valores */
             sym.STRING -> "String literal"
             sym.NUMBER -> "Número"
             sym.ID -> "Identificador"
-            sym.COMMA -> "Separador"
-            sym.LBRACE -> "Inicio de lista"
-            sym.RBRACE -> "Fin de lista"
-            //sym.LPAREN -> "Paréntesis izquierdo"
-            //sym.RPAREN -> "Paréntesis derecho"
-            sym.COLON -> "Dos puntos"
-            //sym.AT -> "Arroba"
 
             sym.error -> "TOKEN DE ERROR"
             else -> ""
@@ -391,7 +473,7 @@ private fun showErrorLine(content: String, errorMsg: String?) {
         if (line <= lines.size) {
             val errorLine = lines[line - 1]
 
-            Log.e("PKMLOADER", "👉 ERROR EN LÍNEA $line:")
+            Log.e("PKMLOADER", " ERROR EN LÍNEA $line:")
             Log.e("PKMLOADER", errorLine)
 
             val pointer = " ".repeat(column - 1) + "^"

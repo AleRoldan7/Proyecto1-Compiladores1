@@ -52,6 +52,7 @@ public class ResultParser {
             //System.out.println("textos: " + currentForm.getTexts().size());
         }
     }
+
 }
 
 

@@ -4,6 +4,8 @@ import androidx.compose.ui.graphics.Color
 
 class RgbColor(private val r: Int, private val g: Int, private val b: Int) : ColorValue {
 
+    fun toPKM(): String = "($r,$g,$b)"
+
     override fun colorCompose(): Color {
         return Color(r, g, b)
     }

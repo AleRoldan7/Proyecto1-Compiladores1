@@ -77,6 +77,13 @@ public class FormsModel {
         variables.add(variableModel);
     }
 
+    public ArrayList<VariableModel> getVariables() {
+        return variables;
+    }
+
+    public List<QuestionModel> getQuestions() {
+        return questions;
+    }
 }
 
     /*

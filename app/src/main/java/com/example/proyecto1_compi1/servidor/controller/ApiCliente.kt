@@ -6,7 +6,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 object ApiCliente {
 
-    private const val BASE_URL = "http://192.168.1.21:8080/Api-Pkm-Forms/"
+    private const val BASE_URL = "https://loretta-nonoperable-aphylly.ngrok-free.dev/Api-Pkm-Forms/"
 
     val api: FormularioAPI by lazy {
 

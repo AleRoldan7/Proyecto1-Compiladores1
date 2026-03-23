@@ -21,147 +21,89 @@ import com.example.proyecto1_compi1.modelo.question.SelectQuestion
 import com.example.proyecto1_compi1.modelo.table.*
 import com.example.proyecto1_compi1.ui.question.DropQuestionUI
 import com.example.proyecto1_compi1.ui.utils.RenderElement
-import kotlin.math.log
-
-
 
 @Composable
 fun TableUI(table: TableModel) {
 
-    val rows = table.elements.size
-    val cols = table.elements.firstOrNull()?.size ?: 1
+    // Verificar si la tabla está vacía
+    if (table.elements.isEmpty()) {
+        Box(
+            modifier = Modifier
+                .width(table.width.dp)
+                .height(table.height.dp)
+                .border(1.dp, Color.Gray),
+            contentAlignment = androidx.compose.ui.Alignment.Center
+        ) {
+            Text("Tabla vacía")
+        }
+        return
+    }
 
-    val cellWidth = if(table.width > 0) table.width / cols else 150
-    val cellHeight = if(table.height > 0) table.height / rows else 80
+    // Obtener número de filas y columnas de forma segura
+    val rows = table.elements.size
+    val firstRow = table.elements.firstOrNull()
+    val cols = firstRow?.size ?: 1
+
+    // Validar que rows y cols sean mayores a 0 para evitar división por cero
+    val safeRows = if (rows > 0) rows else 1
+    val safeCols = if (cols > 0) cols else 1
+
+    // Calcular dimensiones de celdas con valores por defecto seguros
+    val cellWidth = if (table.width > 0 && safeCols > 0) {
+        table.width / safeCols
+    } else {
+        150 // Ancho por defecto
+    }
+
+    val cellHeight = if (table.height > 0 && safeRows > 0) {
+        table.height / safeRows
+    } else {
+        80 // Alto por defecto
+    }
+
+    // Usar valores por defecto si las dimensiones son 0
+    val tableWidth = if (table.width > 0) table.width else 400
+    val tableHeight = if (table.height > 0) table.height else 300
 
     Column(
         modifier = Modifier
-            .width(table.width.dp)
-            .height(table.height.dp)
+            .width(tableWidth.dp)
+            .height(tableHeight.dp)
+            .border(1.dp, Color.LightGray)
     ) {
+        table.elements.forEachIndexed { rowIndex, row ->
 
-        table.elements.forEach { row ->
-
-            Row {
-
-                row.forEach { cell ->
+            Row(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                row.forEachIndexed { colIndex, cell ->
 
                     Box(
                         modifier = Modifier
                             .width(cellWidth.dp)
                             .height(cellHeight.dp)
+                            .border(1.dp, Color.LightGray)
+                            .padding(4.dp),
+                        contentAlignment = androidx.compose.ui.Alignment.Center
                     ) {
-
                         RenderElement(cell)
-
                     }
 
                 }
 
-            }
-
-        }
-
-    }
-
-}
-/*
-@Composable
-fun TableUI(table: TableModel) {
-
-    var width = 200
-    var height = 150
-    var borderSize = 1
-    var borderColor = Color.Black
-    var elements: List<List<TableCell>> = emptyList()
-
-    table.properties.forEach { prop ->
-
-        when (prop) {
-
-            is PropertyWidth -> width = (prop.value as Int)
-
-            is PropertyHeigth -> height = (prop.value as Int)
-
-            is PropertyStyle -> {
-
-                prop.styles.forEach { style ->
-
-                    if (style is StyleBorder) {
-
-                        val grosor = style.type
-
-                        borderSize = when (grosor) {
-                            is Int -> grosor
-                            is Double -> grosor.toInt()
-                            else -> 1
-                        }
-
-                        borderColor = when (style.color.lowercase()) {
-                            "rojo" -> Color.Red
-                            "azul" -> Color.Blue
-                            "verde" -> Color.Green
-                            else -> Color.Black
-                        }
-                    }
-                }
-            }
-
-            is PropertyElements -> {
-                elements = prop.matrix
-                Log.d("ELEMENTOS" , elements.toString())
-            }
-        }
-    }
-
-    Box(
-        modifier = Modifier
-            .width(width.dp)
-            .height(height.dp)
-            .border(borderSize.dp, borderColor)
-            .padding(8.dp)
-    ) {
-        Column {
-
-            elements.forEach { row ->
-
-                Row(
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-
-                    row.forEach { cell ->
-
+                // Si la fila tiene menos columnas que el resto, llenar con celdas vacías
+                val emptyCells = safeCols - row.size
+                if (emptyCells > 0) {
+                    repeat(emptyCells) {
                         Box(
                             modifier = Modifier
-                                .weight(1f)
-                                .border(1.dp, borderColor)
-                                .padding(8.dp)
+                                .width(cellWidth.dp)
+                                .height(cellHeight.dp)
+                                .border(1.dp, Color.LightGray)
+                                .padding(4.dp),
+                            contentAlignment = androidx.compose.ui.Alignment.Center
                         ) {
-
-                            Column {
-
-                                cell.content.forEach { item ->
-
-                                    when (item) {
-
-                                        is String -> {
-                                            Text(text = item)
-                                        }
-
-                                        is OpenQuestion,
-                                        is DropQuestion,
-                                        is SelectQuestion,
-                                        is MultipleQuestion -> {
-
-                                            QuestionRender(item)
-                                        }
-
-                                        else -> {
-                                            Text(text = item.toString())
-                                        }
-                                    }
-                                }
-                            }
+                            Text("")
                         }
                     }
                 }
@@ -169,4 +111,3 @@ fun TableUI(table: TableModel) {
         }
     }
 }
- */

@@ -4,44 +4,100 @@ import java.util.*;
 import com.example.proyecto1_compi1.modelo.forms.*;
 import com.example.proyecto1_compi1.modelo.question.*;
 import com.example.proyecto1_compi1.modelo.table.*;
+import com.example.proyecto1_compi1.modelo.color_style.*;
+import com.example.proyecto1_compi1.enums.*;
 import java_cup.runtime.*;
 
 parser code {:
-  @Override
-  public void report_error(String message, Object info) {
-      StringBuilder m = new StringBuilder("\nERROR SINTÁCTICO\n");
-      if (info instanceof Symbol) {
-          Symbol s = (Symbol) info;
-          m.append("Mensaje: ").append(message).append("\n");
-          m.append("Línea: ").append(s.left + 1).append("\n");
-          m.append("Columna: ").append(s.right + 1).append("\n");
-          m.append("Token: ").append(s.value).append("\n");
-          m.append("Código token: ").append(s.sym).append("\n");
-      } else {
-          m.append("Mensaje: ").append(message);
-      }
-      System.err.println(m.toString());
-  }
 
-  @Override
-  public void report_fatal_error(String message, Object info) {
-      report_error(message, info);
-      throw new RuntimeException("Parsing detenido");
-  }
+    @Override
+    public void report_error(String message, Object info) {
+        if (info instanceof Symbol) {
+            Symbol s = (Symbol) info;
+            System.err.println("ERROR SINTÁCTICO línea " + (s.left+1) +
+                " col " + (s.right+1) + ": " + message);
+        }
+    }
+    @Override
+    public void report_fatal_error(String message, Object info) {
+        report_error(message, info);
+        throw new RuntimeException("Parsing detenido");
+    }
+    @Override
+    public void syntax_error(Symbol t) {
+        System.err.println("TOKEN INESPERADO línea " + (t.left+1) +
+            " col " + (t.right+1) + " val=" + t.value);
+    }
+    @Override
+    public void unrecovered_syntax_error(Symbol t) {
+        throw new RuntimeException("Error sintactico en linea: " + (t.left+1) +
+            ", columna: " + (t.right+1) + ", token: " + t.value);
+    }
 
-  @Override
-  public void syntax_error(Symbol cur_token) {
-      System.err.println("\nTOKEN INESPERADO:");
-      System.err.println("Línea: " + (cur_token.left + 1));
-      System.err.println("Columna: " + (cur_token.right + 1));
-      System.err.println("Token: " + cur_token.value);
-  }
+    /* ── Helper: construye props de sección ── */
+    public static java.util.ArrayList<com.example.proyecto1_compi1.modelo.question.PropertyItem>
+    buildSectionProps(int w, int h, int x, int y, String id, Object content) {
 
-  @Override
-  public void unrecovered_syntax_error(Symbol cur_token) {
-      throw new RuntimeException("Error sintactico en linea: " + (cur_token.left + 1) +
-          ", columna: " + (cur_token.right + 1) + ", token: " + cur_token.value);
-  }
+        java.util.ArrayList<com.example.proyecto1_compi1.modelo.question.PropertyItem> props =
+            new java.util.ArrayList<>();
+        props.add(new com.example.proyecto1_compi1.modelo.question.PropertyItem("width",       w));
+        props.add(new com.example.proyecto1_compi1.modelo.question.PropertyItem("height",      h));
+        props.add(new com.example.proyecto1_compi1.modelo.question.PropertyItem("pointX",      x));
+        props.add(new com.example.proyecto1_compi1.modelo.question.PropertyItem("pointY",      y));
+        props.add(new com.example.proyecto1_compi1.modelo.question.PropertyItem("orientation", id));
+        props.add(new com.example.proyecto1_compi1.modelo.question.PropertyItem("elements",    content));
+        return props;
+    }
+
+    /* ── Helper: convierte String de color → ColorValue ── */
+    public static com.example.proyecto1_compi1.modelo.color_style.ColorValue
+    parseColor(String raw) {
+
+        if (raw == null || raw.trim().isEmpty()) {
+            return com.example.proyecto1_compi1.modelo.color_style.BaseColor.BLACK;
+        }
+
+        raw = raw.trim();
+
+        /* Hex: #FFFFFF */
+        if (raw.startsWith("#")) {
+            return new com.example.proyecto1_compi1.modelo.color_style.HexaColor(raw);
+        }
+
+        /* RGB: (255,0,0) */
+        if (raw.startsWith("(")) {
+            String inner = raw.replaceAll("[()\\s]", "");
+            String[] parts = inner.split(",");
+            return new com.example.proyecto1_compi1.modelo.color_style.RgbColor(
+                Integer.parseInt(parts[0].trim()),
+                Integer.parseInt(parts[1].trim()),
+                Integer.parseInt(parts[2].trim())
+            );
+        }
+
+        /* HSL: <360,0.5,0.5> */
+        if (raw.startsWith("<")) {
+            String inner = raw.replaceAll("[<>\\s]", "");
+            String[] parts = inner.split(",");
+            return new com.example.proyecto1_compi1.modelo.color_style.HslColor(
+                Float.parseFloat(parts[0].trim()),
+                Float.parseFloat(parts[1].trim()),
+                Float.parseFloat(parts[2].trim())
+            );
+        }
+
+        /* Colores base por nombre */
+        switch (raw.toUpperCase()) {
+            case "RED":    return com.example.proyecto1_compi1.modelo.color_style.BaseColor.RED;
+            case "BLUE":   return com.example.proyecto1_compi1.modelo.color_style.BaseColor.BLUE;
+            case "GREEN":  return com.example.proyecto1_compi1.modelo.color_style.BaseColor.GREEN;
+            case "PURPLE": return com.example.proyecto1_compi1.modelo.color_style.BaseColor.PURPLE;
+            case "SKY":    return com.example.proyecto1_compi1.modelo.color_style.BaseColor.SKY;
+            case "YELLOW": return com.example.proyecto1_compi1.modelo.color_style.BaseColor.YELLOW;
+            case "WHITE":  return com.example.proyecto1_compi1.modelo.color_style.BaseColor.WHITE;
+            default:       return com.example.proyecto1_compi1.modelo.color_style.BaseColor.BLACK;
+        }
+    }
 :};
 
 /* ── Terminales ── */
@@ -53,149 +109,139 @@ terminal OPEN_TAG,     OPEN_CLOSE;
 terminal SELECT_TAG,   SELECT_CLOSE;
 terminal MULTIPLE_TAG, MULTIPLE_CLOSE;
 terminal DROP_TAG,     DROP_CLOSE;
+terminal TABLE_OPEN,   TABLE_CLOSE;
+terminal LINE_OPEN,    LINE_CLOSE;
+terminal ELEMENT_OPEN, ELEMENT_CLOSE;
+terminal STYLE_OPEN,   STYLE_CLOSE;
+terminal STYLE_COLOR, STYLE_BG, STYLE_FONT, STYLE_TEXT, STYLE_BORDER;
+terminal FAMILY_EQ, SIZE_EQ, COLOR_EQ;
+terminal MONO, SANS_SERIF, CURSIVE;
+terminal SOLID, DASHED, DOTTED;
 terminal COMMA, COLON, GUION;
 terminal LBRACE, RBRACE;
-terminal IGUAL, MAYOR_QUE;
+terminal IGUAL, MAYOR_QUE, MENOR_QUE;
 terminal SLASH_CLOSE;
 terminal String  STRING;
 terminal Integer NUMBER;
 terminal String  ID;
+terminal String  HEX_COLOR;
+terminal String  RGB_COLOR;
+terminal String  HSL_COLOR;
+terminal String  COLOR_NAME;
+terminal TEXT_CLOSE, INTEABRE, INTECIERRA;
 
 /* ── No terminales ── */
 non terminal Object                  pkm_file;
 non terminal Object                  elementos_principales;
 non terminal Object                  elemento_principal;
-
 non terminal SectionsModel           section;
-non terminal ArrayList               section_props;   // ArrayList<PropertyItem>
-non terminal Object                  content;         // ArrayList<Object> de elementos internos
+non terminal Object                  content;
 non terminal Object                  element;
-
-non terminal TextModel               text_element;
-
+non terminal TextModel               texto_element;
+non terminal Object                  table_elem;
+non terminal Object                  table_content;
+non terminal Object                  table_line;
+non terminal Object                  table_lines;
+non terminal Object                  table_cell;
+non terminal Object                  table_cells;
 non terminal OpenQuestion            open_question;
 non terminal SelectQuestion          select_question;
 non terminal MultipleQuestion        multiple_question;
 non terminal DropQuestion            drop_question;
-
 non terminal ArrayList<String>       options;
 non terminal ArrayList<Integer>      int_list;
 non terminal ArrayList<Integer>      int_list_opt;
-
 non terminal ArrayList<PropertyItem> parametros_pregunta;
+non terminal ArrayList<Object>       style_block;
+non terminal Object                  style_item;
+non terminal String                  color_value;
+non terminal String                  font_value;
+non terminal String                  border_type;
+non terminal ArrayList<Object> style_item_list;
 
-/* ── Precedencia ── */
 precedence left COMMA;
 precedence nonassoc NUMBER;
 
-/* ══════════════════════════════════════════════════
+/* ════════════════════════════════════════════
    INICIO
-   ══════════════════════════════════════════════════ */
+   ════════════════════════════════════════════ */
 pkm_file ::=
     METADATA_BLOCK elementos_principales
     | elementos_principales
     ;
 
-/* ══════════════════════════════════════════════════
-   ELEMENTOS PRINCIPALES
-   Cada elemento se agrega a ResultParser.currentForm
-   (y a formsModel si no es null) usando addElement()
-   ══════════════════════════════════════════════════ */
 elementos_principales ::=
     elementos_principales elemento_principal
     | elemento_principal
     ;
 
 elemento_principal ::=
-
     section:s
     {:
         if (ResultParser.currentForm != null) ResultParser.currentForm.addElement(s);
-        if (ResultParser.formsModel  != null) ResultParser.formsModel.addElement(s);
     :}
-
+    | table_elem:t
+    {:
+        if (ResultParser.currentForm != null) ResultParser.currentForm.addElement(t);
+    :}
     | open_question:q
     {:
         if (ResultParser.currentForm != null) ResultParser.currentForm.addElement(q);
-        if (ResultParser.formsModel  != null) ResultParser.formsModel.addElement(q);
     :}
-
     | select_question:q
     {:
         if (ResultParser.currentForm != null) ResultParser.currentForm.addElement(q);
-        if (ResultParser.formsModel  != null) ResultParser.formsModel.addElement(q);
     :}
-
     | multiple_question:q
     {:
         if (ResultParser.currentForm != null) ResultParser.currentForm.addElement(q);
-        if (ResultParser.formsModel  != null) ResultParser.formsModel.addElement(q);
     :}
-
     | drop_question:q
     {:
         if (ResultParser.currentForm != null) ResultParser.currentForm.addElement(q);
-        if (ResultParser.formsModel  != null) ResultParser.formsModel.addElement(q);
+    :}
+    | texto_element:tx
+    {:
+        if (ResultParser.currentForm != null) ResultParser.currentForm.addElement(tx);
     :}
     ;
 
-/* ══════════════════════════════════════════════════
-   SECCIÓN
-   Sintaxis PKM:
-     SECTION_OPEN w,h,x,y,ID >
-       CONTENT_OPEN
-         <elementos internos>
-       CONTENT_CLOSE
-     SECTION_CLOSE
-
-   SectionsModel espera ArrayList<PropertyItem> en su
-   constructor, por eso section_props acumula PropertyItems.
-   Los elementos del contenido se agregan como último prop
-   con clave "elements".
-   ══════════════════════════════════════════════════ */
+/* ════════════════════════════════════════════
+   SECCIÓN — puede tener estilos opcionales
+   ════════════════════════════════════════════ */
 section ::=
+
+    /* Con estilos */
     SECTION_OPEN
         NUMBER:w COMMA NUMBER:h COMMA NUMBER:x COMMA NUMBER:y COMMA ID:id
     MAYOR_QUE
+        style_block:st
         CONTENT_OPEN content:c CONTENT_CLOSE
     SECTION_CLOSE
     {:
-        /*
-         * Construimos la lista de PropertyItem que SectionsModel
-         * necesita en su constructor.
-         */
-        ArrayList<PropertyItem> props = new ArrayList<>();
-        props.add(new PropertyItem("width",       w));
-        props.add(new PropertyItem("height",      h));
-        props.add(new PropertyItem("pointX",      x));
-        props.add(new PropertyItem("pointY",      y));
-        /*
-         * El quinto campo (ID) se guarda como "orientation".
-         * SectionsModel llama Orientation.valueOf() sobre este
-         * string, así que el lexer debe producir "VERTICAL" o
-         * "HORIZONTAL".  Si el ID es el nombre de la sección,
-         * cambia la clave a "name" aquí.
-         */
-        props.add(new PropertyItem("orientation", id.toString()));
-        /*
-         * Los elementos internos van como propiedad "elements".
-         * c es un ArrayList<Object> acumulado por la regla content.
-         */
-        props.add(new PropertyItem("elements", c));
-
+        ArrayList<PropertyItem> props = buildSectionProps(w, h, x, y, id.toString(), c);
+        props.add(new PropertyItem("styles", st));
         RESULT = new SectionsModel(props);
     :}
-    ;
 
-/* ══════════════════════════════════════════════════
-   CONTENT  — elementos dentro de una sección
-   ══════════════════════════════════════════════════ */
+    /* Sin estilos */
+    | SECTION_OPEN
+        NUMBER:w COMMA NUMBER:h COMMA NUMBER:x COMMA NUMBER:y COMMA ID:id
+      MAYOR_QUE
+        CONTENT_OPEN content:c CONTENT_CLOSE
+      SECTION_CLOSE
+    {:
+        RESULT = new SectionsModel(buildSectionProps(w, h, x, y, id.toString(), c));
+    :}
+    ;
+/* ════════════════════════════════════════════
+   CONTENT — cualquier elemento puede anidarse
+   ════════════════════════════════════════════ */
 content ::=
     content:c element:e
     {:
-        ArrayList<Object> list = (ArrayList<Object>) c;
-        list.add(e);
-        RESULT = list;
+        ((ArrayList<Object>) c).add(e);
+        RESULT = c;
     :}
     | element:e
     {:
@@ -205,40 +251,225 @@ content ::=
     :}
     ;
 
+/*
+ * element — todo lo que puede ir dentro de una sección o tabla:
+ * texto, preguntas, sección anidada, tabla anidada
+ */
 element ::=
-    text_element:t  {: RESULT = t; :}
+    texto_element:t      {: RESULT = t; :}
+    | open_question:q   {: RESULT = q; :}
+    | select_question:q {: RESULT = q; :}
+    | drop_question:q   {: RESULT = q; :}
+    | multiple_question:q {: RESULT = q; :}
+    | section:s         {: RESULT = s; :}
+    | table_elem:t      {: RESULT = t; :}
     ;
 
-/* ══════════════════════════════════════════════════
+/* ════════════════════════════════════════════
    TEXT ELEMENT
-   Sintaxis PKM:  TEXT_ELEMENT w,h,"label" />
-   TextModel usa addProperty() con claves:
-     "width", "height", "label"
-   Nota: "label" en vez de "content" — coincide con
-   el TextModel del parser .form (text_prop acepta LABEL).
-   ══════════════════════════════════════════════════ */
-text_element ::=
+   Formas:
+   1. <text=w,h,"contenido"/>
+   2. <text=w,h,"contenido">
+        <style>...</style>
+      </text>
+   ════════════════════════════════════════════ */
+texto_element ::=
+
+    /* Forma corta: <text=w,h,"label"/> */
     TEXT_ELEMENT NUMBER:w COMMA NUMBER:h COMMA STRING:s SLASH_CLOSE
     {:
         TextModel text = new TextModel();
         text.addProperty(new PropertyItem("width",  w));
         text.addProperty(new PropertyItem("height", h));
-        /*
-         * TextModel.addProperty maneja "content" y "label".
-         * Usa "label" si el parser .form guardó el texto con LABEL;
-         * cámbialo a "content" si lo guardó con CONTENT.
-         */
-        text.addProperty(new PropertyItem("label",  s.toString().replace("\"", "").trim()));
+        text.addProperty(new PropertyItem("label",  s.toString().trim()));
+        RESULT = text;
+    :}
+
+    /* Forma larga con estilo: <text=w,h,"label">\n<style>...</style>\n</text> */
+    | TEXT_ELEMENT NUMBER:w COMMA NUMBER:h COMMA STRING:s MAYOR_QUE
+      style_block:st
+      TEXT_CLOSE
+    {:
+        TextModel text = new TextModel();
+        text.addProperty(new PropertyItem("width",  w));
+        text.addProperty(new PropertyItem("height", h));
+        text.addProperty(new PropertyItem("label",  s.toString().trim()));
+        text.addProperty(new PropertyItem("styles", st));
+        RESULT = text;
+    :}
+
+    /* Forma larga sin estilo: <text=w,h,"label">\n</text> */
+    | TEXT_ELEMENT NUMBER:w COMMA NUMBER:h COMMA STRING:s MAYOR_QUE
+      TEXT_CLOSE
+    {:
+        TextModel text = new TextModel();
+        text.addProperty(new PropertyItem("width",  w));
+        text.addProperty(new PropertyItem("height", h));
+        text.addProperty(new PropertyItem("label",  s.toString().trim()));
         RESULT = text;
     :}
     ;
+/* ════════════════════════════════════════════
+   TABLA
+   Formas:
+   <table=w,h,x,y>
+     <style>...</style>   ← opcional
+     <content>
+       <line>
+         <element> ... </element>
+       </line>
+     </content>
+   </table>
+   ════════════════════════════════════════════ */
+table_elem ::=
 
-/* ══════════════════════════════════════════════════
-   PARÁMETROS COMUNES DE PREGUNTA
-   Sintaxis PKM: w , h ,
-   Devuelve ArrayList<PropertyItem> con "width" y "height"
-   listo para pasarlo a addProperty() de cada pregunta.
-   ══════════════════════════════════════════════════ */
+    /* Con estilos */
+    TABLE_OPEN NUMBER:w COMMA NUMBER:h COMMA NUMBER:x COMMA NUMBER:y MAYOR_QUE
+        style_block:st
+        CONTENT_OPEN table_lines:rows CONTENT_CLOSE
+    TABLE_CLOSE
+    {:
+        ArrayList<PropertyItem> props = new ArrayList<>();
+        props.add(new PropertyItem("width",    w));
+        props.add(new PropertyItem("height",   h));
+        props.add(new PropertyItem("pointX",   x));
+        props.add(new PropertyItem("pointY",   y));
+        props.add(new PropertyItem("styles",   st));
+        props.add(new PropertyItem("elements", rows));
+        RESULT = new TableModel(props);
+    :}
+
+    /* Sin estilos */
+    | TABLE_OPEN NUMBER:w COMMA NUMBER:h COMMA NUMBER:x COMMA NUMBER:y MAYOR_QUE
+        CONTENT_OPEN table_lines:rows CONTENT_CLOSE
+      TABLE_CLOSE
+    {:
+        ArrayList<PropertyItem> props = new ArrayList<>();
+        props.add(new PropertyItem("width",    w));
+        props.add(new PropertyItem("height",   h));
+        props.add(new PropertyItem("pointX",   x));
+        props.add(new PropertyItem("pointY",   y));
+        props.add(new PropertyItem("elements", rows));
+        RESULT = new TableModel(props);
+    :}
+    ;
+
+table_lines ::=
+    table_lines:l table_line:r
+    {:
+        ((ArrayList<Object>) l).add(r);
+        RESULT = l;
+    :}
+    | table_line:r
+    {:
+        ArrayList<Object> list = new ArrayList<>();
+        list.add(r);
+        RESULT = list;
+    :}
+    ;
+
+table_line ::=
+    LINE_OPEN table_cells:c LINE_CLOSE
+    {: RESULT = c; :}
+    | LINE_OPEN LINE_CLOSE
+    {:
+        RESULT = new ArrayList<Object>();
+    :}
+    ;
+
+table_cells ::=
+    table_cells:l table_cell:c
+    {:
+        ((ArrayList<Object>) l).add(c);
+        RESULT = l;
+    :}
+    | table_cell:c
+    {:
+        ArrayList<Object> list = new ArrayList<>();
+        list.add(c);
+        RESULT = list;
+    :}
+    ;
+
+table_cell ::=
+    ELEMENT_OPEN element:e ELEMENT_CLOSE {: RESULT = e; :}
+    | ELEMENT_OPEN ELEMENT_CLOSE         {: RESULT = null; :}
+    ;
+
+/* ════════════════════════════════════════════
+   ESTILOS
+   ════════════════════════════════════════════ */
+style_block ::=
+    STYLE_OPEN style_item_list:l STYLE_CLOSE
+    {: RESULT = l; :}
+    | STYLE_OPEN STYLE_CLOSE
+    {:  RESULT = new ArrayList<Object>(); :}
+    ;
+
+
+style_item_list ::=
+    style_item_list:l style_item:s
+    {:
+        l.add(s);
+        RESULT = l;
+    :}
+    | style_item:s
+    {:
+        ArrayList<Object> list = new ArrayList<>();
+        list.add(s);
+        RESULT = list;
+    :}
+    ;
+
+style_item ::=
+    /* <color=#FFFFFF/> */
+    STYLE_COLOR color_value:c SLASH_CLOSE
+    {: RESULT = new ColorStyle(parseColor(c)); :}
+
+    /* <background color=... /> */
+    | STYLE_BG COLOR_EQ color_value:c SLASH_CLOSE
+    {: RESULT = new BackgroundStyle(parseColor(c)); :}
+
+    /* <font family=MONO/> */
+    | STYLE_FONT FAMILY_EQ font_value:f SLASH_CLOSE
+    {: RESULT = new FontStyle(f); :}
+
+    /* <text size=16/>  — forma corta */
+    | STYLE_TEXT NUMBER:n SLASH_CLOSE
+    {: RESULT = new TextSizeStyle(n); :}
+
+    /* <text size=16>   — forma larga con > */
+    | STYLE_TEXT NUMBER:n MAYOR_QUE
+    {: RESULT = new TextSizeStyle(n); :}
+
+    /* <border,2,SOLID,color=#000000/> */
+    | STYLE_BORDER NUMBER:n COMMA border_type:t COMMA COLOR_EQ color_value:c SLASH_CLOSE
+    {: RESULT = t + ":" + n + ":" + c; :}
+    ;
+
+
+color_value ::=
+    HEX_COLOR:h     {: RESULT = h; :}
+    | RGB_COLOR:r   {: RESULT = r; :}
+    | HSL_COLOR:h   {: RESULT = h; :}
+    | COLOR_NAME:c  {: RESULT = c; :}
+    ;
+
+font_value ::=
+    MONO        {: RESULT = "MONO";       :}
+    | SANS_SERIF  {: RESULT = "SANS_SERIF"; :}
+    | CURSIVE     {: RESULT = "CURSIVE";    :}
+    ;
+
+border_type ::=
+    SOLID   {: RESULT = "SOLID";  :}
+    | DASHED  {: RESULT = "DASHED"; :}
+    | DOTTED  {: RESULT = "DOTTED"; :}
+    ;
+
+/* ════════════════════════════════════════════
+   PARÁMETROS PREGUNTA
+   ════════════════════════════════════════════ */
 parametros_pregunta ::=
     NUMBER:w COMMA NUMBER:h COMMA
     {:
@@ -249,158 +480,187 @@ parametros_pregunta ::=
     :}
     ;
 
-/* ══════════════════════════════════════════════════
-   OPEN QUESTION
-   Sintaxis PKM:
-     OPEN_TAG w,h,"label" />
-     OPEN_TAG w,h,"label" OPEN_CLOSE
-
-   OpenQuestion hereda QuestionModel; usa addProperty().
-   ══════════════════════════════════════════════════ */
+/* ════════════════════════════════════════════
+   OPEN QUESTION (con y sin estilo)
+   ════════════════════════════════════════════ */
 open_question ::=
     OPEN_TAG parametros_pregunta:p STRING:s SLASH_CLOSE
     {:
         OpenQuestion open = new OpenQuestion();
         for (PropertyItem prop : p) open.addProperty(prop);
-        String label = s.toString().replace("\"", "").trim();
-        open.addProperty(new PropertyItem("label", label));
+        open.addProperty(new PropertyItem("label", s.toString().trim()));
+        RESULT = open;
+    :}
+    | OPEN_TAG parametros_pregunta:p STRING:s MAYOR_QUE
+      style_block:st
+      OPEN_CLOSE
+    {:
+        OpenQuestion open = new OpenQuestion();
+        for (PropertyItem prop : p) open.addProperty(prop);
+        open.addProperty(new PropertyItem("label",  s.toString().trim()));
+        open.addProperty(new PropertyItem("styles", st));
         RESULT = open;
     :}
     | OPEN_TAG parametros_pregunta:p STRING:s OPEN_CLOSE
     {:
         OpenQuestion open = new OpenQuestion();
         for (PropertyItem prop : p) open.addProperty(prop);
-        String label = s.toString().replace("\"", "").trim();
-        open.addProperty(new PropertyItem("label", label));
+        open.addProperty(new PropertyItem("label", s.toString().trim()));
         RESULT = open;
     :}
     ;
 
-/* ══════════════════════════════════════════════════
+/* ════════════════════════════════════════════
    SELECT QUESTION
-   Sintaxis PKM:
-     SELECT_TAG w,h,"label",{opt,...},correctIdx />
-     SELECT_TAG w,h,"label",{opt,...},correctIdx SELECT_CLOSE
-
-   correct se guarda como ArrayList<Integer> de un elemento
-   para coincidir con lo que espera SelectQuestion.addProperty.
-   ══════════════════════════════════════════════════ */
+   ════════════════════════════════════════════ */
 select_question ::=
     SELECT_TAG parametros_pregunta:p STRING:s COMMA
                LBRACE options:o RBRACE COMMA NUMBER:n SLASH_CLOSE
     {:
-        SelectQuestion select = new SelectQuestion();
-        for (PropertyItem prop : p) select.addProperty(prop);
-        select.addProperty(new PropertyItem("label",   s.toString()));
-        select.addProperty(new PropertyItem("options", o));
-        ArrayList<Integer> correct = new ArrayList<>();
-        correct.add(n);
-        select.addProperty(new PropertyItem("correct", correct));
-        RESULT = select;
+        SelectQuestion q = new SelectQuestion();
+        for (PropertyItem prop : p) q.addProperty(prop);
+        q.addProperty(new PropertyItem("label",   s.toString().trim()));
+        q.addProperty(new PropertyItem("options", o));
+        ArrayList<Integer> c = new ArrayList<>(); c.add(n);
+        q.addProperty(new PropertyItem("correct", c));
+        RESULT = q;
+    :}
+    | SELECT_TAG parametros_pregunta:p STRING:s COMMA
+                 LBRACE options:o RBRACE COMMA NUMBER:n MAYOR_QUE
+                 style_block:st SELECT_CLOSE
+    {:
+        SelectQuestion q = new SelectQuestion();
+        for (PropertyItem prop : p) q.addProperty(prop);
+        q.addProperty(new PropertyItem("label",   s.toString().trim()));
+        q.addProperty(new PropertyItem("options", o));
+        ArrayList<Integer> c = new ArrayList<>(); c.add(n);
+        q.addProperty(new PropertyItem("correct", c));
+        q.addProperty(new PropertyItem("styles",  st));
+        RESULT = q;
     :}
     | SELECT_TAG parametros_pregunta:p STRING:s COMMA
                  LBRACE options:o RBRACE COMMA NUMBER:n SELECT_CLOSE
     {:
-        SelectQuestion select = new SelectQuestion();
-        for (PropertyItem prop : p) select.addProperty(prop);
-        select.addProperty(new PropertyItem("label",   s.toString()));
-        select.addProperty(new PropertyItem("options", o));
-        ArrayList<Integer> correct = new ArrayList<>();
-        correct.add(n);
-        select.addProperty(new PropertyItem("correct", correct));
-        RESULT = select;
+        SelectQuestion q = new SelectQuestion();
+        for (PropertyItem prop : p) q.addProperty(prop);
+        q.addProperty(new PropertyItem("label",   s.toString().trim()));
+        q.addProperty(new PropertyItem("options", o));
+        ArrayList<Integer> c = new ArrayList<>(); c.add(n);
+        q.addProperty(new PropertyItem("correct", c));
+        RESULT = q;
     :}
     ;
 
-/* ══════════════════════════════════════════════════
-   MULTIPLE QUESTION
-   Sintaxis PKM:
-     MULTIPLE_TAG w,h,"label",{opt,...},{c1,c2,...} />
-     MULTIPLE_TAG w,h,"label",{opt,...},{c1,c2,...} MULTIPLE_CLOSE
+/* ════════════════════════════════════════════
+   DROP QUESTION
+   ════════════════════════════════════════════ */
+drop_question ::=
+    DROP_TAG parametros_pregunta:p STRING:s COMMA
+             LBRACE options:o RBRACE COMMA NUMBER:n SLASH_CLOSE
+    {:
+        DropQuestion q = new DropQuestion();
+        for (PropertyItem prop : p) q.addProperty(prop);
+        q.addProperty(new PropertyItem("label",   s.toString().trim()));
+        q.addProperty(new PropertyItem("options", o));
+        ArrayList<Integer> c = new ArrayList<>(); c.add(n);
+        q.addProperty(new PropertyItem("correct", c));
+        RESULT = q;
+    :}
+    | DROP_TAG parametros_pregunta:p STRING:s COMMA
+               LBRACE options:o RBRACE COMMA NUMBER:n MAYOR_QUE
+               style_block:st DROP_CLOSE
+    {:
+        DropQuestion q = new DropQuestion();
+        for (PropertyItem prop : p) q.addProperty(prop);
+        q.addProperty(new PropertyItem("label",   s.toString().trim()));
+        q.addProperty(new PropertyItem("options", o));
+        ArrayList<Integer> c = new ArrayList<>(); c.add(n);
+        q.addProperty(new PropertyItem("correct", c));
+        q.addProperty(new PropertyItem("styles",  st));
+        RESULT = q;
+    :}
+    | DROP_TAG parametros_pregunta:p STRING:s COMMA
+               LBRACE options:o RBRACE COMMA NUMBER:n DROP_CLOSE
+    {:
+        DropQuestion q = new DropQuestion();
+        for (PropertyItem prop : p) q.addProperty(prop);
+        q.addProperty(new PropertyItem("label",   s.toString().trim()));
+        q.addProperty(new PropertyItem("options", o));
+        ArrayList<Integer> c = new ArrayList<>(); c.add(n);
+        q.addProperty(new PropertyItem("correct", c));
+        RESULT = q;
+    :}
+    ;
 
-   correct es un ArrayList<Integer> con todas las respuestas
-   correctas, igual que CORRECT: { ... } en el .form.
-   ══════════════════════════════════════════════════ */
+/* ════════════════════════════════════════════
+   MULTIPLE QUESTION
+   ════════════════════════════════════════════ */
 multiple_question ::=
     MULTIPLE_TAG parametros_pregunta:p STRING:s COMMA
                  LBRACE options:o RBRACE COMMA
                  LBRACE int_list:cl RBRACE SLASH_CLOSE
     {:
-        MultipleQuestion multiple = new MultipleQuestion();
-        for (PropertyItem prop : p) multiple.addProperty(prop);
-        multiple.addProperty(new PropertyItem("label",   s.toString()));
-        multiple.addProperty(new PropertyItem("options", o));
-        multiple.addProperty(new PropertyItem("correct", cl));
-        RESULT = multiple;
+        MultipleQuestion q = new MultipleQuestion();
+        for (PropertyItem prop : p) q.addProperty(prop);
+        q.addProperty(new PropertyItem("label",   s.toString().trim()));
+        q.addProperty(new PropertyItem("options", o));
+        q.addProperty(new PropertyItem("correct", cl));
+        RESULT = q;
+    :}
+    | MULTIPLE_TAG parametros_pregunta:p STRING:s COMMA
+                   LBRACE options:o RBRACE COMMA
+                   LBRACE RBRACE SLASH_CLOSE
+    {:
+        MultipleQuestion q = new MultipleQuestion();
+        for (PropertyItem prop : p) q.addProperty(prop);
+        q.addProperty(new PropertyItem("label",   s.toString().trim()));
+        q.addProperty(new PropertyItem("options", o));
+        q.addProperty(new PropertyItem("correct", new ArrayList<Integer>()));
+        RESULT = q;
+    :}
+    | MULTIPLE_TAG parametros_pregunta:p STRING:s COMMA
+                   LBRACE options:o RBRACE COMMA
+                   LBRACE int_list:cl RBRACE MAYOR_QUE
+                   style_block:st MULTIPLE_CLOSE
+    {:
+        MultipleQuestion q = new MultipleQuestion();
+        for (PropertyItem prop : p) q.addProperty(prop);
+        q.addProperty(new PropertyItem("label",   s.toString().trim()));
+        q.addProperty(new PropertyItem("options", o));
+        q.addProperty(new PropertyItem("correct", cl));
+        q.addProperty(new PropertyItem("styles",  st));
+        RESULT = q;
     :}
     | MULTIPLE_TAG parametros_pregunta:p STRING:s COMMA
                    LBRACE options:o RBRACE COMMA
                    LBRACE int_list:cl RBRACE MULTIPLE_CLOSE
     {:
-        MultipleQuestion multiple = new MultipleQuestion();
-        for (PropertyItem prop : p) multiple.addProperty(prop);
-        multiple.addProperty(new PropertyItem("label",   s.toString()));
-        multiple.addProperty(new PropertyItem("options", o));
-        multiple.addProperty(new PropertyItem("correct", cl));
-        RESULT = multiple;
+        MultipleQuestion q = new MultipleQuestion();
+        for (PropertyItem prop : p) q.addProperty(prop);
+        q.addProperty(new PropertyItem("label",   s.toString().trim()));
+        q.addProperty(new PropertyItem("options", o));
+        q.addProperty(new PropertyItem("correct", cl));
+        RESULT = q;
     :}
     ;
 
-/* ══════════════════════════════════════════════════
-   DROP QUESTION
-   Sintaxis PKM:
-     DROP_TAG w,h,"label",{opt,...},correctIdx />
-     DROP_TAG w,h,"label",{opt,...},correctIdx DROP_CLOSE
-
-   Mismo patrón que SelectQuestion.
-   ══════════════════════════════════════════════════ */
-drop_question ::=
-    DROP_TAG parametros_pregunta:p STRING:s COMMA
-             LBRACE options:o RBRACE COMMA NUMBER:n SLASH_CLOSE
-    {:
-        DropQuestion drop = new DropQuestion();
-        for (PropertyItem prop : p) drop.addProperty(prop);
-        drop.addProperty(new PropertyItem("label",   s.toString()));
-        drop.addProperty(new PropertyItem("options", o));
-        ArrayList<Integer> correct = new ArrayList<>();
-        correct.add(n);
-        drop.addProperty(new PropertyItem("correct", correct));
-        RESULT = drop;
-    :}
-    | DROP_TAG parametros_pregunta:p STRING:s COMMA
-               LBRACE options:o RBRACE COMMA NUMBER:n DROP_CLOSE
-    {:
-        DropQuestion drop = new DropQuestion();
-        for (PropertyItem prop : p) drop.addProperty(prop);
-        drop.addProperty(new PropertyItem("label",   s.toString()));
-        drop.addProperty(new PropertyItem("options", o));
-        ArrayList<Integer> correct = new ArrayList<>();
-        correct.add(n);
-        drop.addProperty(new PropertyItem("correct", correct));
-        RESULT = drop;
-    :}
-    ;
-
-/* ══════════════════════════════════════════════════
-   LISTAS AUXILIARES
-   ══════════════════════════════════════════════════ */
-
-/* Opciones de texto para preguntas */
+/* ════════════════════════════════════════════
+   LISTAS
+   ════════════════════════════════════════════ */
 options ::=
     STRING:s
     {:
         ArrayList<String> list = new ArrayList<>();
-        list.add(s.toString());
+        list.add(s.toString().trim());
         RESULT = list;
     :}
     | options:o COMMA STRING:s
     {:
-        o.add(s.toString());
+        o.add(s.toString().trim());
         RESULT = o;
     :}
     ;
 
-/* Lista de enteros para respuestas correctas (MultipleQuestion) */
 int_list ::=
     NUMBER:n
     {:
@@ -415,14 +675,7 @@ int_list ::=
     :}
     ;
 
-/* Lista vacía opcional — mantenida por compatibilidad */
 int_list_opt ::=
-    /* vacío */
-    {:
-        RESULT = new ArrayList<Integer>();
-    :}
-    | int_list:l
-    {:
-        RESULT = l;
-    :}
+    {: RESULT = new ArrayList<Integer>(); :}
+    | int_list:l {: RESULT = l; :}
     ;

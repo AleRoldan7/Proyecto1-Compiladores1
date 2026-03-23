@@ -6,6 +6,7 @@ enum class BaseColor(
     private val color: Color
 ) : ColorValue {
 
+
     RED(Color.Red),
     BLUE(Color.Blue),
     GREEN(Color.Green),
@@ -14,6 +15,8 @@ enum class BaseColor(
     YELLOW(Color.Yellow),
     BLACK(Color.Black),
     WHITE(Color.White);
+
+    fun toPKM(): String = this.name
 
     override fun colorCompose(): Color {
         return color

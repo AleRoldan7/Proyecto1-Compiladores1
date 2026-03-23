@@ -104,8 +104,9 @@ HEXCOLOR    = \# [0-9a-fA-F]{6}
 
     /* ── Estilos tipográficos ── */
     "SOLID"                 { return symbol(sym.SOLID);      }
-    "DASHED"                { return symbol(sym.DASHED);     }
+    "DOUBLE"                { return symbol(sym.DOUBLE);     }
     "DOTTED"                { return symbol(sym.DOTTED);     }
+    "LINE"                  { return symbol(sym.LINE);       }
     "MONO"                  { return symbol(sym.MONO);       }
     "SANS_SERIF"            { return symbol(sym.SANS_SERIF); }
     "CURSIVE"               { return symbol(sym.CURSIVE);    }
@@ -137,6 +138,18 @@ HEXCOLOR    = \# [0-9a-fA-F]{6}
 
     /* ── Hex color ── */
     {HEXCOLOR}              { return symbol(sym.HEXCOLOR, yytext()); }
+
+    /* ── RGB completo como un solo token — va ANTES que PARENTESIS_ABRE ── */
+    "(" {DIGITO}+ "," {DIGITO}+ "," {DIGITO}+ ")"
+        {
+            return symbol(sym.RGB_COLOR, yytext());
+        }
+
+    /* ── HSL completo como un solo token ── */
+    "<" {DIGITO}+ ("." {DIGITO}+)? "," {DIGITO}+ ("." {DIGITO}+)? "," {DIGITO}+ ("." {DIGITO}+)? ">"
+        {
+            return symbol(sym.HSL_COLOR, yytext());
+        }
 
     /* ── Operadores ── */
     "=="    { return symbol(sym.IGUALIGUAL); }
@@ -186,52 +199,38 @@ HEXCOLOR    = \# [0-9a-fA-F]{6}
    ════════════════════════════════════════════ */
 <STRING_STATE> {
 
-    /* ── Cierre ── */
+    /* ── Cierre del string ── */
     \"  {
         yybegin(YYINITIAL);
         String resultado = stringBuffer.toString();
-
-        /*
-         * Detectar si es una clave de estilo y retornar
-         * el token correspondiente en lugar de CADENA
-         */
         switch (resultado) {
             case "color":            return symbol(sym.STYLE_COLOR);
             case "background color": return symbol(sym.STYLE_BACKGROUND);
             case "font family":      return symbol(sym.STYLE_FONT);
             case "text size":        return symbol(sym.STYLE_SIZE);
+            case "border":           return symbol(sym.STYLE_BORDER);
             default:
                 return symbol(sym.CADENA, resultado);
         }
     }
 
-    /* ════════════════════════════════════════
-       EMOJIS — van ANTES que el contenido general
-       ════════════════════════════════════════ */
-
-    /* Nombrados — más específicos primero */
+    /* ── Emojis ── */
     "@[:smile:]"                { stringBuffer.append("😀"); }
     "@[:sad:]"                  { stringBuffer.append("🥲"); }
     "@[:serious:]"              { stringBuffer.append("😐"); }
     "@[:heart:]"                { stringBuffer.append("❤️"); }
     "@[:cat:]"                  { stringBuffer.append("😺"); }
-
-    /* Gato símbolo */
     "@[:^^:]"                   { stringBuffer.append("😺"); }
-
-    /* Estrella sola */
     "@[:star:]"                 { stringBuffer.append("⭐"); }
 
-    /* Estrellas con número @[:star:3:] */
     "@[:star:" {DIGITO}+ ":]"   {
-        String txt    = yytext();
-        int    start  = txt.indexOf("star:") + 5;
-        int    end    = txt.lastIndexOf(":");
-        int    n      = Integer.parseInt(txt.substring(start, end));
+        String txt   = yytext();
+        int    start = txt.indexOf("star:") + 5;
+        int    end   = txt.lastIndexOf(":");
+        int    n     = Integer.parseInt(txt.substring(start, end));
         for (int i = 0; i < n; i++) stringBuffer.append("⭐");
     }
 
-    /* Estrellas con guion @[:star-3] */
     "@[:star-" {DIGITO}+ "]"    {
         String txt   = yytext();
         int    start = txt.indexOf("star-") + 5;
@@ -240,35 +239,44 @@ HEXCOLOR    = \# [0-9a-fA-F]{6}
         for (int i = 0; i < n; i++) stringBuffer.append("⭐");
     }
 
-    /* Corazón símbolo @[<3] @[<<<333] */
     "@[" "<"+ "3"+ "]"          { stringBuffer.append("❤️"); }
-
-    /* Sonrisa símbolo @[:)] @[:))] */
     "@[:" ")"+  "]"             { stringBuffer.append("😀"); }
-
-    /* Tristeza símbolo @[:(] @[:((] */
     "@[:" "("+ "]"              { stringBuffer.append("🥲"); }
-
-    /* Serio símbolo @[:|] */
     "@[:" "|"+ "]"              { stringBuffer.append("😐"); }
+    "@"                         { stringBuffer.append('@');  }
 
-    /* @ suelto que no formó emoji */
-    "@"                         { stringBuffer.append('@'); }
+    /* ── Signos de interrogación españoles — se guardan como texto ── */
+    /* ¿ y ? dentro de strings son texto normal, NO comodines          */
+    "¿"                         { stringBuffer.append('¿'); }
 
-    /* ── Escape ── */
-    "\\\""                      { stringBuffer.append('"');  }
-    "\\" .                      { stringBuffer.append(yytext()); }
+    /*
+     * CLAVE: el ? dentro de un string se guarda como el carácter
+     * Unicode \u003F (representación interna), NO como "?"
+     * Así contieneComodin("¿Cuántos años tienes\u003F") != true
+     * porque buscamos exactamente "?" y no \u003F
+     *
+     * Usamos un marcador especial que no sea "?" para que
+     * contieneComodin no lo detecte como comodín.
+     */
 
-    /* ── Contenido normal — excluye " \ \n \r @ ── */
-    [^\"\\\n\r@]+               { stringBuffer.append(yytext()); }
 
-    /* ── Salto de línea forzado ── */
-    \n | \r | \r\n              {
+    /* ── ¿ y ? dentro de strings — se guardan como marcador \uFFFE ── */
+    "¿"   { stringBuffer.append('¿');    }
+     "?"   { stringBuffer.append('\uFFFE'); }  /* ← marcador temporal, NO es "?" */
+
+     /* ── Escape ── */
+     "\\\""   { stringBuffer.append('"');  }
+     "\\" .   { stringBuffer.append(yytext()); }
+
+     /* ── Contenido normal — ahora excluye ? y ¿ explícitamente ── */
+     [^\"\\\n\r@¿?]+   { stringBuffer.append(yytext()); }
+
+    \n | \r | \r\n    {
         yybegin(YYINITIAL);
-        return symbol(sym.CADENA, stringBuffer.toString());
+        String res = stringBuffer.toString().replace('\uFFFE', '?');
+        return symbol(sym.CADENA, res);
     }
 }
-
 /* ════════════════════════════════════════════
    ESTADO COMMENT_BLOCK  /* ... */
    ════════════════════════════════════════════ */

@@ -11,77 +11,88 @@ public class sym {
   public static final int STYLE_SIZE = 76;
   public static final int HORIZONTAL = 63;
   public static final int STYLE_BACKGROUND = 74;
-  public static final int DIVISION = 25;
+  public static final int DIVISION = 28;
   public static final int VARIABLENUMBER = 9;
-  public static final int PARENTESIS_ABRE = 28;
+  public static final int PARENTESIS_ABRE = 31;
   public static final int TABLE = 3;
-  public static final int PARENTESIS_CIERRA = 29;
-  public static final int POTENCIA = 26;
-  public static final int MAYOR = 20;
-  public static final int INTERROGACION = 44;
+  public static final int PARENTESIS_CIERRA = 32;
+  public static final int POTENCIA = 29;
+  public static final int MAYOR = 23;
+  public static final int INTERROGACION = 14;
   public static final int SANS_SERIF = 56;
-  public static final int SPECIAL = 41;
+  public static final int SPECIAL = 11;
   public static final int BLUE = 66;
   public static final int YELLOW = 70;
-  public static final int DIFERENTE = 13;
-  public static final int ELEMENTS = 45;
+  public static final int DIFERENTE = 16;
+  public static final int ELEMENTS = 44;
   public static final int WHITE = 72;
-  public static final int DRAW = 42;
+  public static final int DRAW = 12;
   public static final int BLACK = 71;
-  public static final int CORCHETE_ABRE = 30;
-  public static final int NOT = 18;
-  public static final int IGUALIGUAL = 12;
+  public static final int DOUBLE = 52;
+  public static final int CORCHETE_ABRE = 33;
+  public static final int NOT = 21;
+  public static final int IGUALIGUAL = 15;
   public static final int TEXT = 4;
-  public static final int MULTI = 24;
+  public static final int MULTI = 27;
   public static final int STYLE_FONT = 75;
-  public static final int VARIABLESPECIAL = 11;
   public static final int PURPLE = 68;
-  public static final int WIDTH = 47;
+  public static final int WIDTH = 46;
+  public static final int RGB_COLOR = 86;
   public static final int DROPQUESTION = 6;
-  public static final int STYLES = 46;
-  public static final int COMA = 35;
-  public static final int LLAVE_CIERRA = 33;
-  public static final int ENTERO = 38;
-  public static final int MODULO = 27;
+  public static final int STYLES = 45;
+  public static final int COMA = 38;
+  public static final int LLAVE_CIERRA = 36;
+  public static final int ENTERO = 41;
+  public static final int MODULO = 30;
   public static final int CURSIVE = 57;
   public static final int MONO = 55;
-  public static final int IGUAL = 19;
+  public static final int IGUAL = 22;
+  public static final int WHILE = 80;
   public static final int VARIABLESTRING = 10;
-  public static final int DECIMAL = 37;
-  public static final int DOSPUNTOS = 36;
-  public static final int VARIABLE = 39;
+  public static final int DECIMAL = 40;
+  public static final int DOSPUNTOS = 39;
+  public static final int HSL_COLOR = 87;
+  public static final int FOR = 82;
+  public static final int DO = 81;
+  public static final int VARIABLE = 42;
   public static final int SELECTQUESTION = 7;
-  public static final int ORIENTATION = 51;
-  public static final int MENOR = 21;
-  public static final int LLAVE_ABRE = 32;
+  public static final int ORIENTATION = 50;
+  public static final int ELSE = 79;
+  public static final int MENOR = 24;
+  public static final int LLAVE_ABRE = 35;
   public static final int CORRECT = 60;
   public static final int CONTENT = 61;
   public static final int EOF = 0;
-  public static final int PUNTO = 43;
+  public static final int PUNTO = 13;
   public static final int VERTICAL = 62;
-  public static final int SUMA = 22;
+  public static final int SUMA = 25;
+  public static final int LINE = 54;
   public static final int STYLE_COLOR = 73;
   public static final int LABEL = 58;
-  public static final int MENORIGUAL = 15;
-  public static final int OR = 17;
+  public static final int MENORIGUAL = 18;
+  public static final int IN = 83;
+  public static final int OR = 20;
   public static final int SKY = 69;
   public static final int error = 1;
-  public static final int RESTA = 23;
-  public static final int DASHED = 53;
+  public static final int RESTA = 26;
+  public static final int IF = 78;
+  public static final int STYLE_BORDER = 77;
   public static final int HEXCOLOR = 64;
-  public static final int DOTTED = 54;
-  public static final int SOLID = 52;
-  public static final int PUNTOCOMA = 34;
-  public static final int HEIGHT = 48;
+  public static final int DOTTED = 53;
+  public static final int SOLID = 51;
+  public static final int PUNTOCOMA = 37;
+  public static final int RANGO = 84;
+  public static final int HEIGHT = 47;
   public static final int RED = 65;
-  public static final int CADENA = 40;
-  public static final int MAYORIGUAL = 14;
+  public static final int CADENA = 43;
+  public static final int MAYORIGUAL = 17;
   public static final int MULTIPLEQUESTION = 8;
-  public static final int POINTY = 50;
+  public static final int POINTY = 49;
   public static final int OPTIONS = 59;
-  public static final int POINTX = 49;
-  public static final int AND = 16;
-  public static final int CORCHETE_CIERRA = 31;
+  public static final int POINTX = 48;
+  public static final int AND = 19;
+  public static final int WHO_IS_THAT_POKEMON = 85;
+  public static final int CORCHETE_CIERRA = 34;
   public static final int SECTION = 2;
   public static final int GREEN = 67;
   public static final int OPENQUESTION = 5;
@@ -97,7 +108,10 @@ public class sym {
   "MULTIPLEQUESTION",
   "VARIABLENUMBER",
   "VARIABLESTRING",
-  "VARIABLESPECIAL",
+  "SPECIAL",
+  "DRAW",
+  "PUNTO",
+  "INTERROGACION",
   "IGUALIGUAL",
   "DIFERENTE",
   "MAYORIGUAL",
@@ -127,10 +141,6 @@ public class sym {
   "ENTERO",
   "VARIABLE",
   "CADENA",
-  "SPECIAL",
-  "DRAW",
-  "PUNTO",
-  "INTERROGACION",
   "ELEMENTS",
   "STYLES",
   "WIDTH",
@@ -139,8 +149,9 @@ public class sym {
   "POINTY",
   "ORIENTATION",
   "SOLID",
-  "DASHED",
+  "DOUBLE",
   "DOTTED",
+  "LINE",
   "MONO",
   "SANS_SERIF",
   "CURSIVE",
@@ -162,7 +173,18 @@ public class sym {
   "STYLE_COLOR",
   "STYLE_BACKGROUND",
   "STYLE_FONT",
-  "STYLE_SIZE"
+  "STYLE_SIZE",
+  "STYLE_BORDER",
+  "IF",
+  "ELSE",
+  "WHILE",
+  "DO",
+  "FOR",
+  "IN",
+  "RANGO",
+  "WHO_IS_THAT_POKEMON",
+  "RGB_COLOR",
+  "HSL_COLOR"
   };
 }
 

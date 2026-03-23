@@ -10,10 +10,5 @@ public class OpenQuestion extends QuestionModel {
     public void addProperty(PropertyItem prop) {
         super.addProperty(prop);
     }
-    /*
-    public OpenQuestion(String name) {
-        super(name);
-    }
 
-     */
 }

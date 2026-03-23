@@ -1,5 +1,8 @@
 package com.example.proyecto1_compi1.modelo.question;
 
+import com.example.proyecto1_compi1.analizador.form.Parser;
+import com.example.proyecto1_compi1.modelo.color_style.*;
+
 import java.util.ArrayList;
 
 public class TextModel {
@@ -9,6 +12,7 @@ public class TextModel {
     private int height;
 
     private ArrayList<Object> styles;
+    private Parser parser = new Parser();
 
     public TextModel(){
         styles = new ArrayList<>();
@@ -49,7 +53,25 @@ public class TextModel {
                 break;
 
             case "styles":
-                styles = (ArrayList<Object>) prop.getValue();
+                if (prop.getValue() instanceof ArrayList) {
+                    ArrayList<Object> rawStyles = (ArrayList<Object>) prop.getValue();
+                    ArrayList<Object> evaluatedStyles = new ArrayList<>();
+
+                    for (Object style : rawStyles) {
+                        if (style instanceof RgbStyleWithWildcard) {
+                            // Evaluar RGB con wildcards usando el analizador semántico
+                            RgbColor color = ((RgbStyleWithWildcard) style).evaluar(parser.semantico);
+                            evaluatedStyles.add(new ColorStyle(color));
+                        } else if (style instanceof BackgroundStyleWithWildcard) {
+                            RgbColor color = ((BackgroundStyleWithWildcard) style).evaluar(parser.semantico);
+                            evaluatedStyles.add(new BackgroundStyle(color));
+                        } else {
+                            evaluatedStyles.add(style);
+                        }
+                    }
+
+                    styles = evaluatedStyles;
+                }
                 break;
         }
 
