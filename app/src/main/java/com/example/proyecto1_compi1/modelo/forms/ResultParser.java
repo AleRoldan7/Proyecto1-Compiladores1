@@ -4,19 +4,7 @@ import java.util.ArrayList;
 
 public class ResultParser {
 
-    /*
-    public static ArrayList<FormsModel> forms = new ArrayList<>();
-    public static FormsModel formsModel = null;
 
-    public static FormsModel currentForm = null;
-
-    public static void reset() {
-
-        forms.clear();
-        formsModel = null;
-        currentForm = null;
-    }
-     */
 
     public static ArrayList<FormsModel> forms = new ArrayList<>();
     public static FormsModel currentForm = null;

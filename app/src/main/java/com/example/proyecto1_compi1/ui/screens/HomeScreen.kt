@@ -53,7 +53,7 @@ fun HomeScreen(navController: NavController) {
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                text = "compilador de formularios", color = TextSecondary,
+                text = "Compilador de formularios", color = TextSecondary,
                 fontSize = 11.sp, fontFamily = FontFamily.Monospace
             )
             Spacer(Modifier.height(48.dp))
@@ -61,18 +61,20 @@ fun HomeScreen(navController: NavController) {
             HomeBtn("Crear / Editar formulario", "Escribe código .form",
                 CyanGlow, Color(0xFF0D2A2C)) { navController.navigate("edit") }
             Spacer(Modifier.height(10.dp))
-            HomeBtn("Cargar archivos .pkm", "Responde formularios guardados",
+            HomeBtn("Responder formularios .pkm", "Responde formularios guardados",
                 GreenOk, Color(0xFF0D1F0D)) { navController.navigate("upload") }
             Spacer(Modifier.height(10.dp))
             HomeBtn("Servidor", "Sube y descarga formularios",
                 YellowWarn, Color(0xFF221D08)) { navController.navigate("server") }
             Spacer(Modifier.height(10.dp))
-            HomeBtn("Responder formulario", "Contesta el formulario actual",
-                RedErr, Color(0xFF220D0D)) { navController.navigate("answer") }
+            //HomeBtn("Responder formulario", "Contesta el formulario actual",
+                //RedErr, Color(0xFF220D0D)) { navController.navigate("answer") }
 
             Spacer(Modifier.height(40.dp))
             Text(
-                text = "Compiladores 1  ·  USAC  ·  2026",
+                text = "Compiladores 1  ·  USAC  ·  2026\n" +
+                        "Roldán7",
+
                 color = TextSecondary.copy(alpha = 0.4f),
                 fontSize = 9.sp, fontFamily = FontFamily.Monospace
             )

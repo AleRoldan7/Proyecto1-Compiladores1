@@ -1,7 +1,9 @@
 package com.example.proyecto1_compi1.ui.screens
 
 import android.content.Context
+import android.os.Build
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -10,6 +12,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -30,6 +33,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.proyecto1_compi1.servidor.controller.ApiCliente
 import com.example.proyecto1_compi1.servidor.dto.FormularioDTO
 import com.example.proyecto1_compi1.ui.server.view.FormularioViewModel
 import java.io.File
@@ -65,6 +69,7 @@ fun ServerScreen(
 
     var downloadingId    by remember { mutableStateOf<Int?>(null) }
     var showUploadDialog by remember { mutableStateOf(false) }
+    var showUrlDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(error) {
         error?.let { Toast.makeText(context, it, Toast.LENGTH_LONG).show()
@@ -90,7 +95,6 @@ fun ServerScreen(
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
 
-            // ── Top bar ───────────────────────────────────────────────────
             Box(
                 modifier = Modifier.fillMaxWidth().background(BgSurface)
                     .drawBehind {
@@ -115,15 +119,13 @@ fun ServerScreen(
                         horizontalArrangement = Arrangement.spacedBy(5.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Recargar
                         Box(modifier = Modifier.clip(RoundedCornerShape(4.dp)).background(BgCardAlt)
                             .border(1.dp, BorderColor, RoundedCornerShape(4.dp))
-                            .clickable { viewModel.cargarFormularios() }
+                            .clickable { viewModel.cargarFormularios(context) }
                             .padding(horizontal = 9.dp, vertical = 5.dp)) {
                             Text("↻", color = CyanGlow, fontSize = 12.sp,
                                 fontFamily = FontFamily.Monospace)
                         }
-                        // Subir
                         Box(modifier = Modifier.clip(RoundedCornerShape(4.dp))
                             .background(YellowWarn.copy(0.12f))
                             .border(1.dp, YellowWarn.copy(0.4f), RoundedCornerShape(4.dp))
@@ -132,7 +134,6 @@ fun ServerScreen(
                             Text("+ Subir", color = YellowWarn, fontSize = 10.sp,
                                 fontWeight = FontWeight.SemiBold, fontFamily = FontFamily.Monospace)
                         }
-                        // Home
                         Box(modifier = Modifier.clip(RoundedCornerShape(4.dp)).background(BgCardAlt)
                             .border(1.dp, BorderColor, RoundedCornerShape(4.dp))
                             .clickable { navController.navigate("home") {
@@ -142,11 +143,30 @@ fun ServerScreen(
                             Text("⌂ Home", color = TextSecondary, fontSize = 10.sp,
                                 fontFamily = FontFamily.Monospace)
                         }
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(4.dp))
+                                .background(CyanDim.copy(0.2f))
+                                .border(1.dp, CyanGlow.copy(0.5f))
+                                .clickable { showUrlDialog = true }
+                                .padding(horizontal = 9.dp, vertical = 5.dp)
+                        ) {
+                            Text(
+                                "URL",
+                                color = CyanGlow,
+                                fontSize = 10.sp,
+                                fontFamily = FontFamily.Monospace
+                            )
+                        }
                     }
                 }
             }
-
-            // ── Contenido ─────────────────────────────────────────────────
+            if (showUrlDialog) {
+                NgrokUrlDialog(
+                    context = context,
+                    onDismiss = { showUrlDialog = false }
+                )
+            }
             if (isLoading) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Column(
@@ -172,7 +192,7 @@ fun ServerScreen(
                         Box(modifier = Modifier.clip(RoundedCornerShape(6.dp))
                             .background(CyanDim.copy(0.3f))
                             .border(1.dp, CyanGlow.copy(0.5f), RoundedCornerShape(6.dp))
-                            .clickable { viewModel.cargarFormularios() }
+                            .clickable { viewModel.cargarFormularios(context) }
                             .padding(horizontal = 14.dp, vertical = 8.dp)) {
                             Text("↻ Reintentar", color = CyanGlow, fontSize = 11.sp,
                                 fontFamily = FontFamily.Monospace)
@@ -206,7 +226,7 @@ fun ServerScreen(
         ServerUploadDialog(
             onDismiss = { showUploadDialog = false },
             onUpload  = { file, autor ->
-                viewModel.subirFormulario(file, autor)
+                viewModel.subirFormulario(file, autor, context)
                 showUploadDialog = false
             },
             context = context
@@ -214,6 +234,77 @@ fun ServerScreen(
     }
 }
 
+@Composable
+fun NgrokUrlDialog(
+    context: Context,
+    onDismiss: () -> Unit
+) {
+
+    var url by remember {
+        mutableStateOf(ApiCliente.getSavedUrl(context))
+    }
+
+    Dialog(onDismissRequest = onDismiss) {
+
+        Column(
+            modifier = Modifier
+                .clip(RoundedCornerShape(10.dp))
+                .background(BgCard)
+                .border(1.dp, CyanGlow, RoundedCornerShape(10.dp))
+                .padding(16.dp)
+        ) {
+
+            Text(
+                "URL servidor (ngrok)",
+                color = CyanGlow,
+                fontFamily = FontFamily.Monospace
+            )
+
+            Spacer(Modifier.height(10.dp))
+
+            BasicTextField(
+                value = url,
+                onValueChange = { url = it },
+                textStyle = TextStyle(
+                    color = TextPrimary,
+                    fontFamily = FontFamily.Monospace
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(BgEditor)
+                    .border(1.dp, BorderColor)
+                    .padding(10.dp)
+            )
+
+            Spacer(Modifier.height(12.dp))
+
+            Row(
+                horizontalArrangement = Arrangement.End,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+
+                TextButton(onClick = onDismiss) {
+                    Text("Cancelar")
+                }
+
+                TextButton(
+                    onClick = {
+                        ApiCliente.saveUrl(context, url)
+                        Toast
+                            .makeText(context,"URL guardada",Toast.LENGTH_SHORT)
+                            .show()
+
+                        onDismiss()
+                    }
+                ) {
+                    Text("Guardar", color = CyanGlow)
+                }
+            }
+
+        }
+
+    }
+}
 @Composable
 private fun ServerFormCard(
     formulario:       FormularioDTO,
@@ -228,7 +319,6 @@ private fun ServerFormCard(
             .background(BgCard)
             .border(1.dp, GreenOk.copy(alpha = 0.2f), RoundedCornerShape(8.dp))
     ) {
-        // Header
         Row(
             modifier = Modifier.fillMaxWidth().background(BgCardAlt)
                 .padding(horizontal = 12.dp, vertical = 8.dp),
@@ -264,7 +354,6 @@ private fun ServerFormCard(
             Text("Autor: ${formulario.autor}", color = TextSecondary,
                 fontSize = 10.sp, fontFamily = FontFamily.Monospace)
 
-            // Botón descargar
             if (isDownloading) {
                 Row(
                     modifier = Modifier
@@ -323,7 +412,6 @@ private fun ServerUploadDialog(
             Column(modifier = Modifier.padding(14.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)) {
 
-                // Autor
                 Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
                     Text("Autor", color = TextSecondary, fontSize = 10.sp,
                         fontFamily = FontFamily.Monospace)
@@ -343,7 +431,6 @@ private fun ServerUploadDialog(
                     }
                 }
 
-                // Selector de archivo
                 Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
                     Text("Archivo .pkm", color = TextSecondary, fontSize = 10.sp,
                         fontFamily = FontFamily.Monospace)
@@ -429,6 +516,7 @@ private fun ServerUploadDialog(
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.FROYO)
 @Composable
 private fun ServerFilePickerDialog(
     onDismiss:      () -> Unit,
