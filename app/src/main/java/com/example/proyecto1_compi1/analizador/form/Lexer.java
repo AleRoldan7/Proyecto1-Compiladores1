@@ -646,18 +646,36 @@ public class Lexer implements java_cup.runtime.Scanner {
     public static ArrayList<Token> listaError = new ArrayList<>();
     private StringBuilder stringBuffer = new StringBuilder();
 
+    /* Posición de apertura del string actual — se guarda al ver la " inicial */
+    private int stringStartLine   = 0;
+    private int stringStartColumn = 0;
+
     private void errorLexer(String lexema) {
         listaError.add(new Token(
             lexema, yyline + 1, yycolumn + 1, lexema, "Error Léxico"
         ));
     }
 
+    /*
+     * symbol SIN valor: no pasar yytext() como valor para evitar
+     * que s.value contamine el reporte de errores con el lexema
+     * cuando no es necesario.
+     */
     private Symbol symbol(int type) {
-        return new Symbol(type, yyline + 1, yycolumn + 1, yytext());
+        return new Symbol(type, yyline, yycolumn);
     }
 
+    /* symbol CON valor semántico explícito */
     private Symbol symbol(int type, Object value) {
-        return new Symbol(type, yyline + 1, yycolumn + 1, value);
+        return new Symbol(type, yyline, yycolumn, value);
+    }
+
+    /*
+     * symbol para tokens que abren un string — usa la posición
+     * guardada en el momento de la comilla de apertura.
+     */
+    private Symbol symbolString(int type, Object value) {
+        return new Symbol(type, stringStartLine, stringStartColumn, value);
     }
 
 
@@ -1098,6 +1116,8 @@ public class Lexer implements java_cup.runtime.Scanner {
           case 102: break;
           case 3:
             { stringBuffer.setLength(0);
+        stringStartLine   = yyline;
+        stringStartColumn = yycolumn;
         yybegin(STRING_STATE);
             }
           // fall through
@@ -1225,7 +1245,7 @@ public class Lexer implements java_cup.runtime.Scanner {
           case 28:
             { yybegin(YYINITIAL);
         String res = stringBuffer.toString().replace('\uFFFE', '?');
-        return symbol(sym.CADENA, res);
+        return symbolString(sym.CADENA, res);
             }
           // fall through
           case 128: break;
@@ -1233,13 +1253,13 @@ public class Lexer implements java_cup.runtime.Scanner {
             { yybegin(YYINITIAL);
         String resultado = stringBuffer.toString();
         switch (resultado) {
-            case "color":            return symbol(sym.STYLE_COLOR);
-            case "background color": return symbol(sym.STYLE_BACKGROUND);
-            case "font family":      return symbol(sym.STYLE_FONT);
-            case "text size":        return symbol(sym.STYLE_SIZE);
-            case "border":           return symbol(sym.STYLE_BORDER);
+            case "color":            return symbolString(sym.STYLE_COLOR,      resultado);
+            case "background color": return symbolString(sym.STYLE_BACKGROUND, resultado);
+            case "font family":      return symbolString(sym.STYLE_FONT,       resultado);
+            case "text size":        return symbolString(sym.STYLE_SIZE,       resultado);
+            case "border":           return symbolString(sym.STYLE_BORDER,     resultado);
             default:
-                return symbol(sym.CADENA, resultado);
+                return symbolString(sym.CADENA, resultado);
         }
             }
           // fall through

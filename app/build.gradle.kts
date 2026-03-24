@@ -49,6 +49,8 @@ dependencies {
     implementation(libs.androidx.room.external.antlr)
     implementation(libs.material3)
     implementation(libs.androidx.ui.text)
+    implementation(libs.androidx.runtime)
+    implementation(libs.androidx.foundation)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

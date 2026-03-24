@@ -29,15 +29,14 @@ public class TextModel {
                 break;
 
             case "width":
-
                 Object value = prop.getValue();
-
                 if (value instanceof Integer) {
                     width = (Integer) value;
                 } else if (value instanceof String){
                     width = Integer.parseInt((String) value);
+                } else if (value instanceof Double) {
+                    width = ((Double) value).intValue();
                 }
-
                 break;
 
             case "height":
@@ -49,6 +48,8 @@ public class TextModel {
                     } catch (NumberFormatException e) {
                         height = 0;
                     }
+                } else if (prop.getValue() instanceof Double) {
+                    height = ((Double) prop.getValue()).intValue();
                 }
                 break;
 
@@ -59,11 +60,16 @@ public class TextModel {
 
                     for (Object style : rawStyles) {
                         if (style instanceof RgbStyleWithWildcard) {
-                            // Evaluar RGB con wildcards usando el analizador semántico
                             RgbColor color = ((RgbStyleWithWildcard) style).evaluar(parser.semantico);
                             evaluatedStyles.add(new ColorStyle(color));
                         } else if (style instanceof BackgroundStyleWithWildcard) {
                             RgbColor color = ((BackgroundStyleWithWildcard) style).evaluar(parser.semantico);
+                            evaluatedStyles.add(new BackgroundStyle(color));
+                        } else if (style instanceof HslStyleWithWildcard) {
+                            HslColor color = ((HslStyleWithWildcard) style).evaluar(parser.semantico);
+                            evaluatedStyles.add(new ColorStyle(color));
+                        } else if (style instanceof HslBackgroundStyleWithWildcard) {
+                            HslColor color = ((HslBackgroundStyleWithWildcard) style).evaluar(parser.semantico);
                             evaluatedStyles.add(new BackgroundStyle(color));
                         } else {
                             evaluatedStyles.add(style);
@@ -92,5 +98,4 @@ public class TextModel {
     public ArrayList<Object> getStyles() {
         return styles;
     }
-
 }

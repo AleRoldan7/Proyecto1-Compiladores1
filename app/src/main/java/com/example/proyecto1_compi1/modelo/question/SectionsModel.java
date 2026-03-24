@@ -66,7 +66,6 @@ public class SectionsModel {
                 }
                 break;
 
-            // En SectionsModel.addProperty()
             case "styles":
                 if (prop.getValue() instanceof ArrayList) {
                     ArrayList<Object> rawStyles = (ArrayList<Object>) prop.getValue();
@@ -78,6 +77,12 @@ public class SectionsModel {
                             evaluatedStyles.add(new ColorStyle(color));
                         } else if (style instanceof BackgroundStyleWithWildcard) {
                             RgbColor color = ((BackgroundStyleWithWildcard) style).evaluar(parser.semantico);
+                            evaluatedStyles.add(new BackgroundStyle(color));
+                        } else if (style instanceof HslStyleWithWildcard) {
+                            HslColor color = ((HslStyleWithWildcard) style).evaluar(parser.semantico);
+                            evaluatedStyles.add(new ColorStyle(color));
+                        } else if (style instanceof HslBackgroundStyleWithWildcard) {
+                            HslColor color = ((HslBackgroundStyleWithWildcard) style).evaluar(parser.semantico);
                             evaluatedStyles.add(new BackgroundStyle(color));
                         } else {
                             evaluatedStyles.add(style);

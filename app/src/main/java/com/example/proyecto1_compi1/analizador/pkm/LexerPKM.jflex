@@ -22,8 +22,13 @@ import java_cup.runtime.Symbol;
 %}
 
 DIGIT    = [0-9]
+INT        = {DIGIT}+
+DECIMAL    = {DIGIT}+"."{DIGIT}+
+NUMBER     = -?({DIGIT}+("."{DIGIT}+)?)
+RGB        = \({NUMBER},{NUMBER},{NUMBER}\)
+HSL        = \<{NUMBER},{NUMBER},{NUMBER}\>
+HEXCOLOR   = \#[0-9a-fA-F]{6}
 ID       = [a-zA-ZáéíóúÁÉÍÓÚüÜñÑ_][a-zA-ZáéíóúÁÉÍÓÚüÜñÑ0-9_]*
-HEXCOLOR = \#[0-9a-fA-F]{6}
 
 %state STRING_STATE
 
@@ -40,7 +45,25 @@ HEXCOLOR = \#[0-9a-fA-F]{6}
         [ \t\r\n]+          { /* ignorar */ }
 
         /* ── Hex ANTES que cualquier otra regla con < o # ── */
-        {HEXCOLOR}          { return symbol(sym.HEX_COLOR, yytext()); }
+        /* HEX */
+        {HEXCOLOR} {
+            return symbol(sym.HEX_COLOR, yytext());
+        }
+
+        /* RGB */
+        {RGB} {
+            return symbol(sym.RGB_COLOR, yytext());
+        }
+
+        /* HSL */
+        {HSL} {
+            return symbol(sym.HSL_COLOR, yytext());
+        }
+
+        /* número decimal o entero */
+        {NUMBER} {
+            return symbol(sym.NUMBER, Double.parseDouble(yytext()));
+        }
 
     "</section>"        { return symbol(sym.SECTION_CLOSE);  }
     "</content>"        { return symbol(sym.CONTENT_CLOSE);  }
@@ -74,10 +97,10 @@ HEXCOLOR = \#[0-9a-fA-F]{6}
     "<drop="            { return symbol(sym.DROP_TAG);       }
 
     /* Estilos con = */
+     "<background"       { return symbol(sym.STYLE_BG);       }
     "<color="           { return symbol(sym.STYLE_COLOR);    }
-    "<background"       { return symbol(sym.STYLE_BG);       }
     "<font"             { return symbol(sym.STYLE_FONT);     }
-    "<border,"          { return symbol(sym.STYLE_BORDER);   }
+    "<border,"          { return symbol(sym.STYLE_BORDER);  }
 
     /* ── Aperturas sin = ── */
     "<content>"         { return symbol(sym.CONTENT_OPEN);   }
@@ -122,10 +145,10 @@ HEXCOLOR = \#[0-9a-fA-F]{6}
                         { return symbol(sym.HSL_COLOR, yytext()); }
 
     /* ── Número negativo — ANTES que "-" suelto ── */
-    "-"{DIGIT}+         { return symbol(sym.NUMBER, Integer.parseInt(yytext())); }
+    "-"{DIGIT}+("."{DIGIT}+)?  { return symbol(sym.NUMBER, Double.parseDouble(yytext())); }
 
     /* ── Número positivo ── */
-    {DIGIT}+            { return symbol(sym.NUMBER, Integer.parseInt(yytext())); }
+    {DIGIT}+("."{DIGIT}+)?     { return symbol(sym.NUMBER, Double.parseDouble(yytext())); }
 
     /* ── Cierres de tag ── */
     "/>"                { return symbol(sym.SLASH_CLOSE); }

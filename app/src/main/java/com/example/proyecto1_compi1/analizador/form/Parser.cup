@@ -16,41 +16,128 @@ parser code {:
     public static ArrayList<Token> listaErrores = new ArrayList<>();
     public static AnalizadorSemantico semantico  = new AnalizadorSemantico();
 
+    /*
+     * Última posición conocida — se actualiza en scan() para que
+     * los errores semánticos generados en acciones tengan la línea
+     * real del token que los disparó, en lugar de 0,0.
+     */
+    public static int currentLine = 1;
+    public static int currentCol  = 1;
+
+    /**
+     * Sobreescribimos scan() para interceptar cada token y registrar
+     * su posición antes de que el parser lo consuma.
+     */
+    @Override
+    public Symbol scan() throws Exception {
+        Symbol s = super.scan();
+        if (s != null) {
+            /* s.left es yyline (0-based desde JFlex), +1 → 1-based */
+            currentLine = s.left  + 1;
+            currentCol  = s.right + 1;
+        }
+        return s;
+    }
+
     @Override
     public void syntax_error(Symbol s) {
-        String lexema = s.value != null ? s.value.toString() : "EOF";
-        String msg;
+        /*
+         * s es el token que el parser NO pudo consumir.
+         * Mostramos línea/columna de ESE token (el conflictivo),
+         * más un mensaje que describe qué se esperaba en ese contexto.
+         */
+        int    lin    = s.left  + 1;
+        int    col    = s.right + 1;
+        String lexema = (s.value != null && !s.value.toString().isEmpty())
+                        ? s.value.toString() : tokenNombre(s.sym);
 
+        String msg;
         if (s.sym == sym.EOF) {
             msg = "Fin de archivo inesperado — verifique que todos los bloques " +
-                  "{ } [ ] estén cerrados correctamente";
+                  "{ } [ ] estén cerrados correctamente.";
         } else {
             switch (s.sym) {
-                case sym.PUNTOCOMA:       msg = "Se esperaba ';'"; break;
-                case sym.CORCHETE_CIERRA: msg = "Se esperaba ']'"; break;
-                case sym.CORCHETE_ABRE:   msg = "Se esperaba '['"; break;
-                case sym.LLAVE_CIERRA:    msg = "Se esperaba '}'"; break;
-                case sym.LLAVE_ABRE:      msg = "Se esperaba '{'"; break;
-                case sym.COMA:            msg = "Se esperaba ','"; break;
-                case sym.PARENTESIS_CIERRA: msg = "Se esperaba ')'"; break;
-                case sym.PARENTESIS_ABRE:   msg = "Se esperaba '('"; break;
-                case sym.DOSPUNTOS:         msg = "Se esperaba ':'"; break;
+                case sym.PUNTOCOMA:         msg = "Se esperaba ';' pero se encontró '" + lexema + "'"; break;
+                case sym.CORCHETE_CIERRA:   msg = "Se esperaba ']' pero se encontró '" + lexema + "'"; break;
+                case sym.CORCHETE_ABRE:     msg = "Se esperaba '[' pero se encontró '" + lexema + "'"; break;
+                case sym.LLAVE_CIERRA:      msg = "Se esperaba '}' pero se encontró '" + lexema + "'"; break;
+                case sym.LLAVE_ABRE:        msg = "Se esperaba '{' pero se encontró '" + lexema + "'"; break;
+                case sym.COMA:              msg = "Se esperaba ',' pero se encontró '" + lexema + "'"; break;
+                case sym.PARENTESIS_CIERRA: msg = "Se esperaba ')' pero se encontró '" + lexema + "'"; break;
+                case sym.PARENTESIS_ABRE:   msg = "Se esperaba '(' pero se encontró '" + lexema + "'"; break;
+                case sym.DOSPUNTOS:         msg = "Se esperaba ':' pero se encontró '" + lexema + "'"; break;
+                case sym.IGUAL:             msg = "Se esperaba '=' pero se encontró '" + lexema + "'"; break;
                 default:
-                    msg = "Token inesperado '" + lexema + "' " +
-                          "(código: " + s.sym + ") en línea " + (s.left+1);
+                    msg = "Token inesperado '" + lexema + "'";
             }
         }
-        listaErrores.add(new Token(lexema, s.left+1, s.right+1, "Sintáctico", msg));
+        listaErrores.add(new Token(lexema, lin, col, "Sintáctico", msg));
+    }
+
+    /** Convierte el código numérico de un terminal a su nombre legible. */
+    private String tokenNombre(int sym_code) {
+        switch (sym_code) {
+            case sym.VARIABLENUMBER:    return "number";
+            case sym.VARIABLESTRING:    return "string";
+            case sym.SPECIAL:           return "special";
+            case sym.OPENQUESTION:      return "OPEN_QUESTION";
+            case sym.DROPQUESTION:      return "DROP_QUESTION";
+            case sym.SELECTQUESTION:    return "SELECT_QUESTION";
+            case sym.MULTIPLEQUESTION:  return "MULTIPLE_QUESTION";
+            case sym.SECTION:           return "SECTION";
+            case sym.TABLE:             return "TABLE";
+            case sym.TEXT:              return "TEXT";
+            case sym.DRAW:              return "draw";
+            case sym.IF:                return "IF";
+            case sym.ELSE:              return "ELSE";
+            case sym.WHILE:             return "WHILE";
+            case sym.DO:                return "DO";
+            case sym.FOR:               return "FOR";
+            case sym.IN:                return "in";
+            case sym.SUMA:              return "+";
+            case sym.RESTA:             return "-";
+            case sym.MULTI:             return "*";
+            case sym.DIVISION:          return "/";
+            case sym.IGUAL:             return "=";
+            case sym.IGUALIGUAL:        return "==";
+            case sym.DIFERENTE:         return "!!";
+            case sym.MAYOR:             return ">";
+            case sym.MENOR:             return "<";
+            case sym.MAYORIGUAL:        return ">=";
+            case sym.MENORIGUAL:        return "<=";
+            case sym.AND:               return "&&";
+            case sym.OR:                return "||";
+            case sym.NOT:               return "~";
+            case sym.CORCHETE_ABRE:     return "[";
+            case sym.CORCHETE_CIERRA:   return "]";
+            case sym.LLAVE_ABRE:        return "{";
+            case sym.LLAVE_CIERRA:      return "}";
+            case sym.PARENTESIS_ABRE:   return "(";
+            case sym.PARENTESIS_CIERRA: return ")";
+            case sym.COMA:              return ",";
+            case sym.DOSPUNTOS:         return ":";
+            case sym.PUNTOCOMA:         return ";";
+            case sym.PUNTO:             return ".";
+            case sym.RANGO:             return "..";
+            case sym.INTERROGACION:     return "?";
+            case sym.ENTERO:            return "<número entero>";
+            case sym.DECIMAL:           return "<número decimal>";
+            case sym.CADENA:            return "<cadena>";
+            case sym.VARIABLE:          return "<identificador>";
+            case sym.HEXCOLOR:          return "<color hex>";
+            case sym.EOF:               return "<fin de archivo>";
+            default:                    return "<token " + sym_code + ">";
+        }
     }
 
     @Override
     public void report_error(String message, Object info) {
         if (info instanceof Symbol) {
-            Symbol sym = (Symbol) info;
-            listaErrores.add(new Token(
-                sym.value != null ? sym.value.toString() : "EOF",
-                sym.left+1, sym.right+1, "Sintáctico", message
-            ));
+            Symbol s = (Symbol) info;
+            int lin = s.left  + 1;
+            int col = s.right + 1;
+            String lexema = s.value != null ? s.value.toString() : "EOF";
+            listaErrores.add(new Token(lexema, lin, col, "Sintáctico", message));
         }
     }
 
@@ -59,21 +146,28 @@ parser code {:
         report_error(message, info);
     }
 
-    /* ── Detecta si un valor contiene comodín ── */
+    public void ejecutarInstrucciones(ArrayList<Object> lista) {
+        if (lista == null) return;
+        for (Object o : lista) {
+            if (o == null) continue;
+            if (o instanceof AnalizadorSemantico.AsignacionPendiente) {
+                ((AnalizadorSemantico.AsignacionPendiente) o).ejecutar(semantico);
+            } else {
+                ResultParser.currentForm.addElement(o);
+            }
+        }
+    }
+
     public static boolean contieneComodin(Object value) {
         if (value == null) return false;
 
         if (value instanceof String) {
             String s = (String) value;
-            // Buscar cualquier "?" en el string
             if (s.contains("?")) return true;
-
-            // También verificar patrones con comodines
             if (s.matches("[\\d.]+[+\\-*/%^]\\?")) return true;
             if (s.matches("\\?[+\\-*/%^][\\d.]+")) return true;
         }
 
-        // Verificar si es una lista que contiene comodines
         if (value instanceof List) {
             List<?> list = (List<?>) value;
             for (Object item : list) {
@@ -90,31 +184,26 @@ parser code {:
             System.out.println("[evaluarArgumento] Recibido: " + arg +
                              " (tipo: " + arg.getClass().getSimpleName() + ")");
 
-            // Si es una expresión que necesita evaluación
             if (arg instanceof String) {
                 String str = (String) arg;
 
-                // Si es una expresión aritmética con operadores
                 if (str.matches(".*[+\\-*/%^].*") && !str.contains("?")) {
                     try {
                         double result = semantico.evaluar(str);
-                        System.out.println("[evaluarArgumento] Expresión evaluada: " + str + " = " + result);
+                        System.out.println("evaluarArgumento: Expresión evaluada: " + str + " = " + result);
                         return result;
                     } catch (Exception e) {
-                        System.out.println("[evaluarArgumento] Error evaluando expresión: " + e.getMessage());
+                        System.out.println("evaluarArgumento: Error evaluando expresión: " + e.getMessage());
                     }
                 }
 
-                // Si es un número en string
                 try {
                     double num = Double.parseDouble(str);
                     return num;
                 } catch (NumberFormatException e) {
-                    // No es número, devolver el string
                 }
             }
 
-            // Si es número, devolver directamente
             if (arg instanceof Number) {
                 return arg;
             }
@@ -166,7 +255,11 @@ non terminal declaracion;
 non terminal asignacion;
 non terminal Object expresion;
 non terminal Object condicion;
-
+non terminal Object condicion_logica;
+non terminal Object condicion_and;
+non terminal Object condicion_or;
+non terminal Object condicion_not;
+non terminal Object condicion_base;
 /* Preguntas */
 non terminal OpenQuestion            open_q;
 non terminal DropQuestion            drop_q;
@@ -202,13 +295,12 @@ non terminal ColorValue        color_value;
 non terminal Object            style_item;
 non terminal ArrayList<Object> styles_block;
 non terminal ArrayList<Object> style_list;
-non terminal String            font_value;
+non terminal Object            font_value;
 
 /* Variables especiales */
 non terminal                         special_decl;
 non terminal ArrayList<PropertyItem> special_props;
 non terminal PropertyItem            special_prop;
-non terminal Object                  special_prop_value;
 non terminal                         draw_stmt;
 non terminal ArrayList<Object>       parametros;
 non terminal String                  tipo_pregunta;
@@ -224,9 +316,8 @@ non terminal Object            bloque_for;
 
 non terminal Object element_en_lista;
 non terminal String tipo_borde;
-non terminal String comodin;
-non terminal Object comodin_valor;
-non terminal Object comodin_color;
+/* AsignacionPendiente para ciclos */
+non terminal com.example.proyecto1_compi1.analizador.semantico.AnalizadorSemantico.AsignacionPendiente asignacion_bloque;
 /* PokeAPI */
 non terminal ArrayList<String> poke_call;
 
@@ -236,7 +327,7 @@ non terminal ArrayList<String> poke_call;
 precedence left OR;
 precedence left AND;
 precedence right NOT;
-precedence left MAYOR, MENOR, IGUALIGUAL, DIFERENTE, MAYORIGUAL, MENORIGUAL;
+precedence left IGUALIGUAL, DIFERENTE, MAYOR, MENOR, MAYORIGUAL, MENORIGUAL;
 precedence left SUMA, RESTA;
 precedence left MULTI, DIVISION, MODULO;
 precedence right POTENCIA;
@@ -287,25 +378,25 @@ element ::=
 declaracion ::=
     VARIABLENUMBER VARIABLE:v IGUAL expresion:e
     {:
-        parser.semantico.declararVariable(v.toString(), "number", e, 0, 0);
+        parser.semantico.declararVariable(v.toString(), "number", e, parser.currentLine, parser.currentCol);
         ResultParser.currentForm.addVariable(
             new VariableModel("number", v.toString(), e));
     :}
     | VARIABLENUMBER VARIABLE:v
     {:
-        parser.semantico.declararVariable(v.toString(), "number", 0.0, 0, 0);
+        parser.semantico.declararVariable(v.toString(), "number", 0.0, parser.currentLine, parser.currentCol);
         ResultParser.currentForm.addVariable(
             new VariableModel("number", v.toString(), 0.0));
     :}
     | VARIABLESTRING VARIABLE:v IGUAL expresion:e
     {:
-        parser.semantico.declararVariable(v.toString(), "string", e, 0, 0);
+        parser.semantico.declararVariable(v.toString(), "string", e, parser.currentLine, parser.currentCol);
         ResultParser.currentForm.addVariable(
             new VariableModel("string", v.toString(), e));
     :}
     | VARIABLESTRING VARIABLE:v
     {:
-        parser.semantico.declararVariable(v.toString(), "string", "", 0, 0);
+        parser.semantico.declararVariable(v.toString(), "string", "", parser.currentLine, parser.currentCol);
         ResultParser.currentForm.addVariable(
             new VariableModel("string", v.toString(), ""));
     :}
@@ -315,20 +406,144 @@ declaracion ::=
 asignacion ::=
     VARIABLE:v IGUAL expresion:e
     {:
-        parser.semantico.asignarVariable(v.toString(), e, 0, 0);
+        parser.semantico.asignarVariable(v.toString(), e, parser.currentLine, parser.currentCol);
     :}
+    ;
+
+/* ════════════════════════════════════════════
+   ASIGNACIÓN DENTRO DE BLOQUES DE CICLO
+   Devuelve un AsignacionPendiente para que el
+   ciclo la re-ejecute en cada iteración con los
+   valores actuales de las variables.
+
+   Captura el nombre (String) de cada operando
+   —no su valor evaluado— para poder resolverlo
+   en runtime con resolverNodo().
+
+   Soporta las formas más comunes:
+     v = v OP v          (acumulación: suma = suma + i)
+     v = v OP LITERAL    (suma = suma + 1)
+     v = LITERAL OP v    (k = 2 * k)
+     v = LITERAL OP LITERAL
+     v = v               (copia: a = b)
+     v = LITERAL         (asignación directa: k = 1)
+     v = ( expresion )   (con paréntesis, evalúa al parsear)
+   ════════════════════════════════════════════ */
+asignacion_bloque ::=
+
+    /* v = varIzq OP varDer  (e.g. suma = suma + i) */
+    VARIABLE:dest IGUAL VARIABLE:izq SUMA     VARIABLE:der
+    {: RESULT = new com.example.proyecto1_compi1.analizador.semantico.AnalizadorSemantico.AsignacionPendiente(dest.toString(), izq.toString(), "+", der.toString()); :}
+    | VARIABLE:dest IGUAL VARIABLE:izq RESTA    VARIABLE:der
+    {: RESULT = new com.example.proyecto1_compi1.analizador.semantico.AnalizadorSemantico.AsignacionPendiente(dest.toString(), izq.toString(), "-", der.toString()); :}
+    | VARIABLE:dest IGUAL VARIABLE:izq MULTI    VARIABLE:der
+    {: RESULT = new com.example.proyecto1_compi1.analizador.semantico.AnalizadorSemantico.AsignacionPendiente(dest.toString(), izq.toString(), "*", der.toString()); :}
+    | VARIABLE:dest IGUAL VARIABLE:izq DIVISION VARIABLE:der
+    {: RESULT = new com.example.proyecto1_compi1.analizador.semantico.AnalizadorSemantico.AsignacionPendiente(dest.toString(), izq.toString(), "/", der.toString()); :}
+    | VARIABLE:dest IGUAL VARIABLE:izq POTENCIA VARIABLE:der
+    {: RESULT = new com.example.proyecto1_compi1.analizador.semantico.AnalizadorSemantico.AsignacionPendiente(dest.toString(), izq.toString(), "^", der.toString()); :}
+    | VARIABLE:dest IGUAL VARIABLE:izq MODULO   VARIABLE:der
+    {: RESULT = new com.example.proyecto1_compi1.analizador.semantico.AnalizadorSemantico.AsignacionPendiente(dest.toString(), izq.toString(), "%", der.toString()); :}
+
+    /* v = varIzq OP LITERAL  (e.g. k = k + 1, suma = suma + 10) */
+    | VARIABLE:dest IGUAL VARIABLE:izq SUMA     ENTERO:n
+    {: RESULT = new com.example.proyecto1_compi1.analizador.semantico.AnalizadorSemantico.AsignacionPendiente(dest.toString(), izq.toString(), "+", Double.parseDouble(n.toString())); :}
+    | VARIABLE:dest IGUAL VARIABLE:izq RESTA    ENTERO:n
+    {: RESULT = new com.example.proyecto1_compi1.analizador.semantico.AnalizadorSemantico.AsignacionPendiente(dest.toString(), izq.toString(), "-", Double.parseDouble(n.toString())); :}
+    | VARIABLE:dest IGUAL VARIABLE:izq MULTI    ENTERO:n
+    {: RESULT = new com.example.proyecto1_compi1.analizador.semantico.AnalizadorSemantico.AsignacionPendiente(dest.toString(), izq.toString(), "*", Double.parseDouble(n.toString())); :}
+    | VARIABLE:dest IGUAL VARIABLE:izq DIVISION ENTERO:n
+    {: RESULT = new com.example.proyecto1_compi1.analizador.semantico.AnalizadorSemantico.AsignacionPendiente(dest.toString(), izq.toString(), "/", Double.parseDouble(n.toString())); :}
+    | VARIABLE:dest IGUAL VARIABLE:izq POTENCIA ENTERO:n
+    {: RESULT = new com.example.proyecto1_compi1.analizador.semantico.AnalizadorSemantico.AsignacionPendiente(dest.toString(), izq.toString(), "^", Double.parseDouble(n.toString())); :}
+    | VARIABLE:dest IGUAL VARIABLE:izq MODULO   ENTERO:n
+    {: RESULT = new com.example.proyecto1_compi1.analizador.semantico.AnalizadorSemantico.AsignacionPendiente(dest.toString(), izq.toString(), "%", Double.parseDouble(n.toString())); :}
+
+    | VARIABLE:dest IGUAL VARIABLE:izq SUMA     DECIMAL:n
+    {: RESULT = new com.example.proyecto1_compi1.analizador.semantico.AnalizadorSemantico.AsignacionPendiente(dest.toString(), izq.toString(), "+", Double.parseDouble(n.toString())); :}
+    | VARIABLE:dest IGUAL VARIABLE:izq RESTA    DECIMAL:n
+    {: RESULT = new com.example.proyecto1_compi1.analizador.semantico.AnalizadorSemantico.AsignacionPendiente(dest.toString(), izq.toString(), "-", Double.parseDouble(n.toString())); :}
+    | VARIABLE:dest IGUAL VARIABLE:izq MULTI    DECIMAL:n
+    {: RESULT = new com.example.proyecto1_compi1.analizador.semantico.AnalizadorSemantico.AsignacionPendiente(dest.toString(), izq.toString(), "*", Double.parseDouble(n.toString())); :}
+    | VARIABLE:dest IGUAL VARIABLE:izq DIVISION DECIMAL:n
+    {: RESULT = new com.example.proyecto1_compi1.analizador.semantico.AnalizadorSemantico.AsignacionPendiente(dest.toString(), izq.toString(), "/", Double.parseDouble(n.toString())); :}
+    | VARIABLE:dest IGUAL VARIABLE:izq POTENCIA DECIMAL:n
+    {: RESULT = new com.example.proyecto1_compi1.analizador.semantico.AnalizadorSemantico.AsignacionPendiente(dest.toString(), izq.toString(), "^", Double.parseDouble(n.toString())); :}
+    | VARIABLE:dest IGUAL VARIABLE:izq MODULO   DECIMAL:n
+    {: RESULT = new com.example.proyecto1_compi1.analizador.semantico.AnalizadorSemantico.AsignacionPendiente(dest.toString(), izq.toString(), "%", Double.parseDouble(n.toString())); :}
+
+    /* v = LITERAL OP var  (e.g. k = 2 * k) */
+    | VARIABLE:dest IGUAL ENTERO:n SUMA     VARIABLE:der
+    {: RESULT = new com.example.proyecto1_compi1.analizador.semantico.AnalizadorSemantico.AsignacionPendiente(dest.toString(), Double.parseDouble(n.toString()), "+", der.toString()); :}
+    | VARIABLE:dest IGUAL ENTERO:n RESTA    VARIABLE:der
+    {: RESULT = new com.example.proyecto1_compi1.analizador.semantico.AnalizadorSemantico.AsignacionPendiente(dest.toString(), Double.parseDouble(n.toString()), "-", der.toString()); :}
+    | VARIABLE:dest IGUAL ENTERO:n MULTI    VARIABLE:der
+    {: RESULT = new com.example.proyecto1_compi1.analizador.semantico.AnalizadorSemantico.AsignacionPendiente(dest.toString(), Double.parseDouble(n.toString()), "*", der.toString()); :}
+    | VARIABLE:dest IGUAL ENTERO:n DIVISION VARIABLE:der
+    {: RESULT = new com.example.proyecto1_compi1.analizador.semantico.AnalizadorSemantico.AsignacionPendiente(dest.toString(), Double.parseDouble(n.toString()), "/", der.toString()); :}
+    | VARIABLE:dest IGUAL ENTERO:n POTENCIA VARIABLE:der
+    {: RESULT = new com.example.proyecto1_compi1.analizador.semantico.AnalizadorSemantico.AsignacionPendiente(dest.toString(), Double.parseDouble(n.toString()), "^", der.toString()); :}
+    | VARIABLE:dest IGUAL ENTERO:n MODULO   VARIABLE:der
+    {: RESULT = new com.example.proyecto1_compi1.analizador.semantico.AnalizadorSemantico.AsignacionPendiente(dest.toString(), Double.parseDouble(n.toString()), "%", der.toString()); :}
+
+    | VARIABLE:dest IGUAL DECIMAL:n SUMA     VARIABLE:der
+    {: RESULT = new com.example.proyecto1_compi1.analizador.semantico.AnalizadorSemantico.AsignacionPendiente(dest.toString(), Double.parseDouble(n.toString()), "+", der.toString()); :}
+    | VARIABLE:dest IGUAL DECIMAL:n RESTA    VARIABLE:der
+    {: RESULT = new com.example.proyecto1_compi1.analizador.semantico.AnalizadorSemantico.AsignacionPendiente(dest.toString(), Double.parseDouble(n.toString()), "-", der.toString()); :}
+    | VARIABLE:dest IGUAL DECIMAL:n MULTI    VARIABLE:der
+    {: RESULT = new com.example.proyecto1_compi1.analizador.semantico.AnalizadorSemantico.AsignacionPendiente(dest.toString(), Double.parseDouble(n.toString()), "*", der.toString()); :}
+    | VARIABLE:dest IGUAL DECIMAL:n DIVISION VARIABLE:der
+    {: RESULT = new com.example.proyecto1_compi1.analizador.semantico.AnalizadorSemantico.AsignacionPendiente(dest.toString(), Double.parseDouble(n.toString()), "/", der.toString()); :}
+    | VARIABLE:dest IGUAL DECIMAL:n POTENCIA VARIABLE:der
+    {: RESULT = new com.example.proyecto1_compi1.analizador.semantico.AnalizadorSemantico.AsignacionPendiente(dest.toString(), Double.parseDouble(n.toString()), "^", der.toString()); :}
+    | VARIABLE:dest IGUAL DECIMAL:n MODULO   VARIABLE:der
+    {: RESULT = new com.example.proyecto1_compi1.analizador.semantico.AnalizadorSemantico.AsignacionPendiente(dest.toString(), Double.parseDouble(n.toString()), "%", der.toString()); :}
+
+    /* v = var  (copia directa: a = b) */
+    | VARIABLE:dest IGUAL VARIABLE:src
+    {: RESULT = new com.example.proyecto1_compi1.analizador.semantico.AnalizadorSemantico.AsignacionPendiente(dest.toString(), src.toString()); :}
+
+    /* v = var OP (expresion)  — e.g. acumulador = acumulador + (i * j) */
+    | VARIABLE:dest IGUAL VARIABLE:izq SUMA     PARENTESIS_ABRE expresion:e PARENTESIS_CIERRA
+    {: RESULT = new com.example.proyecto1_compi1.analizador.semantico.AnalizadorSemantico.AsignacionPendiente(dest.toString(), izq.toString(), "+", e); :}
+    | VARIABLE:dest IGUAL VARIABLE:izq RESTA    PARENTESIS_ABRE expresion:e PARENTESIS_CIERRA
+    {: RESULT = new com.example.proyecto1_compi1.analizador.semantico.AnalizadorSemantico.AsignacionPendiente(dest.toString(), izq.toString(), "-", e); :}
+    | VARIABLE:dest IGUAL VARIABLE:izq MULTI    PARENTESIS_ABRE expresion:e PARENTESIS_CIERRA
+    {: RESULT = new com.example.proyecto1_compi1.analizador.semantico.AnalizadorSemantico.AsignacionPendiente(dest.toString(), izq.toString(), "*", e); :}
+    | VARIABLE:dest IGUAL VARIABLE:izq DIVISION PARENTESIS_ABRE expresion:e PARENTESIS_CIERRA
+    {: RESULT = new com.example.proyecto1_compi1.analizador.semantico.AnalizadorSemantico.AsignacionPendiente(dest.toString(), izq.toString(), "/", e); :}
+
+    /* v = LITERAL  (asignación directa: k = 1, k = 3.14) */
+    | VARIABLE:dest IGUAL ENTERO:n
+    {: RESULT = new com.example.proyecto1_compi1.analizador.semantico.AnalizadorSemantico.AsignacionPendiente(dest.toString(), Double.parseDouble(n.toString())); :}
+    | VARIABLE:dest IGUAL DECIMAL:n
+    {: RESULT = new com.example.proyecto1_compi1.analizador.semantico.AnalizadorSemantico.AsignacionPendiente(dest.toString(), Double.parseDouble(n.toString())); :}
+
+    /* v = CADENA  (asignación de string: estado = "ACTIVO") */
+    | VARIABLE:dest IGUAL CADENA:s
+    {: RESULT = new com.example.proyecto1_compi1.analizador.semantico.AnalizadorSemantico.AsignacionPendiente(dest.toString(), s.toString()); :}
+
+    /* v = var + "cadena"  (e.g. log = log + "COND1 -> ") */
+    | VARIABLE:dest IGUAL VARIABLE:izq SUMA CADENA:s
+    {: RESULT = new com.example.proyecto1_compi1.analizador.semantico.AnalizadorSemantico.AsignacionPendiente(dest.toString(), izq.toString(), "+", s.toString()); :}
+
+    /* v = "cadena" + var  (e.g. log = "PREFIX" + log) */
+    | VARIABLE:dest IGUAL CADENA:s SUMA VARIABLE:der
+    {: RESULT = new com.example.proyecto1_compi1.analizador.semantico.AnalizadorSemantico.AsignacionPendiente(dest.toString(), s.toString(), "+", der.toString()); :}
+
+    /* v = "cadena" + "cadena" */
+    | VARIABLE:dest IGUAL CADENA:s1 SUMA CADENA:s2
+    {: RESULT = new com.example.proyecto1_compi1.analizador.semantico.AnalizadorSemantico.AsignacionPendiente(dest.toString(), s1.toString(), "+", s2.toString()); :}
+
+    /* v = ( expresion )  — expresión compleja con paréntesis.
+       Se evalúa al parsear (snapshot), útil para constantes calculadas. */
+    | VARIABLE:dest IGUAL PARENTESIS_ABRE expresion:e PARENTESIS_CIERRA
+    {: RESULT = new com.example.proyecto1_compi1.analizador.semantico.AnalizadorSemantico.AsignacionPendiente(dest.toString(), e); :}
     ;
 
 /* ════════════════════════════════════════════
    EXPRESIONES
    ════════════════════════════════════════════ */
-
-comodin ::=
-    INTERROGACION
-    {:
-        RESULT = "?";
-    :}
-;
 
 expresion ::=
 
@@ -347,79 +562,120 @@ expresion ::=
             RESULT = (valor != null) ? valor : v.toString();
         :}
 
-    | comodin:c
+    | INTERROGACION
         {: RESULT = "?"; :}
 
     | expresion:a SUMA expresion:b
-        {: RESULT = parser.semantico.suma(a, b); :}
+        {:
+            /* Si alguno de los operandos es String → concatenación */
+            Object va = a, vb = b;
+            if ((va instanceof String && !((String)va).equals("?") &&
+                 !((String)va).matches("-?[0-9]+(\\.[0-9]+)?"))
+                || (vb instanceof String && !((String)vb).equals("?") &&
+                    !((String)vb).matches("-?[0-9]+(\\.[0-9]+)?"))) {
+                RESULT = parser.semantico.toStringConcat(va, vb);
+            } else {
+                RESULT = parser.semantico.suma(va, vb);
+            }
+        :}
 
     | expresion:a RESTA expresion:b
-        {: RESULT = parser.semantico.resta(a, b); :}
+        {: RESULT = parser.semantico.resta(a,b); :}
 
     | expresion:a MULTI expresion:b
-        {: RESULT = parser.semantico.multiplicacion(a, b); :}
+        {: RESULT = parser.semantico.multiplicacion(a,b); :}
 
     | expresion:a DIVISION expresion:b
-        {: RESULT = parser.semantico.division(a, b, 0, 0); :}
+        {: RESULT = parser.semantico.division(a,b,0,0); :}
 
     | expresion:a POTENCIA expresion:b
-        {: RESULT = parser.semantico.potencia(a, b); :}
+        {: RESULT = parser.semantico.potencia(a,b); :}
 
     | expresion:a MODULO expresion:b
-        {: RESULT = parser.semantico.modulo(a, b, 0, 0); :}
-    | PARENTESIS_ABRE expresion:e PARENTESIS_CIERRA
-        {: RESULT = e; :}
+        {: RESULT = parser.semantico.modulo(a,b,0,0); :}
 
     | RESTA expresion:e
         {: RESULT = -parser.semantico.evaluar(e); :}
 
     | SUMA expresion:e
-        {: RESULT = +parser.semantico.evaluar(e); :}
-;
+        {: RESULT = parser.semantico.evaluar(e); :}
+
+    | PARENTESIS_ABRE expresion:e PARENTESIS_CIERRA
+        {: RESULT = e; :}
+    ;
 
 
 /* ════════════════════════════════════════════
    CONDICIONES
    ════════════════════════════════════════════ */
+
 condicion ::=
-    expresion:a MAYOR expresion:b
-    {:
-        parser.semantico.resetOperadorLogico();
-        RESULT = parser.semantico.mayor(a, b);
-    :}
-    | expresion:a MENOR expresion:b
-    {:
-        parser.semantico.resetOperadorLogico();
-        RESULT = parser.semantico.menor(a, b);
-    :}
-    | expresion:a IGUALIGUAL expresion:b
-    {:
-        parser.semantico.resetOperadorLogico();
-        RESULT = parser.semantico.igual(a, b);
-    :}
-    | expresion:a DIFERENTE expresion:b
-    {:
-        parser.semantico.resetOperadorLogico();
-        RESULT = parser.semantico.diferente(a, b);
-    :}
+    condicion_logica:c
+        {: RESULT = c; :}
+    ;
+
+/* ════════════════════════════════════════════
+   CONDICIONES LÓGICAS — jerarquía completa
+   ════════════════════════════════════════════ */
+condicion_logica ::=
+    condicion_or:c
+        {: RESULT = c; :}
+    ;
+
+/* OR tiene menor precedencia */
+condicion_or ::=
+      condicion_or:a OR condicion_and:b
+        {: RESULT = parser.semantico.or(a,b); :}
+    | condicion_and:a
+        {: RESULT = a; :}
+    ;
+
+/* AND tiene precedencia media */
+condicion_and ::=
+      condicion_and:a AND condicion_not:b
+        {: RESULT = parser.semantico.and(a,b); :}
+    | condicion_not:a
+        {: RESULT = a; :}
+    ;
+
+/* NOT tiene mayor precedencia */
+condicion_not ::=
+      NOT condicion_not:a
+        {: RESULT = parser.semantico.not(a); :}
+    | condicion_base:a
+        {: RESULT = a; :}
+    ;
+
+/* ════════════════════════════════════════════
+   CONDICION BASE — comparaciones atómicas
+   No incluye "expresion sola" para evitar
+   conflicto shift/reduce con expresion::=(expr)
+   ════════════════════════════════════════════ */
+condicion_base ::=
+    expresion:a MAYOR      expresion:b
+        {: RESULT = parser.semantico.mayor(a,b); :}
+
+    | expresion:a MENOR      expresion:b
+        {: RESULT = parser.semantico.menor(a,b); :}
+
     | expresion:a MAYORIGUAL expresion:b
-    {:
-        parser.semantico.resetOperadorLogico();
-        RESULT = parser.semantico.mayorIgual(a, b);
-    :}
+        {: RESULT = parser.semantico.mayorIgual(a,b); :}
+
     | expresion:a MENORIGUAL expresion:b
-    {:
-        parser.semantico.resetOperadorLogico();
-        RESULT = parser.semantico.menorIgual(a, b);
-    :}
-    | condicion:a AND condicion:b
-    {: RESULT = parser.semantico.and(a, b); :}
-    | condicion:a OR condicion:b
-    {: RESULT = parser.semantico.or(a, b); :}
-    | NOT condicion:c
-    {: RESULT = parser.semantico.not(c); :}
-    | PARENTESIS_ABRE condicion:c PARENTESIS_CIERRA
-    {: RESULT = c; :}
+        {: RESULT = parser.semantico.menorIgual(a,b); :}
+
+    | expresion:a IGUALIGUAL expresion:b
+        {: RESULT = parser.semantico.igual(a,b); :}
+
+    | expresion:a DIFERENTE  expresion:b
+        {: RESULT = parser.semantico.diferente(a,b); :}
+
+    /* ( condición lógica anidada ) — soporta:
+         ~(base == 0)
+         ((base * crecimiento) > 15)
+         (bandera < 3) && (acumulador >= 0)        */
+    | PARENTESIS_ABRE condicion_logica:c PARENTESIS_CIERRA
+        {: RESULT = c; :}
     ;
 
 /* ════════════════════════════════════════════
@@ -448,15 +704,13 @@ lista_instrucciones_bloque ::=
     ;
 
 instruccion_bloque ::=
-    element_en_lista:e  {: RESULT = e; :}
-    | declaracion       {: RESULT = null; :}
-    | asignacion        {: RESULT = null; :}
-    | bloque_codigo     {: RESULT = null; :}
-    | error PUNTOCOMA   {: RESULT = null; :}
-    /* Recuperación sin ; — para asignaciones sin punto y coma */
+    element_en_lista:e      {: RESULT = e; :}
+    | declaracion           {: RESULT = null; :}
+    | asignacion_bloque:a   {: RESULT = a; :}
+    | bloque_codigo         {: RESULT = null; :}
+    | error PUNTOCOMA       {: RESULT = null; :}
     | error LLAVE_CIERRA
     {:
-        /* devuelve el } al stream para que el bloque padre lo consuma */
         RESULT = null;
     :}
     ;
@@ -477,8 +731,7 @@ bloque_if ::=
       LLAVE_ABRE lista_instrucciones_bloque:si LLAVE_CIERRA
     {:
         if (parser.semantico.evaluarCondicion(c))
-            for (Object o : (ArrayList<Object>) si)
-                if (o != null) ResultParser.currentForm.addElement(o);
+            parser.ejecutarInstrucciones((ArrayList<Object>) si);
         RESULT = null;
     :}
 
@@ -494,8 +747,7 @@ bloque_if ::=
       ELSE LLAVE_ABRE LLAVE_CIERRA
     {:
         if (parser.semantico.evaluarCondicion(c))
-            for (Object o : (ArrayList<Object>) si)
-                if (o != null) ResultParser.currentForm.addElement(o);
+            parser.ejecutarInstrucciones((ArrayList<Object>) si);
         RESULT = null;
     :}
 
@@ -505,8 +757,7 @@ bloque_if ::=
       ELSE LLAVE_ABRE lista_instrucciones_bloque:no LLAVE_CIERRA
     {:
         if (!parser.semantico.evaluarCondicion(c))
-            for (Object o : (ArrayList<Object>) no)
-                if (o != null) ResultParser.currentForm.addElement(o);
+            parser.ejecutarInstrucciones((ArrayList<Object>) no);
         RESULT = null;
     :}
 
@@ -515,10 +766,10 @@ bloque_if ::=
       LLAVE_ABRE lista_instrucciones_bloque:si LLAVE_CIERRA
       ELSE LLAVE_ABRE lista_instrucciones_bloque:no LLAVE_CIERRA
     {:
-        ArrayList<Object> rama = parser.semantico.evaluarCondicion(c)
-            ? (ArrayList<Object>) si : (ArrayList<Object>) no;
-        for (Object o : rama)
-            if (o != null) ResultParser.currentForm.addElement(o);
+        if (parser.semantico.evaluarCondicion(c))
+            parser.ejecutarInstrucciones((ArrayList<Object>) si);
+        else
+            parser.ejecutarInstrucciones((ArrayList<Object>) no);
         RESULT = null;
     :}
 
@@ -528,13 +779,10 @@ bloque_if ::=
       ELSE IF PARENTESIS_ABRE condicion:c2 PARENTESIS_CIERRA
       LLAVE_ABRE lista_instrucciones_bloque:elseif LLAVE_CIERRA
     {:
-        if (parser.semantico.evaluarCondicion(c1)) {
-            for (Object o : (ArrayList<Object>) si)
-                if (o != null) ResultParser.currentForm.addElement(o);
-        } else if (parser.semantico.evaluarCondicion(c2)) {
-            for (Object o : (ArrayList<Object>) elseif)
-                if (o != null) ResultParser.currentForm.addElement(o);
-        }
+        if (parser.semantico.evaluarCondicion(c1))
+            parser.ejecutarInstrucciones((ArrayList<Object>) si);
+        else if (parser.semantico.evaluarCondicion(c2))
+            parser.ejecutarInstrucciones((ArrayList<Object>) elseif);
         RESULT = null;
     :}
 
@@ -545,16 +793,12 @@ bloque_if ::=
       LLAVE_ABRE lista_instrucciones_bloque:elseif LLAVE_CIERRA
       ELSE LLAVE_ABRE lista_instrucciones_bloque:no LLAVE_CIERRA
     {:
-        if (parser.semantico.evaluarCondicion(c1)) {
-            for (Object o : (ArrayList<Object>) si)
-                if (o != null) ResultParser.currentForm.addElement(o);
-        } else if (parser.semantico.evaluarCondicion(c2)) {
-            for (Object o : (ArrayList<Object>) elseif)
-                if (o != null) ResultParser.currentForm.addElement(o);
-        } else {
-            for (Object o : (ArrayList<Object>) no)
-                if (o != null) ResultParser.currentForm.addElement(o);
-        }
+        if (parser.semantico.evaluarCondicion(c1))
+            parser.ejecutarInstrucciones((ArrayList<Object>) si);
+        else if (parser.semantico.evaluarCondicion(c2))
+            parser.ejecutarInstrucciones((ArrayList<Object>) elseif);
+        else
+            parser.ejecutarInstrucciones((ArrayList<Object>) no);
         RESULT = null;
     :}
     ;
@@ -582,22 +826,21 @@ bloque_while ::=
       LLAVE_ABRE lista_instrucciones_bloque:instr LLAVE_CIERRA
     {:
         int iter = 0;
-        /*
-         * Primera evaluación: usa c (ya evaluado al parsear).
-         * Siguientes evaluaciones: recalcularUltimaCondicion() usa los
-         * operandos originales guardados en semantico.ultimaCondicion
-         * y los re-evalúa con los valores actuales de valorVariables.
-         */
         boolean condicion = parser.semantico.evaluarCondicion(c);
         while (condicion && iter < parser.semantico.getMaxIteraciones()) {
-            /* Ejecuta instrucciones — las asignaciones actualizan valorVariables */
-            for (Object o : (ArrayList<Object>) instr)
-                if (o != null) ResultParser.currentForm.addElement(o);
+            for (Object o : (ArrayList<Object>) instr) {
+                if (o == null) continue;
+                if (o instanceof com.example.proyecto1_compi1.analizador.semantico.AnalizadorSemantico.AsignacionPendiente) {
+                    ((com.example.proyecto1_compi1.analizador.semantico.AnalizadorSemantico.AsignacionPendiente) o)
+                        .ejecutar(parser.semantico);
+                } else {
+                    ResultParser.currentForm.addElement(o);
+                }
+            }
             iter++;
-            /* Re-evalúa con los valores actualizados de las variables */
             condicion = parser.semantico.recalcularUltimaCondicion();
         }
-        parser.semantico.reportarLimiteCiclo("WHILE", iter, 0, 0);
+        parser.semantico.reportarLimiteCiclo("WHILE", iter, parser.currentLine, parser.currentCol);
         RESULT = null;
     :}
     ;
@@ -619,13 +862,19 @@ bloque_do_while ::=
     {:
         int iter = 0;
         do {
-            for (Object o : (ArrayList<Object>) instr)
-                if (o != null) ResultParser.currentForm.addElement(o);
+            for (Object o : (ArrayList<Object>) instr) {
+                if (o == null) continue;
+                if (o instanceof com.example.proyecto1_compi1.analizador.semantico.AnalizadorSemantico.AsignacionPendiente) {
+                    ((com.example.proyecto1_compi1.analizador.semantico.AnalizadorSemantico.AsignacionPendiente) o)
+                        .ejecutar(parser.semantico);
+                } else {
+                    ResultParser.currentForm.addElement(o);
+                }
+            }
             iter++;
-            /* Después de la primera iteración re-evalúa dinámicamente */
         } while (parser.semantico.recalcularUltimaCondicion()
                  && iter < parser.semantico.getMaxIteraciones());
-        parser.semantico.reportarLimiteCiclo("DO-WHILE", iter, 0, 0);
+        parser.semantico.reportarLimiteCiclo("DO-WHILE", iter, parser.currentLine, parser.currentCol);
         RESULT = null;
     :}
     ;
@@ -643,7 +892,7 @@ bloque_for ::=
     PARENTESIS_CIERRA
     LLAVE_ABRE LLAVE_CIERRA
     {:
-        parser.semantico.declararVariableFor(v.toString(), ini, 0, 0);
+        parser.semantico.declararVariableFor(v.toString(), ini, parser.currentLine, parser.currentCol);
         RESULT = null;
     :}
 
@@ -665,32 +914,29 @@ bloque_for ::=
       PARENTESIS_CIERRA
       LLAVE_ABRE lista_instrucciones_bloque:instr LLAVE_CIERRA
     {:
-        parser.semantico.declararVariableFor(v.toString(), ini, 0, 0);
+        parser.semantico.declararVariableFor(v.toString(), ini, parser.currentLine, parser.currentCol);
         int iter = 0;
 
-        /* Primera evaluación usa cond (snapshot al parsear) */
         boolean condActual = parser.semantico.evaluarCondicion(cond);
         while (condActual && iter < parser.semantico.getMaxIteraciones()) {
 
-            /* Ejecuta el cuerpo */
-            for (Object o : (ArrayList<Object>) instr)
-                if (o != null) ResultParser.currentForm.addElement(o);
+            for (Object o : (ArrayList<Object>) instr) {
+                if (o == null) continue;
+                if (o instanceof com.example.proyecto1_compi1.analizador.semantico.AnalizadorSemantico.AsignacionPendiente) {
+                    ((com.example.proyecto1_compi1.analizador.semantico.AnalizadorSemantico.AsignacionPendiente) o)
+                        .ejecutar(parser.semantico);
+                } else {
+                    ResultParser.currentForm.addElement(o);
+                }
+            }
 
-            /*
-             * Incrementa la variable de control.
-             * evaluar(inc) re-evalúa la expresión con el valor ACTUAL de vInc
-             * porque evaluar() busca en valorVariables["vInc"] que ya tiene
-             * el valor actualizado por la iteración anterior.
-             */
             double nuevoValor = parser.semantico.evaluar(inc);
             parser.semantico.actualizarVariableCiclo(vInc.toString(), nuevoValor);
 
             iter++;
-
-            /* Re-evalúa la condición con los valores actualizados */
             condActual = parser.semantico.recalcularUltimaCondicion();
         }
-        parser.semantico.reportarLimiteCiclo("FOR", iter, 0, 0);
+        parser.semantico.reportarLimiteCiclo("FOR", iter, parser.currentLine, parser.currentCol);
         RESULT = null;
     :}
 
@@ -700,7 +946,7 @@ bloque_for ::=
       PARENTESIS_CIERRA
       LLAVE_ABRE LLAVE_CIERRA
     {:
-        parser.semantico.declararVariableFor(v.toString(), desde, 0, 0);
+        parser.semantico.declararVariableFor(v.toString(), desde, parser.currentLine, parser.currentCol);
         RESULT = null;
     :}
 
@@ -718,25 +964,32 @@ bloque_for ::=
         int start = (int) parser.semantico.evaluar(desde);
         int end   = (int) parser.semantico.evaluar(hasta);
 
-        /* Valida que el rango sea válido */
         if (start > end) {
             parser.semantico.getErrores().add(
                 new com.example.proyecto1_compi1.token.Token(
-                    v.toString(), 0, 0, "Advertencia",
+                    v.toString(), parser.currentLine, parser.currentCol, "Advertencia",
                     "FOR rango: inicio (" + start + ") > fin (" + end +
                     ") — el ciclo no se ejecutará."
                 )
             );
         }
 
-        parser.semantico.declararVariableFor(v.toString(), (double) start, 0, 0);
+        parser.semantico.declararVariableFor(v.toString(), (double) start, parser.currentLine, parser.currentCol);
 
-        for (int i = start; i <= end; i++) {
-            /* Actualiza la variable ANTES de ejecutar el cuerpo */
-            parser.semantico.actualizarVariableCiclo(v.toString(), (double) i);
+        for (int _i = start; _i <= end; _i++) {
+            /* Actualiza la variable de control ANTES del cuerpo */
+            parser.semantico.actualizarVariableCiclo(v.toString(), (double) _i);
 
-            for (Object o : (ArrayList<Object>) instr)
-                if (o != null) ResultParser.currentForm.addElement(o);
+            for (Object o : (ArrayList<Object>) instr) {
+                if (o == null) continue;
+                /* Si es AsignacionPendiente, ejecutarla ahora con valores actuales */
+                if (o instanceof com.example.proyecto1_compi1.analizador.semantico.AnalizadorSemantico.AsignacionPendiente) {
+                    ((com.example.proyecto1_compi1.analizador.semantico.AnalizadorSemantico.AsignacionPendiente) o)
+                        .ejecutar(parser.semantico);
+                } else {
+                    ResultParser.currentForm.addElement(o);
+                }
+            }
         }
         RESULT = null;
     :}
@@ -759,10 +1012,9 @@ drop_q ::=
     {:
         DropQuestion drop = new DropQuestion();
         for (PropertyItem prop : p) drop.addProperty(prop);
-        /* ✅ Solo valida correct si NO usa PokeAPI */
         if (drop.getOptionsPoke() == null || drop.getOptionsPoke().isEmpty()) {
             parser.semantico.validarCorrect(
-                drop.getLabel(), drop.getOptions(), drop.getCorrect(), 0, 0);
+                drop.getLabel(), drop.getOptions(), drop.getCorrect(), parser.currentLine, parser.currentCol);
         }
         RESULT = drop;
     :}
@@ -775,9 +1027,9 @@ select_q ::=
         for (PropertyItem prop : p) select.addProperty(prop);
         if (select.getOptionsPoke() == null || select.getOptionsPoke().isEmpty()) {
             parser.semantico.validarOpcionesSelect(
-                select.getLabel(), select.getOptions(), 0, 0);
+                select.getLabel(), select.getOptions(), parser.currentLine, parser.currentCol);
             parser.semantico.validarCorrect(
-                select.getLabel(), select.getOptions(), select.getCorrect(), 0, 0);
+                select.getLabel(), select.getOptions(), select.getCorrect(), parser.currentLine, parser.currentCol);
         }
         RESULT = select;
     :}
@@ -790,7 +1042,7 @@ multiple_q ::=
         for (PropertyItem prop : p) multiple.addProperty(prop);
         if (multiple.getOptionsPoke() == null || multiple.getOptionsPoke().isEmpty()) {
             parser.semantico.validarCorrect(
-                multiple.getLabel(), multiple.getOptions(), multiple.getCorrect(), 0, 0);
+                multiple.getLabel(), multiple.getOptions(), multiple.getCorrect(), parser.currentLine, parser.currentCol);
         }
         RESULT = multiple;
     :}
@@ -812,9 +1064,9 @@ question_prop ::=
         RESULT = new PropertyItem("label",
             parser.semantico.expresionAString(e));
     :}
-    | WIDTH DOSPUNTOS comodin_valor:n
+    | WIDTH DOSPUNTOS expresion:n
     {: RESULT = new PropertyItem("width",  parser.semantico.evaluarEntero(n)); :}
-    | HEIGHT DOSPUNTOS comodin_valor:n
+    | HEIGHT DOSPUNTOS expresion:n
     {: RESULT = new PropertyItem("height", parser.semantico.evaluarEntero(n)); :}
     | OPTIONS DOSPUNTOS lista_opciones:o
     {: RESULT = new PropertyItem("options", o); :}
@@ -824,7 +1076,11 @@ question_prop ::=
     | CORRECT DOSPUNTOS expresion:n
     {:
         ArrayList<Integer> list = new ArrayList<>();
-        list.add(parser.semantico.evaluarEntero(n));
+        if ("?".equals(n)) {
+            list.add(-1);
+        } else {
+            list.add(parser.semantico.evaluarEntero(n));
+        }
         RESULT = new PropertyItem("correct", list);
     :}
     | CORRECT DOSPUNTOS LLAVE_ABRE int_list:l LLAVE_CIERRA
@@ -835,72 +1091,53 @@ question_prop ::=
     {: RESULT = new PropertyItem("styles", s); :}
     ;
 
-comodin_valor ::=
-    expresion:e     {: RESULT = e; :}
-    ;
+
 
 lista_opciones ::=
     LLAVE_ABRE lista_strings:l LLAVE_CIERRA {: RESULT = l; :}
     ;
 
-/* ════════════════════════════════════════════════════════════
-   PARSER.cup — SECCIONES QUE REEMPLAZAR COMPLETAMENTE
-   Copia estas reglas sobre las existentes en tu Parser.cup
-   ════════════════════════════════════════════════════════════ */
+
 
 /* ── 1. lista_strings — acepta CADENA, comodín y expresión ──────────────── */
 lista_strings ::=
-
-    /* Base: un CADENA */
-    CADENA:c
+    expresion:e
     {:
         ArrayList<String> list = new ArrayList<>();
-        list.add(c.toString().trim());
+        Object val = parser.semantico.expresionAString(e);
+        list.add(val != null ? val.toString() : "");
         RESULT = list;
     :}
-
-    /* Base: un comodín */
-    | INTERROGACION
+    | lista_strings:l COMA expresion:e
     {:
-        ArrayList<String> list = new ArrayList<>();
-        list.add("?");
-        RESULT = list;
-    :}
-
-    /* Acumulación: + CADENA */
-    | lista_strings:l COMA CADENA:c
-    {:
-        l.add(c.toString().trim());
-        RESULT = l;
-    :}
-
-    /* Acumulación: + comodín */
-    | lista_strings:l COMA INTERROGACION
-    {:
-        l.add("?");
+        Object val = parser.semantico.expresionAString(e);
+        l.add(val != null ? val.toString() : "");
         RESULT = l;
     :}
     ;
 
 /* ── 2. int_list — acepta expresion y comodín, no solo ENTERO ───────────── */
 int_list ::=
-
-    /* Base: expresión numérica (cubre ENTERO, DECIMAL, variable) */
     expresion:e
     {:
         ArrayList<Integer> list = new ArrayList<>();
-        list.add(parser.semantico.evaluarEntero(e));
+        if ("?".equals(e)) {
+            // Para comodines, guardamos -1 o un valor especial
+            list.add(-1);
+        } else {
+            list.add(parser.semantico.evaluarEntero(e));
+        }
         RESULT = list;
     :}
-
-
-    /* Acumulación: + expresión */
     | int_list:l COMA expresion:e
     {:
-        l.add(parser.semantico.evaluarEntero(e));
+        if ("?".equals(e)) {
+            l.add(-1);
+        } else {
+            l.add(parser.semantico.evaluarEntero(e));
+        }
         RESULT = l;
     :}
-
     ;
 
 /* ════════════════════════════════════════════
@@ -929,11 +1166,6 @@ text_prop ::=
     CONTENT DOSPUNTOS expresion:e
     {:
         RESULT = new PropertyItem("content",
-            parser.semantico.expresionAString(e));
-    :}
-    | LABEL DOSPUNTOS expresion:e
-    {:
-        RESULT = new PropertyItem("label",
             parser.semantico.expresionAString(e));
     :}
     | WIDTH  DOSPUNTOS expresion:n
@@ -1091,26 +1323,32 @@ special_props ::=
     ;
 
 special_prop ::=
-    WIDTH  DOSPUNTOS special_prop_value:v {: RESULT = new PropertyItem("width",  v); :}
-    | HEIGHT DOSPUNTOS special_prop_value:v {: RESULT = new PropertyItem("height", v); :}
-    | LABEL  DOSPUNTOS special_prop_value:v {: RESULT = new PropertyItem("label",  v); :}
+    WIDTH  DOSPUNTOS expresion:v {: RESULT = new PropertyItem("width",  v); :}
+    | HEIGHT DOSPUNTOS expresion:v {: RESULT = new PropertyItem("height", v); :}
+    | LABEL  DOSPUNTOS expresion:v {: RESULT = new PropertyItem("label",  v); :}
     | OPTIONS DOSPUNTOS lista_opciones:o    {: RESULT = new PropertyItem("options", o); :}
     | OPTIONS DOSPUNTOS poke_call:p         {: RESULT = new PropertyItem("options_poke", p); :}
     | poke_call:p {: RESULT = new PropertyItem("options_poke", p); :}
-    | CORRECT DOSPUNTOS special_prop_value:v {: RESULT = new PropertyItem("correct", v); :}
+    | CORRECT DOSPUNTOS expresion:v
+    {:
+        ArrayList<Object> list = new ArrayList<>();
+        if ("?".equals(v)) {
+            list.add("?");
+        } else {
+            list.add(v);
+        }
+        RESULT = new PropertyItem("correct", list);
+    :}
     | CORRECT DOSPUNTOS LLAVE_ABRE int_list:l LLAVE_CIERRA
     {: RESULT = new PropertyItem("correct", l); :}
     | CORRECT DOSPUNTOS LLAVE_ABRE LLAVE_CIERRA
     {: RESULT = new PropertyItem("correct", new ArrayList<Integer>()); :}
     | styles_block:s
     {: RESULT = new PropertyItem("styles", s); :}
-    | VARIABLE:key DOSPUNTOS special_prop_value:v
+    | VARIABLE:key DOSPUNTOS expresion:v
     {: RESULT = new PropertyItem(key.toString().toLowerCase(), v); :}
     ;
 
-special_prop_value ::=
-    expresion:e     {: RESULT = e; :}
-    ;
 
 draw_stmt ::=
     VARIABLE:v PUNTO DRAW
@@ -1120,7 +1358,7 @@ draw_stmt ::=
             ? ResultParser.currentForm.findSpecialQuestion(v.toString()) : null;
         if (sq == null) {
             parser.semantico.getErrores().add(new Token(
-                v.toString(), 0, 0, "Semántico",
+                v.toString(), parser.currentLine, parser.currentCol, "Semántico",
                 "Variable special '" + v + "' no declarada."));
         } else {
             // EVALUAR TODOS LOS ARGUMENTOS ANTES DE PASARLOS
@@ -1134,7 +1372,7 @@ draw_stmt ::=
 
             if (evaluatedArgs.size() != sq.getWildcardCount()) {
                 parser.semantico.getErrores().add(new Token(
-                    v.toString(), 0, 0, "Semántico",
+                    v.toString(), parser.currentLine, parser.currentCol, "Semántico",
                     "'" + v + ".draw()' espera " + sq.getWildcardCount() +
                     " argumento(s) pero recibió " + evaluatedArgs.size() + "."));
             } else {
@@ -1152,11 +1390,11 @@ draw_stmt ::=
             ? ResultParser.currentForm.findSpecialQuestion(v.toString()) : null;
         if (sq == null) {
             parser.semantico.getErrores().add(new Token(
-                v.toString(), 0, 0, "Semántico",
+                v.toString(), parser.currentLine, parser.currentCol, "Semántico",
                 "Variable special '" + v + "' no declarada."));
         } else if (sq.getWildcardCount() != 0) {
             parser.semantico.getErrores().add(new Token(
-                v.toString(), 0, 0, "Semántico",
+                v.toString(), parser.currentLine, parser.currentCol, "Semántico",
                 "'" + v + ".draw()' necesita " + sq.getWildcardCount() +
                 " argumento(s)."));
         } else {
@@ -1196,74 +1434,69 @@ poke_call ::=
 
 /* ESTILOS Y COLORES */
 styles_block ::=
-    STYLES CORCHETE_ABRE style_list:s CORCHETE_CIERRA {: RESULT = s; :}
-    ;
+    STYLES CORCHETE_ABRE style_list:s CORCHETE_CIERRA
+    {: RESULT = s; :}
+;
 
+/* lista separada por coma */
 style_list ::=
-    style_list:l COMA style_item:s {: l.add(s); RESULT = l; :}
-    | style_item:s
+    style_list:l COMA style_item:s
+    {:
+        l.add(s);
+        RESULT = l;
+    :}
+
+    |
+
+    style_item:s
     {:
         ArrayList<Object> list = new ArrayList<>();
         list.add(s);
         RESULT = list;
     :}
-    ;
+;
 
+/* una sola forma de definir estilos */
 style_item ::=
+
+    /* COLOR */
     STYLE_COLOR DOSPUNTOS color_value:c
-    {: RESULT = new ColorStyle(c); :}
+    {:
+        RESULT = new ColorStyle(c);
+    :}
 
+    /* BACKGROUND */
     | STYLE_BACKGROUND DOSPUNTOS color_value:c
-    {: RESULT = new BackgroundStyle(c); :}
+    {:
+        RESULT = new BackgroundStyle(c);
+    :}
 
-    | STYLE_SIZE DOSPUNTOS expresion:n
-    {: RESULT = new TextSizeStyle(parser.semantico.evaluarEntero(n)); :}
-
+    /* FONT */
     | STYLE_FONT DOSPUNTOS font_value:f
-    {: RESULT = new FontStyle(f); :}
-
-    /* "border": (grosor, TIPO, color) */
-    | STYLE_BORDER DOSPUNTOS PARENTESIS_ABRE
-        expresion:grosor COMA tipo_borde:t COMA color_value:c
-      PARENTESIS_CIERRA
     {:
-        RESULT = t + ":" + parser.semantico.evaluarEntero(grosor) +
-                 ":" + c.toString();
+        RESULT = new FontStyle(f.toString());
     :}
 
-    /* RGB con comodines: "color": (r, g, b) */
-    | STYLE_COLOR DOSPUNTOS PARENTESIS_ABRE
-        expresion:r COMA expresion:g COMA expresion:b
-      PARENTESIS_CIERRA
+    /* SIZE dinámico */
+    | STYLE_SIZE DOSPUNTOS expresion:n
     {:
-        RESULT = new RgbStyleWithWildcard(r, g, b);
+        int size = parser.semantico.evaluarEntero(n);
+        RESULT = new TextSizeStyle(size);
     :}
 
-    | STYLE_BACKGROUND DOSPUNTOS PARENTESIS_ABRE
-        expresion:r COMA expresion:g COMA expresion:b
-      PARENTESIS_CIERRA
+    /* BORDER dinámico */
+    | STYLE_BORDER DOSPUNTOS
+        PARENTESIS_ABRE expresion:w COMA tipo_borde:t COMA color_value:c PARENTESIS_CIERRA
     {:
-        RESULT = new BackgroundStyleWithWildcard(r, g, b);
+
+
+        RESULT = new BorderStyle(
+            (int) w,
+            t.toString(),
+            c
+        );
     :}
 
-    /* HSL con comodines: "color": <h, s, l> */
-    | STYLE_COLOR DOSPUNTOS MENOR
-        expresion:r COMA expresion:g COMA expresion:b
-      MAYOR
-    {:
-        RESULT = new RgbStyleWithWildcard(r, g, b);
-    :}
-
-    | STYLE_BACKGROUND DOSPUNTOS MENOR
-        expresion:r COMA expresion:g COMA expresion:b
-      MAYOR
-    {:
-        RESULT = new BackgroundStyleWithWildcard(r, g, b);
-    :}
-    ;
-
-comodin_color ::=
-    expresion:e     {: RESULT = e; :}
 ;
 
 tipo_borde ::=
@@ -1272,41 +1505,74 @@ tipo_borde ::=
     | DOTTED  {: RESULT = "DOTTED"; :}
     | LINE    {: RESULT = "LINE"; :}
     ;
-color_value ::=
-    HEXCOLOR:h
-    {: RESULT = new HexaColor(h.toString()); :}
 
+/* ════════════════════════════════════════════
+   COLOR VALUE CON EXPRESIONES
+   ════════════════════════════════════════════ */
+color_value ::=
+
+    HEXCOLOR:h
+    {:
+        RESULT = new HexaColor(h.toString());
+    :}
+
+    /* RGB fijo */
     | RGB_COLOR:r
     {:
         String s = r.toString().replaceAll("[()\\s]", "");
         String[] p = s.split(",");
+
         RESULT = new RgbColor(
-            Integer.parseInt(p[0].trim()),
-            Integer.parseInt(p[1].trim()),
-            Integer.parseInt(p[2].trim())
+            Integer.parseInt(p[0]),
+            Integer.parseInt(p[1]),
+            Integer.parseInt(p[2])
         );
     :}
 
+    /* HSL fijo */
     | HSL_COLOR:h
     {:
         String s = h.toString().replaceAll("[<>\\s]", "");
         String[] p = s.split(",");
+
         RESULT = new HslColor(
-            Float.parseFloat(p[0].trim()),
-            Float.parseFloat(p[1].trim()),
-            Float.parseFloat(p[2].trim())
+            Float.parseFloat(p[0]),
+            Float.parseFloat(p[1]),
+            Float.parseFloat(p[2])
         );
     :}
 
-    | RED    {: RESULT = BaseColor.RED;    :}
-    | BLUE   {: RESULT = BaseColor.BLUE;   :}
-    | GREEN  {: RESULT = BaseColor.GREEN;  :}
+    /* RGB dinámico con expresiones */
+    | PARENTESIS_ABRE expresion:r COMA expresion:g COMA expresion:b PARENTESIS_CIERRA
+    {:
+        RESULT = new RgbColor(
+            parser.semantico.evaluarColorComponente(r),
+            parser.semantico.evaluarColorComponente(g),
+            parser.semantico.evaluarColorComponente(b)
+        );
+    :}
+
+    /* HSL dinámico con expresiones */
+    | MENOR expresion:h COMA expresion:s COMA expresion:l MAYOR
+    {:
+        RESULT = new HslColor(
+            parser.semantico.evaluarHslComponente(h),
+            parser.semantico.evaluarHslComponente(s),
+            parser.semantico.evaluarHslComponente(l)
+        );
+    :}
+
+    /* colores base */
+    | RED    {: RESULT = BaseColor.RED; :}
+    | BLUE   {: RESULT = BaseColor.BLUE; :}
+    | GREEN  {: RESULT = BaseColor.GREEN; :}
     | PURPLE {: RESULT = BaseColor.PURPLE; :}
-    | SKY    {: RESULT = BaseColor.SKY;    :}
+    | SKY    {: RESULT = BaseColor.SKY; :}
     | YELLOW {: RESULT = BaseColor.YELLOW; :}
-    | BLACK  {: RESULT = BaseColor.BLACK;  :}
-    | WHITE  {: RESULT = BaseColor.WHITE;  :}
-    ;
+    | BLACK  {: RESULT = BaseColor.BLACK; :}
+    | WHITE  {: RESULT = BaseColor.WHITE; :}
+
+;
 
 font_value ::=
     MONO        {: RESULT = "MONO";       :}

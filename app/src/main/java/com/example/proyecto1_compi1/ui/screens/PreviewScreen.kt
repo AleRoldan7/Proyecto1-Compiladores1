@@ -415,9 +415,11 @@ fun generarPKMCompleto(
     val fecha = LocalDate.now()
     val hora  = LocalTime.now().withNano(0)
     val elementos = mutableListOf<Any>()
+
     forms.forEach { form ->
         form.elements.forEach { el ->
-            recolectarElemento(el, elementos)
+            // Solo recolectar elementos estructurales (no variables ni ciclos)
+            recolectarElementoEstructural(el, elementos)
         }
     }
 
@@ -428,6 +430,7 @@ fun generarPKMCompleto(
     var totalDrop      = 0
     var totalSelect    = 0
     var totalMultiple  = 0
+    var totalTextos    = 0
 
     fun contarRecursivo(el: Any) {
         when (el) {
@@ -439,6 +442,7 @@ fun generarPKMCompleto(
             is SelectQuestion  -> { totalPreguntas++; totalSelect++   }
             is DropQuestion    -> { totalPreguntas++; totalDrop++     }
             is MultipleQuestion -> { totalPreguntas++; totalMultiple++ }
+            is TextModel       -> { totalTextos++ }
         }
     }
     elementos.forEach { contarRecursivo(it) }
@@ -448,41 +452,59 @@ fun generarPKMCompleto(
 
     return buildString {
         appendLine("###")
-        appendLine("FormName: $nameForm")
         appendLine("Author: $autor")
-        appendLine("Date: $fecha")
-        appendLine("Time: $hora")
-        appendLine("Description: $descripcion")
-        appendLine("Sections: $totalSecciones")
-        appendLine("Questions: $totalPreguntas")
-        appendLine("Abiertas: $totalAbiertas")
-        appendLine("Desplegables: $totalDrop")
-        appendLine("Seleccion: $totalSelect")
-        appendLine("Multiples: $totalMultiple")
+        appendLine("Fecha: $fecha")
+        appendLine("Hora: $hora")
+        appendLine("Descripcion: $descripcion")
+        appendLine("Total de Secciones: $totalSecciones")
+        appendLine("Total de Preguntas: $totalPreguntas")
+        appendLine("    Abiertas: $totalAbiertas")
+        appendLine("    Desplegables: $totalDrop")
+        appendLine("    Seleccion: $totalSelect")
+        appendLine("    Multiples: $totalMultiple")
+        appendLine("    Textos (Abiertos): $totalTextos")
         appendLine("###")
         appendLine()
         append(contenido.toString())
     }
 }
 
-private fun recolectarElemento(el: Any?, dest: MutableList<Any>) {
+/**
+ * Recolecta SOLO elementos estructurales (secciones, tablas, preguntas, textos)
+ * Ignora variables, asignaciones, ciclos, condicionales, etc.
+ */
+private fun recolectarElementoEstructural(el: Any?, dest: MutableList<Any>) {
     if (el == null) return
-    when (el) {
 
+    when (el) {
+        // Elementos que SÍ se guardan en PKM
         is OpenQuestion,
         is SelectQuestion,
         is DropQuestion,
         is MultipleQuestion,
         is TextModel,
-        is SectionsModel,
-        is TableModel -> dest.add(el)
+        is TableModel -> {
+            dest.add(el)
+        }
 
+        is SectionsModel -> {
+            // Guardar la sección
+            dest.add(el)
+            // Recolectar sus elementos hijos (pueden tener más estructura)
+            el.elements?.forEach { sub ->
+                recolectarElementoEstructural(sub, dest)
+            }
+        }
+
+        // Si es una pregunta genérica
         is QuestionModel -> dest.add(el)
 
-        // ── Todo lo demás (variables, null, etc.) → ignorar ──────────────
+        // Ignorar todo lo demás (variables, ciclos, asignaciones, etc.)
+        else -> {
+            // No hacer nada - estos elementos no van al PKM
+        }
     }
 }
-
 
 fun serializarElemento(el: Any): String = buildString {
     when (el) {
@@ -497,7 +519,7 @@ fun serializarElemento(el: Any): String = buildString {
 }
 
 private fun serializarTexto(t: TextModel): String = buildString {
-    val label = cleanStr( t.content ?: "")
+    val label = cleanStr(t.content ?: "")
     if (!t.styles.isNullOrEmpty()) {
         appendLine("<text=${t.width},${t.height},\"$label\">")
         append(serializarEstilos(t.styles))
@@ -506,7 +528,6 @@ private fun serializarTexto(t: TextModel): String = buildString {
         appendLine("<text=${t.width},${t.height},\"$label\"/>")
     }
 }
-
 
 private fun serializarOpen(q: OpenQuestion): String = buildString {
     val label = cleanStr(q.label ?: "")
@@ -519,10 +540,9 @@ private fun serializarOpen(q: OpenQuestion): String = buildString {
     }
 }
 
-
 private fun serializarSelect(q: SelectQuestion): String = buildString {
-    val label   = cleanStr(q.label ?: "")
-    val opts    = q.options.joinToString(",") { "\"${cleanStr(it)}\"" }
+    val label = cleanStr(q.label ?: "")
+    val opts = q.options.joinToString(",") { "\"${cleanStr(it)}\"" }
     val correct = q.correct.firstOrNull() ?: -1
 
     if (!q.styles.isNullOrEmpty()) {
@@ -534,10 +554,9 @@ private fun serializarSelect(q: SelectQuestion): String = buildString {
     }
 }
 
-
 private fun serializarDrop(q: DropQuestion): String = buildString {
-    val label   = cleanStr(q.label ?: "")
-    val opts    = q.options.joinToString(",") { "\"${cleanStr(it)}\"" }
+    val label = cleanStr(q.label ?: "")
+    val opts = q.options.joinToString(",") { "\"${cleanStr(it)}\"" }
     val correct = q.correct.firstOrNull() ?: -1
 
     if (!q.styles.isNullOrEmpty()) {
@@ -549,10 +568,9 @@ private fun serializarDrop(q: DropQuestion): String = buildString {
     }
 }
 
-
 private fun serializarMultiple(q: MultipleQuestion): String = buildString {
-    val label   = cleanStr(q.label ?: "")
-    val opts    = q.options.joinToString(",") { "\"${cleanStr(it)}\"" }
+    val label = cleanStr(q.label ?: "")
+    val opts = q.options.joinToString(",") { "\"${cleanStr(it)}\"" }
     val correct = q.correct.joinToString(",")
 
     if (!q.styles.isNullOrEmpty()) {
@@ -564,35 +582,39 @@ private fun serializarMultiple(q: MultipleQuestion): String = buildString {
     }
 }
 
-
 private fun serializarSeccion(s: SectionsModel): String = buildString {
     appendLine("<section=${s.width},${s.height},${s.pointX},${s.pointY},${s.orientation}>")
 
-    if (!s.styles.isNullOrEmpty())
+    if (!s.styles.isNullOrEmpty()) {
         append(serializarEstilos(s.styles))
+    }
 
     appendLine("<content>")
     s.elements?.forEach { sub ->
-        if (sub != null) append(serializarElemento(sub))
+        if (sub != null) {
+            append(serializarElemento(sub))
+        }
     }
     appendLine("</content>")
     appendLine("</section>")
     appendLine()
 }
 
-
 private fun serializarTabla(t: TableModel): String = buildString {
     appendLine("<table=${t.width},${t.height},${t.pointX},${t.pointY}>")
 
-    if (!t.styles.isNullOrEmpty())
+    if (!t.styles.isNullOrEmpty()) {
         append(serializarEstilos(t.styles))
+    }
 
     appendLine("<content>")
     t.elements.forEach { row ->
         appendLine("<line>")
         (row as? List<*>)?.forEach { cell ->
             appendLine("<element>")
-            if (cell != null) append(serializarElemento(cell))
+            if (cell != null) {
+                append(serializarElemento(cell))
+            }
             appendLine("</element>")
         }
         appendLine("</line>")
@@ -602,44 +624,68 @@ private fun serializarTabla(t: TableModel): String = buildString {
     appendLine()
 }
 
-
+/**
+ * Serializa estilos - SOLO el contenido, no el nombre de la clase
+ */
 fun serializarEstilos(styles: List<Any>?): String {
     if (styles.isNullOrEmpty()) return ""
     return buildString {
         appendLine("<style>")
-        styles.forEach { s -> append(serializarEstiloItem(s)) }
+        styles.forEach { style ->
+            when (style) {
+                is ColorStyle -> {
+                    appendLine("<color=${serializarColor(style.color)}/>")
+                }
+                is BackgroundStyle -> {
+                    appendLine("<background color=${serializarColor(style.color)}/>")
+                }
+                is TextSizeStyle -> {
+                    appendLine("<text size=${style.size}>")
+                }
+                is FontStyle -> {
+                    appendLine("<font family=${style.font}/>")
+                }
+                is BorderStyle -> {
+                    appendLine("<border,${style.width},${style.type},color=${serializarColor(style.color)}/>")
+                }
+                // Si es un String (borde serializado previamente)
+                is String -> {
+                    // Formato esperado: "SOLID:2:#FF3C43"
+                    val parts = style.split(":")
+                    if (parts.size >= 3) {
+                        val tipo = parts[0]
+                        val grosor = parts[1]
+                        val color = parts[2]
+                        appendLine("<border,$grosor,$tipo,color=$color/>")
+                    } else {
+                        appendLine("<!-- $style -->")
+                    }
+                }
+                else -> {
+                    // No mostrar el nombre de la clase, solo comentario
+                    // appendLine("<!-- ${style.javaClass.simpleName} -->")
+                }
+            }
+        }
         appendLine("</style>")
     }
 }
 
-fun serializarEstiloItem(style: Any): String = when (style) {
-
-    is ColorStyle ->
-        "<color=${serializarColor(style.color)}/>\n"
-
-    is BackgroundStyle ->
-        "<background color=${serializarColor(style.color)}/>\n"
-
-    is TextSizeStyle ->
-        "<text size=${style.size}>\n"
-
-    is FontStyle ->
-        "<font family=${style.font}/>\n"
-
-    else -> "$ ${style.javaClass.simpleName}\n"
-}
-
-
+/**
+ * Serializa un color a su formato PKM
+ */
 fun serializarColor(color: ColorValue?): String = when (color) {
     is HexaColor -> color.toPKM()
-    is RgbColor  -> color.toPKM()
-    is HslColor  -> color.toPKM()
+    is RgbColor -> color.toPKM()
+    is HslColor -> color.toPKM()
     is BaseColor -> color.name
-    null         -> "#000000"
-    else         -> "#000000"
+    null -> "#000000"
+    else -> "#000000"
 }
 
-
+/**
+ * Limpia un string, reemplazando emojis por su notación PKM
+ */
 private fun cleanStr(s: String): String =
     s.replace("\"", "")
         .replace("😀", "@[:smile:]")
@@ -651,10 +697,9 @@ private fun cleanStr(s: String): String =
         .replace("😺", "@[:^^:]")
         .trim()
 
-
+// Funciones de utilidad
 fun serializeElement(element: Any): String = serializarElemento(element)
 fun serializeSection(element: SectionsModel): String = serializarSeccion(element)
 fun serializeTable(table: TableModel): String = serializarTabla(table)
 fun serializeStyles(styles: List<Any>?): String = serializarEstilos(styles)
-fun serializeStyleItem(style: Any): String = serializarEstiloItem(style)
 fun serializeColorValue(color: ColorValue?): String = serializarColor(color)

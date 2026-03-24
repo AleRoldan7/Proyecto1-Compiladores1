@@ -8,62 +8,62 @@ package com.example.proyecto1_compi1.analizador.pkm;
 /** CUP generated class containing symbol constants. */
 public class sym {
   /* terminals */
-  public static final int HSL_COLOR = 52;
+  public static final int HSL_COLOR = 46;
   public static final int STYLE_FONT = 26;
   public static final int ELEMENT_CLOSE = 21;
   public static final int METADATA_BLOCK = 2;
   public static final int LINE_CLOSE = 19;
   public static final int INTECIERRA = 56;
   public static final int FAMILY_EQ = 29;
-  public static final int MONO = 32;
+  public static final int MONO = 51;
   public static final int SIZE_EQ = 30;
   public static final int ELEMENT_OPEN = 20;
-  public static final int IGUAL = 43;
-  public static final int SLASH_CLOSE = 46;
-  public static final int RGB_COLOR = 51;
+  public static final int IGUAL = 37;
+  public static final int SLASH_CLOSE = 40;
+  public static final int RGB_COLOR = 45;
   public static final int TABLE_CLOSE = 17;
   public static final int COLOR_EQ = 31;
   public static final int CONTENT_OPEN = 5;
-  public static final int COMMA = 38;
-  public static final int SOLID = 35;
+  public static final int COMMA = 32;
+  public static final int SOLID = 48;
   public static final int DROP_CLOSE = 15;
-  public static final int GUION = 40;
+  public static final int CURSIVE = 53;
   public static final int STYLE_COLOR = 24;
-  public static final int CURSIVE = 34;
   public static final int SELECT_CLOSE = 11;
-  public static final int ID = 49;
+  public static final int GUION = 34;
+  public static final int ID = 42;
   public static final int SECTION_CLOSE = 4;
   public static final int EOF = 0;
   public static final int error = 1;
   public static final int SECTION_OPEN = 3;
-  public static final int NUMBER = 48;
-  public static final int MAYOR_QUE = 44;
+  public static final int NUMBER = 43;
+  public static final int MAYOR_QUE = 38;
   public static final int STYLE_OPEN = 22;
   public static final int SELECT_TAG = 10;
-  public static final int COLOR_NAME = 53;
+  public static final int COLOR_NAME = 47;
   public static final int CONTENT_CLOSE = 6;
   public static final int STYLE_CLOSE = 23;
   public static final int MULTIPLE_CLOSE = 13;
   public static final int STYLE_TEXT = 27;
   public static final int TEXT_ELEMENT = 7;
-  public static final int COLON = 39;
-  public static final int LBRACE = 41;
+  public static final int COLON = 33;
+  public static final int LBRACE = 35;
   public static final int LINE_OPEN = 18;
   public static final int DROP_TAG = 14;
   public static final int STYLE_BORDER = 28;
   public static final int MULTIPLE_TAG = 12;
-  public static final int DASHED = 36;
-  public static final int RBRACE = 42;
-  public static final int SANS_SERIF = 33;
+  public static final int DASHED = 49;
+  public static final int RBRACE = 36;
+  public static final int SANS_SERIF = 52;
   public static final int TEXT_CLOSE = 54;
-  public static final int STRING = 47;
-  public static final int MENOR_QUE = 45;
+  public static final int STRING = 41;
+  public static final int MENOR_QUE = 39;
   public static final int STYLE_BG = 25;
   public static final int INTEABRE = 55;
   public static final int TABLE_OPEN = 16;
   public static final int OPEN_TAG = 8;
-  public static final int DOTTED = 37;
-  public static final int HEX_COLOR = 50;
+  public static final int DOTTED = 50;
+  public static final int HEX_COLOR = 44;
   public static final int OPEN_CLOSE = 9;
   public static final String[] terminalNames = new String[] {
   "EOF",
@@ -98,12 +98,6 @@ public class sym {
   "FAMILY_EQ",
   "SIZE_EQ",
   "COLOR_EQ",
-  "MONO",
-  "SANS_SERIF",
-  "CURSIVE",
-  "SOLID",
-  "DASHED",
-  "DOTTED",
   "COMMA",
   "COLON",
   "GUION",
@@ -114,12 +108,18 @@ public class sym {
   "MENOR_QUE",
   "SLASH_CLOSE",
   "STRING",
-  "NUMBER",
   "ID",
+  "NUMBER",
   "HEX_COLOR",
   "RGB_COLOR",
   "HSL_COLOR",
   "COLOR_NAME",
+  "SOLID",
+  "DASHED",
+  "DOTTED",
+  "MONO",
+  "SANS_SERIF",
+  "CURSIVE",
   "TEXT_CLOSE",
   "INTEABRE",
   "INTECIERRA"

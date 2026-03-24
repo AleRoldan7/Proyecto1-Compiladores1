@@ -16,7 +16,6 @@ public class RgbStyleWithWildcard {
         int green = (int) semantico.evaluar(g);
         int blue = (int) semantico.evaluar(b);
 
-        // Validar rangos
         red = Math.max(0, Math.min(255, red));
         green = Math.max(0, Math.min(255, green));
         blue = Math.max(0, Math.min(255, blue));

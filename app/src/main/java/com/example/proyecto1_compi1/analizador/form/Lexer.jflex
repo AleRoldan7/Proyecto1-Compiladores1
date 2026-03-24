@@ -18,18 +18,36 @@ import com.example.proyecto1_compi1.token.Token;
     public static ArrayList<Token> listaError = new ArrayList<>();
     private StringBuilder stringBuffer = new StringBuilder();
 
+    /* Posición de apertura del string actual — se guarda al ver la " inicial */
+    private int stringStartLine   = 0;
+    private int stringStartColumn = 0;
+
     private void errorLexer(String lexema) {
         listaError.add(new Token(
             lexema, yyline + 1, yycolumn + 1, lexema, "Error Léxico"
         ));
     }
 
+    /*
+     * symbol SIN valor: no pasar yytext() como valor para evitar
+     * que s.value contamine el reporte de errores con el lexema
+     * cuando no es necesario.
+     */
     private Symbol symbol(int type) {
-        return new Symbol(type, yyline + 1, yycolumn + 1, yytext());
+        return new Symbol(type, yyline, yycolumn);
     }
 
+    /* symbol CON valor semántico explícito */
     private Symbol symbol(int type, Object value) {
-        return new Symbol(type, yyline + 1, yycolumn + 1, value);
+        return new Symbol(type, yyline, yycolumn, value);
+    }
+
+    /*
+     * symbol para tokens que abren un string — usa la posición
+     * guardada en el momento de la comilla de apertura.
+     */
+    private Symbol symbolString(int type, Object value) {
+        return new Symbol(type, stringStartLine, stringStartColumn, value);
     }
 %}
 
@@ -62,13 +80,13 @@ HEXCOLOR    = \# [0-9a-fA-F]{6}
 
     /*
      * ── STRINGS ──
-     * La comilla SIEMPRE va al STRING_STATE.
-     * Las claves de estilo como "color", "font family" etc.
-     * se reconocen DENTRO del STRING_STATE como casos especiales
-     * y retornan su token correspondiente.
+     * Guardamos la posición de la comilla de apertura para que
+     * el token resultante apunte al INICIO del string, no al cierre.
      */
-    \"                      {
+    \"  {
         stringBuffer.setLength(0);
+        stringStartLine   = yyline;
+        stringStartColumn = yycolumn;
         yybegin(STRING_STATE);
     }
 
@@ -141,15 +159,11 @@ HEXCOLOR    = \# [0-9a-fA-F]{6}
 
     /* ── RGB completo como un solo token — va ANTES que PARENTESIS_ABRE ── */
     "(" {DIGITO}+ "," {DIGITO}+ "," {DIGITO}+ ")"
-        {
-            return symbol(sym.RGB_COLOR, yytext());
-        }
+        { return symbol(sym.RGB_COLOR, yytext()); }
 
     /* ── HSL completo como un solo token ── */
     "<" {DIGITO}+ ("." {DIGITO}+)? "," {DIGITO}+ ("." {DIGITO}+)? "," {DIGITO}+ ("." {DIGITO}+)? ">"
-        {
-            return symbol(sym.HSL_COLOR, yytext());
-        }
+        { return symbol(sym.HSL_COLOR, yytext()); }
 
     /* ── Operadores ── */
     "=="    { return symbol(sym.IGUALIGUAL); }
@@ -190,7 +204,7 @@ HEXCOLOR    = \# [0-9a-fA-F]{6}
     /* ── Identificadores ── */
     {ID}        { return symbol(sym.VARIABLE, yytext()); }
 
-    /* ── Error ── */
+    /* ── Error léxico ── */
     .           { errorLexer(yytext()); }
 }
 
@@ -199,18 +213,22 @@ HEXCOLOR    = \# [0-9a-fA-F]{6}
    ════════════════════════════════════════════ */
 <STRING_STATE> {
 
-    /* ── Cierre del string ── */
+    /*
+     * Cierre del string: usamos symbolString() para que el token
+     * quede apuntando a la comilla de APERTURA, no a la de cierre.
+     * Los tokens de estilo también usan symbolString().
+     */
     \"  {
         yybegin(YYINITIAL);
         String resultado = stringBuffer.toString();
         switch (resultado) {
-            case "color":            return symbol(sym.STYLE_COLOR);
-            case "background color": return symbol(sym.STYLE_BACKGROUND);
-            case "font family":      return symbol(sym.STYLE_FONT);
-            case "text size":        return symbol(sym.STYLE_SIZE);
-            case "border":           return symbol(sym.STYLE_BORDER);
+            case "color":            return symbolString(sym.STYLE_COLOR,      resultado);
+            case "background color": return symbolString(sym.STYLE_BACKGROUND, resultado);
+            case "font family":      return symbolString(sym.STYLE_FONT,       resultado);
+            case "text size":        return symbolString(sym.STYLE_SIZE,       resultado);
+            case "border":           return symbolString(sym.STYLE_BORDER,     resultado);
             default:
-                return symbol(sym.CADENA, resultado);
+                return symbolString(sym.CADENA, resultado);
         }
     }
 
@@ -245,38 +263,31 @@ HEXCOLOR    = \# [0-9a-fA-F]{6}
     "@[:" "|"+ "]"              { stringBuffer.append("😐"); }
     "@"                         { stringBuffer.append('@');  }
 
-    /* ── Signos de interrogación españoles — se guardan como texto ── */
-    /* ¿ y ? dentro de strings son texto normal, NO comodines          */
+    /* ── Signos especiales dentro de string ── */
     "¿"                         { stringBuffer.append('¿'); }
 
     /*
-     * CLAVE: el ? dentro de un string se guarda como el carácter
-     * Unicode \u003F (representación interna), NO como "?"
-     * Así contieneComodin("¿Cuántos años tienes\u003F") != true
-     * porque buscamos exactamente "?" y no \u003F
-     *
-     * Usamos un marcador especial que no sea "?" para que
-     * contieneComodin no lo detecte como comodín.
+     * "?" dentro de un string se guarda como \uFFFE para que
+     * contieneComodin() no lo confunda con el comodín del .pkm.
+     * Se repone a "?" al cerrar el string (tanto con " como con \n).
      */
+    "?"     { stringBuffer.append('\uFFFE'); }
 
+    /* ── Escape ── */
+    "\\\""  { stringBuffer.append('"');       }
+    "\\" .  { stringBuffer.append(yytext());  }
 
-    /* ── ¿ y ? dentro de strings — se guardan como marcador \uFFFE ── */
-    "¿"   { stringBuffer.append('¿');    }
-     "?"   { stringBuffer.append('\uFFFE'); }  /* ← marcador temporal, NO es "?" */
+    /* ── Contenido normal (excluye ", \, @, ¿, ?) ── */
+    [^\"\\\n\r@¿?]+   { stringBuffer.append(yytext()); }
 
-     /* ── Escape ── */
-     "\\\""   { stringBuffer.append('"');  }
-     "\\" .   { stringBuffer.append(yytext()); }
-
-     /* ── Contenido normal — ahora excluye ? y ¿ explícitamente ── */
-     [^\"\\\n\r@¿?]+   { stringBuffer.append(yytext()); }
-
+    /* ── Salto de línea: cierra el string y repone \uFFFE → ? ── */
     \n | \r | \r\n    {
         yybegin(YYINITIAL);
         String res = stringBuffer.toString().replace('\uFFFE', '?');
-        return symbol(sym.CADENA, res);
+        return symbolString(sym.CADENA, res);
     }
 }
+
 /* ════════════════════════════════════════════
    ESTADO COMMENT_BLOCK  /* ... */
    ════════════════════════════════════════════ */

@@ -9,4 +9,9 @@ import androidx.lifecycle.ViewModel
 class EditViewModel : ViewModel() {
 
     var editText by mutableStateOf(TextFieldValue(""))
+        private set
+
+    fun updateText(newText: TextFieldValue) {
+        editText = newText
+    }
 }

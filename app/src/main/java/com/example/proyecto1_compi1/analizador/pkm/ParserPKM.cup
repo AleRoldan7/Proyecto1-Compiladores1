@@ -115,19 +115,26 @@ terminal ELEMENT_OPEN, ELEMENT_CLOSE;
 terminal STYLE_OPEN,   STYLE_CLOSE;
 terminal STYLE_COLOR, STYLE_BG, STYLE_FONT, STYLE_TEXT, STYLE_BORDER;
 terminal FAMILY_EQ, SIZE_EQ, COLOR_EQ;
-terminal MONO, SANS_SERIF, CURSIVE;
-terminal SOLID, DASHED, DOTTED;
 terminal COMMA, COLON, GUION;
 terminal LBRACE, RBRACE;
 terminal IGUAL, MAYOR_QUE, MENOR_QUE;
 terminal SLASH_CLOSE;
 terminal String  STRING;
-terminal Integer NUMBER;
 terminal String  ID;
-terminal String  HEX_COLOR;
-terminal String  RGB_COLOR;
-terminal String  HSL_COLOR;
-terminal String  COLOR_NAME;
+terminal Double NUMBER;
+
+terminal String HEX_COLOR;
+terminal String RGB_COLOR;
+terminal String HSL_COLOR;
+terminal String COLOR_NAME;
+
+terminal SOLID;
+terminal DASHED;
+terminal DOTTED;
+
+terminal MONO;
+terminal SANS_SERIF;
+terminal CURSIVE;
 terminal TEXT_CLOSE, INTEABRE, INTECIERRA;
 
 /* ── No terminales ── */
@@ -154,10 +161,10 @@ non terminal ArrayList<Integer>      int_list_opt;
 non terminal ArrayList<PropertyItem> parametros_pregunta;
 non terminal ArrayList<Object>       style_block;
 non terminal Object                  style_item;
-non terminal String                  color_value;
 non terminal String                  font_value;
 non terminal String                  border_type;
 non terminal ArrayList<Object> style_item_list;
+non terminal ColorValue color_value;
 
 precedence left COMMA;
 precedence nonassoc NUMBER;
@@ -207,34 +214,6 @@ elemento_principal ::=
     ;
 
 /* ════════════════════════════════════════════
-   SECCIÓN — puede tener estilos opcionales
-   ════════════════════════════════════════════ */
-section ::=
-
-    /* Con estilos */
-    SECTION_OPEN
-        NUMBER:w COMMA NUMBER:h COMMA NUMBER:x COMMA NUMBER:y COMMA ID:id
-    MAYOR_QUE
-        style_block:st
-        CONTENT_OPEN content:c CONTENT_CLOSE
-    SECTION_CLOSE
-    {:
-        ArrayList<PropertyItem> props = buildSectionProps(w, h, x, y, id.toString(), c);
-        props.add(new PropertyItem("styles", st));
-        RESULT = new SectionsModel(props);
-    :}
-
-    /* Sin estilos */
-    | SECTION_OPEN
-        NUMBER:w COMMA NUMBER:h COMMA NUMBER:x COMMA NUMBER:y COMMA ID:id
-      MAYOR_QUE
-        CONTENT_OPEN content:c CONTENT_CLOSE
-      SECTION_CLOSE
-    {:
-        RESULT = new SectionsModel(buildSectionProps(w, h, x, y, id.toString(), c));
-    :}
-    ;
-/* ════════════════════════════════════════════
    CONTENT — cualquier elemento puede anidarse
    ════════════════════════════════════════════ */
 content ::=
@@ -248,6 +227,70 @@ content ::=
         ArrayList<Object> list = new ArrayList<>();
         list.add(e);
         RESULT = list;
+    :}
+    ;
+
+/* ════════════════════════════════════════════
+   SECCIÓN — puede tener estilos opcionales
+   ════════════════════════════════════════════ */
+section ::=
+
+    /* Con estilos y contenido */
+    SECTION_OPEN
+        NUMBER:w COMMA NUMBER:h COMMA NUMBER:x COMMA NUMBER:y COMMA ID:id
+    MAYOR_QUE
+        style_block:st
+        CONTENT_OPEN content:c CONTENT_CLOSE
+    SECTION_CLOSE
+    {:
+        ArrayList<PropertyItem> props = buildSectionProps(
+            ((Double)w).intValue(), ((Double)h).intValue(),
+            ((Double)x).intValue(), ((Double)y).intValue(),
+            id.toString(), c);
+        props.add(new PropertyItem("styles", st));
+        RESULT = new SectionsModel(props);
+    :}
+
+    /* Con estilos y contenido vacío */
+    | SECTION_OPEN
+        NUMBER:w COMMA NUMBER:h COMMA NUMBER:x COMMA NUMBER:y COMMA ID:id
+    MAYOR_QUE
+        style_block:st
+        CONTENT_OPEN CONTENT_CLOSE
+    SECTION_CLOSE
+    {:
+        ArrayList<PropertyItem> props = buildSectionProps(
+            ((Double)w).intValue(), ((Double)h).intValue(),
+            ((Double)x).intValue(), ((Double)y).intValue(),
+            id.toString(), new ArrayList<Object>());
+        props.add(new PropertyItem("styles", st));
+        RESULT = new SectionsModel(props);
+    :}
+
+    /* Sin estilos, con contenido */
+    | SECTION_OPEN
+        NUMBER:w COMMA NUMBER:h COMMA NUMBER:x COMMA NUMBER:y COMMA ID:id
+      MAYOR_QUE
+        CONTENT_OPEN content:c CONTENT_CLOSE
+      SECTION_CLOSE
+    {:
+        RESULT = new SectionsModel(buildSectionProps(
+            ((Double)w).intValue(), ((Double)h).intValue(),
+            ((Double)x).intValue(), ((Double)y).intValue(),
+            id.toString(), c));
+    :}
+
+    /* Sin estilos, con contenido vacío */
+    | SECTION_OPEN
+        NUMBER:w COMMA NUMBER:h COMMA NUMBER:x COMMA NUMBER:y COMMA ID:id
+      MAYOR_QUE
+        CONTENT_OPEN CONTENT_CLOSE
+      SECTION_CLOSE
+    {:
+        RESULT = new SectionsModel(buildSectionProps(
+            ((Double)w).intValue(), ((Double)h).intValue(),
+            ((Double)x).intValue(), ((Double)y).intValue(),
+            id.toString(), new ArrayList<Object>()));
     :}
     ;
 
@@ -279,9 +322,9 @@ texto_element ::=
     TEXT_ELEMENT NUMBER:w COMMA NUMBER:h COMMA STRING:s SLASH_CLOSE
     {:
         TextModel text = new TextModel();
-        text.addProperty(new PropertyItem("width",  w));
-        text.addProperty(new PropertyItem("height", h));
-        text.addProperty(new PropertyItem("label",  s.toString().trim()));
+        text.addProperty(new PropertyItem("width",   ((Double)w).intValue()));
+        text.addProperty(new PropertyItem("height",  ((Double)h).intValue()));
+        text.addProperty(new PropertyItem("content", s.toString().trim()));
         RESULT = text;
     :}
 
@@ -291,10 +334,10 @@ texto_element ::=
       TEXT_CLOSE
     {:
         TextModel text = new TextModel();
-        text.addProperty(new PropertyItem("width",  w));
-        text.addProperty(new PropertyItem("height", h));
-        text.addProperty(new PropertyItem("label",  s.toString().trim()));
-        text.addProperty(new PropertyItem("styles", st));
+        text.addProperty(new PropertyItem("width",   ((Double)w).intValue()));
+        text.addProperty(new PropertyItem("height",  ((Double)h).intValue()));
+        text.addProperty(new PropertyItem("content", s.toString().trim()));
+        text.addProperty(new PropertyItem("styles",  st));
         RESULT = text;
     :}
 
@@ -303,9 +346,9 @@ texto_element ::=
       TEXT_CLOSE
     {:
         TextModel text = new TextModel();
-        text.addProperty(new PropertyItem("width",  w));
-        text.addProperty(new PropertyItem("height", h));
-        text.addProperty(new PropertyItem("label",  s.toString().trim()));
+        text.addProperty(new PropertyItem("width",   ((Double)w).intValue()));
+        text.addProperty(new PropertyItem("height",  ((Double)h).intValue()));
+        text.addProperty(new PropertyItem("content", s.toString().trim()));
         RESULT = text;
     :}
     ;
@@ -330,10 +373,10 @@ table_elem ::=
     TABLE_CLOSE
     {:
         ArrayList<PropertyItem> props = new ArrayList<>();
-        props.add(new PropertyItem("width",    w));
-        props.add(new PropertyItem("height",   h));
-        props.add(new PropertyItem("pointX",   x));
-        props.add(new PropertyItem("pointY",   y));
+        props.add(new PropertyItem("width",    ((Double)w).intValue()));
+        props.add(new PropertyItem("height",   ((Double)h).intValue()));
+        props.add(new PropertyItem("pointX",   ((Double)x).intValue()));
+        props.add(new PropertyItem("pointY",   ((Double)y).intValue()));
         props.add(new PropertyItem("styles",   st));
         props.add(new PropertyItem("elements", rows));
         RESULT = new TableModel(props);
@@ -345,10 +388,10 @@ table_elem ::=
       TABLE_CLOSE
     {:
         ArrayList<PropertyItem> props = new ArrayList<>();
-        props.add(new PropertyItem("width",    w));
-        props.add(new PropertyItem("height",   h));
-        props.add(new PropertyItem("pointX",   x));
-        props.add(new PropertyItem("pointY",   y));
+        props.add(new PropertyItem("width",    ((Double)w).intValue()));
+        props.add(new PropertyItem("height",   ((Double)h).intValue()));
+        props.add(new PropertyItem("pointX",   ((Double)x).intValue()));
+        props.add(new PropertyItem("pointY",   ((Double)y).intValue()));
         props.add(new PropertyItem("elements", rows));
         RESULT = new TableModel(props);
     :}
@@ -424,11 +467,11 @@ style_item_list ::=
 style_item ::=
     /* <color=#FFFFFF/> */
     STYLE_COLOR color_value:c SLASH_CLOSE
-    {: RESULT = new ColorStyle(parseColor(c)); :}
+    {: RESULT = new ColorStyle(c); :}
 
     /* <background color=... /> */
     | STYLE_BG COLOR_EQ color_value:c SLASH_CLOSE
-    {: RESULT = new BackgroundStyle(parseColor(c)); :}
+    {: RESULT = new BackgroundStyle(c); :}
 
     /* <font family=MONO/> */
     | STYLE_FONT FAMILY_EQ font_value:f SLASH_CLOSE
@@ -436,23 +479,30 @@ style_item ::=
 
     /* <text size=16/>  — forma corta */
     | STYLE_TEXT NUMBER:n SLASH_CLOSE
-    {: RESULT = new TextSizeStyle(n); :}
+    {: RESULT = new TextSizeStyle(((Double)n).intValue()); :}
 
     /* <text size=16>   — forma larga con > */
     | STYLE_TEXT NUMBER:n MAYOR_QUE
-    {: RESULT = new TextSizeStyle(n); :}
+    {: RESULT = new TextSizeStyle(((Double)n).intValue()); :}
 
     /* <border,2,SOLID,color=#000000/> */
     | STYLE_BORDER NUMBER:n COMMA border_type:t COMMA COLOR_EQ color_value:c SLASH_CLOSE
-    {: RESULT = t + ":" + n + ":" + c; :}
+    {: RESULT = new BorderStyle(((Double)n).intValue(), t, c); :}
     ;
 
 
 color_value ::=
-    HEX_COLOR:h     {: RESULT = h; :}
-    | RGB_COLOR:r   {: RESULT = r; :}
-    | HSL_COLOR:h   {: RESULT = h; :}
-    | COLOR_NAME:c  {: RESULT = c; :}
+      HEX_COLOR:c
+        {: RESULT = parseColor(c.toString()); :}
+
+    | RGB_COLOR:c
+        {: RESULT = parseColor(c.toString()); :}
+
+    | HSL_COLOR:c
+        {: RESULT = parseColor(c.toString()); :}
+
+    | COLOR_NAME:c
+        {: RESULT = parseColor(c.toString()); :}
     ;
 
 font_value ::=
@@ -474,8 +524,8 @@ parametros_pregunta ::=
     NUMBER:w COMMA NUMBER:h COMMA
     {:
         ArrayList<PropertyItem> props = new ArrayList<>();
-        props.add(new PropertyItem("width",  w));
-        props.add(new PropertyItem("height", h));
+        props.add(new PropertyItem("width",  ((Double)w).intValue()));
+        props.add(new PropertyItem("height", ((Double)h).intValue()));
         RESULT = props;
     :}
     ;
@@ -521,7 +571,7 @@ select_question ::=
         for (PropertyItem prop : p) q.addProperty(prop);
         q.addProperty(new PropertyItem("label",   s.toString().trim()));
         q.addProperty(new PropertyItem("options", o));
-        ArrayList<Integer> c = new ArrayList<>(); c.add(n);
+        ArrayList<Integer> c = new ArrayList<>(); c.add(((Double)n).intValue());
         q.addProperty(new PropertyItem("correct", c));
         RESULT = q;
     :}
@@ -533,7 +583,7 @@ select_question ::=
         for (PropertyItem prop : p) q.addProperty(prop);
         q.addProperty(new PropertyItem("label",   s.toString().trim()));
         q.addProperty(new PropertyItem("options", o));
-        ArrayList<Integer> c = new ArrayList<>(); c.add(n);
+        ArrayList<Integer> c = new ArrayList<>(); c.add(((Double)n).intValue());
         q.addProperty(new PropertyItem("correct", c));
         q.addProperty(new PropertyItem("styles",  st));
         RESULT = q;
@@ -545,7 +595,7 @@ select_question ::=
         for (PropertyItem prop : p) q.addProperty(prop);
         q.addProperty(new PropertyItem("label",   s.toString().trim()));
         q.addProperty(new PropertyItem("options", o));
-        ArrayList<Integer> c = new ArrayList<>(); c.add(n);
+        ArrayList<Integer> c = new ArrayList<>(); c.add(((Double)n).intValue());
         q.addProperty(new PropertyItem("correct", c));
         RESULT = q;
     :}
@@ -562,7 +612,7 @@ drop_question ::=
         for (PropertyItem prop : p) q.addProperty(prop);
         q.addProperty(new PropertyItem("label",   s.toString().trim()));
         q.addProperty(new PropertyItem("options", o));
-        ArrayList<Integer> c = new ArrayList<>(); c.add(n);
+        ArrayList<Integer> c = new ArrayList<>(); c.add(((Double)n).intValue());
         q.addProperty(new PropertyItem("correct", c));
         RESULT = q;
     :}
@@ -574,7 +624,7 @@ drop_question ::=
         for (PropertyItem prop : p) q.addProperty(prop);
         q.addProperty(new PropertyItem("label",   s.toString().trim()));
         q.addProperty(new PropertyItem("options", o));
-        ArrayList<Integer> c = new ArrayList<>(); c.add(n);
+        ArrayList<Integer> c = new ArrayList<>(); c.add(((Double)n).intValue());
         q.addProperty(new PropertyItem("correct", c));
         q.addProperty(new PropertyItem("styles",  st));
         RESULT = q;
@@ -586,7 +636,7 @@ drop_question ::=
         for (PropertyItem prop : p) q.addProperty(prop);
         q.addProperty(new PropertyItem("label",   s.toString().trim()));
         q.addProperty(new PropertyItem("options", o));
-        ArrayList<Integer> c = new ArrayList<>(); c.add(n);
+        ArrayList<Integer> c = new ArrayList<>(); c.add(((Double)n).intValue());
         q.addProperty(new PropertyItem("correct", c));
         RESULT = q;
     :}
@@ -665,12 +715,12 @@ int_list ::=
     NUMBER:n
     {:
         ArrayList<Integer> list = new ArrayList<>();
-        list.add(n);
+        list.add(((Double)n).intValue());
         RESULT = list;
     :}
     | int_list:l COMMA NUMBER:n
     {:
-        l.add(n);
+        l.add(((Double)n).intValue());
         RESULT = l;
     :}
     ;

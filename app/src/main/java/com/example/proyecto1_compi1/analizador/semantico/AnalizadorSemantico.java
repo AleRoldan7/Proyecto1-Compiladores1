@@ -8,8 +8,58 @@ import com.example.proyecto1_compi1.modelo.variable.VariableModel;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.regex.Pattern;
 
 public class AnalizadorSemantico {
+
+    public static class AsignacionPendiente {
+        public final String variable;
+        public final Object nodoIzq;
+        public final String operador;
+        public final Object nodoDer;
+
+        public AsignacionPendiente(String variable,
+                                   Object nodoIzq, String operador, Object nodoDer) {
+            this.variable  = variable;
+            this.nodoIzq   = nodoIzq;
+            this.operador  = operador;
+            this.nodoDer   = nodoDer;
+        }
+
+        public AsignacionPendiente(String variable, Object valor) {
+            this.variable  = variable;
+            this.nodoIzq   = valor;
+            this.operador  = "=";
+            this.nodoDer   = null;
+        }
+
+        /* Ejecuta la asignación con el estado actual del semántico */
+        public void ejecutar(AnalizadorSemantico sem) {
+            Object resultado;
+            if ("=".equals(operador)) {
+                resultado = sem.resolverNodo(nodoIzq);
+            } else {
+                Object va = sem.resolverNodo(nodoIzq);
+                Object vb = sem.resolverNodo(nodoDer);
+                switch (operador) {
+                    case "+": resultado = sem.suma(va, vb);             break;
+                    case "-": resultado = sem.resta(va, vb);            break;
+                    case "*": resultado = sem.multiplicacion(va, vb);   break;
+                    case "/": resultado = sem.division(va, vb, 0, 0);   break;
+                    case "^": resultado = sem.potencia(va, vb);         break;
+                    case "%": resultado = sem.modulo(va, vb, 0, 0);     break;
+                    default:  resultado = sem.resolverNodo(nodoIzq);    break;
+                }
+            }
+            sem.asignarVariable(variable, resultado, 0, 0);
+        }
+
+        @Override
+        public String toString() {
+            return "AsignacionPendiente{" + variable + " = " + nodoIzq
+                    + (operador.equals("=") ? "" : " " + operador + " " + nodoDer) + "}";
+        }
+    }
 
     private final ArrayList<Token> errores = new ArrayList<>();
     private final HashMap<String, String> tipoVariables = new HashMap<>();
@@ -18,8 +68,9 @@ public class AnalizadorSemantico {
     private static final int MAX_ITERACIONES = 50;
 
     private String ultimoOperadorLogico = null;
-
     private Object[] ultimaCondicion = null;
+
+    private static final Pattern EXPRESION_NUMERICA = Pattern.compile("^[0-9+\\-*/%^.()]+$");
 
     public ArrayList<Token> getErrores() {
         return errores;
@@ -40,7 +91,6 @@ public class AnalizadorSemantico {
         ultimoOperadorLogico = null;
         ultimaCondicion = null;
     }
-
 
     /* DECLARACIÓN Y ASIGNACIÓN DE VARIABLES */
     public void declararVariable(String nombre, String tipo, Object valor,
@@ -72,7 +122,12 @@ public class AnalizadorSemantico {
 
         Object valorEvaluado = valor;
         if ("number".equals(tipo) && valor != null) {
-            valorEvaluado = evaluarNumero(valor);
+
+            if (valor instanceof Number) {
+                valorEvaluado = valor;
+            } else {
+                valorEvaluado = evaluarNumero(valor);
+            }
         }
         valorVariables.put(nombre, valorEvaluado);
     }
@@ -114,16 +169,34 @@ public class AnalizadorSemantico {
         valorVariables.put(nombre, valor);
     }
 
+    public Object resolverNodo(Object nodo) {
+        if (nodo == null) return null;
+        if (nodo instanceof Number) return nodo;
+        if (nodo instanceof AsignacionPendiente) {
+            AsignacionPendiente ap = (AsignacionPendiente) nodo;
+            ap.ejecutar(this);
+            return valorVariables.getOrDefault(ap.variable, 0.0);
+        }
+        if (nodo instanceof String) {
+            String s = (String) nodo;
+            if (s.contains("?")) return s;
+            if (valorVariables.containsKey(s)) {
+                return valorVariables.get(s);
+            }
+            try { return Double.parseDouble(s); } catch (NumberFormatException ignored) {}
+            return s;
+        }
+        return nodo;
+    }
+
     /* VALIDACIONES DE DIMENSIONES */
     public int validarDimension(Object valor, String prop, int linea, int columna) {
         int v = evaluarEntero(valor);
-
         if (v <= 0) {
             agregarError(prop, linea, columna, "Semántico",
                     "'" + prop + "' debe ser mayor que 0, se obtuvo " + v + ".");
             return 1;
         }
-
         return v;
     }
 
@@ -157,12 +230,30 @@ public class AnalizadorSemantico {
         return v;
     }
 
+    /**
+     * Retorna true si la lista de correctos contiene -1,
+     * lo que significa "cualquier respuesta es válida".
+     */
+    public boolean esCorrectoCualquiera(List<Integer> correctos) {
+        if (correctos == null) return false;
+        for (int idx : correctos) {
+            if (idx == -1) return true;
+        }
+        return false;
+    }
+
     public void validarCorrect(String label, List<String> opciones,
                                List<Integer> correctos, int linea, int columna) {
         if (opciones == null || correctos == null || correctos.isEmpty()) return;
 
-        int size = opciones.size();
+        // -1 en cualquier posición = cualquier respuesta es correcta → válido siempre
+        if (esCorrectoCualquiera(correctos)) {
+            System.out.println("[validarCorrect] '" + label +
+                    "' tiene correct=-1: cualquier respuesta es aceptada.");
+            return;
+        }
 
+        int size = opciones.size();
         if (size == 0) {
             System.out.println("[validarCorrect] '" + label +
                     "' tiene opciones vacías — probable PokeAPI, omitiendo validación.");
@@ -170,13 +261,12 @@ public class AnalizadorSemantico {
         }
 
         for (int idx : correctos) {
-            if (idx == -1) continue;
             if (idx < 0 || idx >= size) {
                 agregarError(
                         label != null ? label : "pregunta",
                         linea, columna, "Semántico",
                         "Índice 'correct=" + idx + "' fuera de rango en '" + label +
-                                "'. Opciones: 0 al " + (size - 1) + "."
+                                "'. Opciones válidas: 0 al " + (size - 1) + "."
                 );
             }
         }
@@ -185,7 +275,6 @@ public class AnalizadorSemantico {
     public void validarOpcionesSelect(String label, List<String> opciones,
                                       int linea, int columna) {
         if (opciones == null || opciones.isEmpty()) return;
-
         if (opciones.size() > 5) {
             agregarError(
                     label != null ? label : "SELECT_QUESTION", linea, columna, "Advertencia",
@@ -195,70 +284,71 @@ public class AnalizadorSemantico {
         }
     }
 
-
     /* EVALUACIÓN MEJORADA */
     public double evaluar(Object expr) {
         if (expr == null) return 0;
-
-        if ("?".equals(expr)) return 0;
-
-        if (expr instanceof Number) {
-            return ((Number) expr).doubleValue();
-        }
+        if (expr instanceof Number) return ((Number) expr).doubleValue();
 
         if (expr instanceof String) {
             String s = (String) expr;
-
             if (s.contains("?")) return 0;
 
             if (valorVariables.containsKey(s)) {
                 Object v = valorVariables.get(s);
-                if (v instanceof Number) {
-                    return ((Number) v).doubleValue();
-                }
+                if (v instanceof Number) return ((Number) v).doubleValue();
                 if (v instanceof String) {
                     try {
                         return Double.parseDouble((String) v);
-                    } catch (Exception ignored) {
-                    }
+                    } catch (Exception ignored) {}
                 }
                 return 0;
             }
-
             try {
                 return Double.parseDouble(s);
-            } catch (Exception ignored) {
-            }
+            } catch (Exception ignored) {}
         }
         return 0;
     }
 
 
-    public Object evaluarExpresion(Object expr) {
+    public Object evaluarExpresionConComodines(Object expr) {
         if (expr == null) return null;
-
         if ("?".equals(expr)) return "?";
-
-        if (expr instanceof Number) {
-            return expr;
-        }
+        if (expr instanceof Number) return expr;
 
         if (expr instanceof String) {
             String s = (String) expr;
-
-            if (s.contains("?")) return s;
-
             if (valorVariables.containsKey(s)) {
-                return valorVariables.get(s);
+                Object val = valorVariables.get(s);
+                return evaluarExpresionConComodines(val);
             }
-
+            if (s.contains("?")) return s;
             try {
                 return Double.parseDouble(s);
             } catch (NumberFormatException e) {
                 return s;
             }
         }
+        return expr;
+    }
 
+    public Object evaluarExpresion(Object expr) {
+        if (expr == null) return null;
+        if ("?".equals(expr)) return "?";
+        if (expr instanceof Number) return expr;
+
+        if (expr instanceof String) {
+            String s = (String) expr;
+            if (s.contains("?")) return s;
+            if (valorVariables.containsKey(s)) {
+                return valorVariables.get(s);
+            }
+            try {
+                return Double.parseDouble(s);
+            } catch (NumberFormatException e) {
+                return s;
+            }
+        }
         return expr;
     }
 
@@ -275,122 +365,152 @@ public class AnalizadorSemantico {
         return 0.0;
     }
 
-    /* OPERACIONES MEJORADAS */
+    /* OPERACIONES MEJORADAS  */
+
     public Object suma(Object a, Object b) {
-        System.out.println("[suma] a=" + a + " (" + (a != null ? a.getClass().getSimpleName() : "null") +
-                "), b=" + b + " (" + (b != null ? b.getClass().getSimpleName() : "null") + ")");
+        System.out.println("[suma] a=" + a + ", b=" + b);
 
         Object va = resolverVariable(a);
         Object vb = resolverVariable(b);
 
-        System.out.println("[suma] va=" + va + ", vb=" + vb);
-
-        boolean vaEsComodin = "?".equals(va) || (va instanceof String && ((String) va).contains("?"));
-        boolean vbEsComodin = "?".equals(vb) || (vb instanceof String && ((String) vb).contains("?"));
-
-        if (vaEsComodin || vbEsComodin || esStringNoNumerico(va) || esStringNoNumerico(vb)) {
-            String resultado = objetoAString(va) + objetoAString(vb);
-            System.out.println("[suma] Concatenación: " + resultado);
+        if (tieneComodin(va) || tieneComodin(vb)) {
+            String resultado = objetoAString(va) + " + " + objetoAString(vb);
+            System.out.println("[suma] Preservando comodín: " + resultado);
             return resultado;
         }
 
-        double resultado = evaluar(va) + evaluar(vb);
-
-        if (resultado == Math.floor(resultado) && !Double.isInfinite(resultado)) {
-            System.out.println("[suma] Numérica (entero): " + (int) resultado);
-            return (int) resultado;
+        if(a instanceof Boolean || b instanceof Boolean){
+            agregarError("+",0,0,"Semántico",
+                    "No se puede concatenar booleanos");
         }
 
-        System.out.println("[suma] Numérica: " + resultado);
-        return resultado;
+        if (va instanceof Number && vb instanceof Number) {
+            double resultado = ((Number) va).doubleValue() + ((Number) vb).doubleValue();
+            return resultado;
+        }
+
+
+        return objetoAString(va) + objetoAString(vb);
     }
 
     public Object resta(Object a, Object b) {
-
         Object va = resolverVariable(a);
         Object vb = resolverVariable(b);
-        if ("?".equals(va) || "?".equals(vb) ||
-                (va instanceof String && ((String) va).contains("?")) ||
-                (vb instanceof String && ((String) vb).contains("?"))) {
-            return objetoAString(va) + "-" + objetoAString(vb);
+
+        if (tieneComodin(va) || tieneComodin(vb)) {
+            String resultado = objetoAString(va) + " - " + objetoAString(vb);
+            System.out.println("[resta] Preservando comodín: " + resultado);
+            return resultado;
         }
-        return evaluar(va) - evaluar(vb);
+
+        if (va instanceof Number && vb instanceof Number) {
+            return ((Number) va).doubleValue() - ((Number) vb).doubleValue();
+        }
+
+        return objetoAString(va) + " - " + objetoAString(vb);
     }
 
     public Object multiplicacion(Object a, Object b) {
         Object va = resolverVariable(a);
         Object vb = resolverVariable(b);
-        if ("?".equals(va) || "?".equals(vb) ||
-                (va instanceof String && ((String) va).contains("?")) ||
-                (vb instanceof String && ((String) vb).contains("?"))) {
-            return objetoAString(va) + "*" + objetoAString(vb);
+
+        if (tieneComodin(va) || tieneComodin(vb)) {
+            String resultado = objetoAString(va) + " * " + objetoAString(vb);
+            System.out.println("[multiplicacion] Preservando comodín: " + resultado);
+            return resultado;
         }
-        return evaluar(va) * evaluar(vb);
+
+        if (va instanceof Number && vb instanceof Number) {
+            return ((Number) va).doubleValue() * ((Number) vb).doubleValue();
+        }
+
+        return objetoAString(va) + " * " + objetoAString(vb);
     }
 
-    public double division(Object a, Object b, int linea, int columna) {
+    public Object division(Object a, Object b, int linea, int columna) {
         Object va = resolverVariable(a);
         Object vb = resolverVariable(b);
 
-        if ("?".equals(va) || "?".equals(vb)) {
-            agregarError("división", linea, columna, "Semántico",
-                    "No se puede dividir con comodín '?'");
-            return 0;
+        if (tieneComodin(va) || tieneComodin(vb)) {
+            String resultado = objetoAString(va) + " / " + objetoAString(vb);
+            System.out.println("[division] Preservando comodín: " + resultado);
+            return resultado;
         }
 
-        double div = evaluar(vb);
-        if (div == 0) {
-            agregarError("/", linea, columna, "Semántico", "División entre cero.");
-            return 0;
+        if (va instanceof Number && vb instanceof Number) {
+            double divisor = ((Number) vb).doubleValue();
+            if (divisor == 0) {
+                agregarError("/", linea, columna, "Semántico",
+                        "División entre cero. Revisa tus valores.");
+                return 0;
+            }
+            return ((Number) va).doubleValue() / divisor;
         }
-        return evaluar(va) / div;
+
+        return objetoAString(va) + " / " + objetoAString(vb);
     }
 
-    public double potencia(Object base, Object exp) {
+    public Object potencia(Object base, Object exp) {
         Object vb = resolverVariable(base);
         Object ve = resolverVariable(exp);
 
-        if ("?".equals(vb) || "?".equals(ve)) {
-            agregarError("potencia", 0, 0, "Semántico",
-                    "No se puede calcular potencia con comodín '?'");
-            return 0;
+        if (tieneComodin(vb) || tieneComodin(ve)) {
+            return objetoAString(vb) + " ^ " + objetoAString(ve);
         }
 
-        return Math.pow(evaluar(vb), evaluar(ve));
+        if (vb instanceof Number && ve instanceof Number) {
+            return Math.pow(((Number) vb).doubleValue(), ((Number) ve).doubleValue());
+        }
+
+        return objetoAString(vb) + " ^ " + objetoAString(ve);
     }
 
-    public double modulo(Object a, Object b, int linea, int columna) {
+    public Object modulo(Object a, Object b, int linea, int columna) {
         Object va = resolverVariable(a);
         Object vb = resolverVariable(b);
 
-        if ("?".equals(va) || "?".equals(vb)) {
-            agregarError("módulo", linea, columna, "Semántico",
-                    "No se puede calcular módulo con comodín '?'");
-            return 0;
+        if (tieneComodin(va) || tieneComodin(vb)) {
+            return objetoAString(va) + " % " + objetoAString(vb);
         }
 
-        double div = evaluar(vb);
-        if (div == 0) {
-            agregarError("%", linea, columna, "Semántico", "Módulo entre cero.");
-            return 0;
+        if (va instanceof Number && vb instanceof Number) {
+            double divisor = ((Number) vb).doubleValue();
+            if (divisor == 0) {
+                agregarError("%", linea, columna, "Semántico",
+                        "Módulo entre cero.");
+                return 0;
+            }
+            return ((Number) va).doubleValue() % divisor;
         }
-        return evaluar(va) % div;
+
+        return objetoAString(va) + " % " + objetoAString(vb);
     }
 
     public Object toStringConcat(Object left, Object right) {
-        return objetoAString(resolverVariable(left)) +
-                objetoAString(resolverVariable(right));
+        return objetoAString(resolverVariable(left)) + objetoAString(resolverVariable(right));
     }
 
-    /* CONDICIONES MEJORADAS */
+    /* CONDICIONES */
     public boolean evaluarCondicion(Object cond) {
-        return evaluar(cond) >= 1;
+        if (cond instanceof Number) {
+            return ((Number) cond).doubleValue() >= 1;
+        }
+        if (cond instanceof String) {
+            String s = (String) cond;
+            if (s.contains("?")) return false; // Comodín no evaluable
+            try {
+                return Double.parseDouble(s) >= 1;
+            } catch (NumberFormatException e) {
+                return false;
+            }
+        }
+        return false;
     }
 
     public boolean recalcularUltimaCondicion() {
         if (ultimaCondicion == null) return false;
         Object resultado = ejecutarCondicion(ultimaCondicion);
-        return evaluar(resultado) >= 1;
+        return evaluarCondicion(resultado);
     }
 
     private Object ejecutarCondicion(Object[] cond) {
@@ -412,60 +532,105 @@ public class AnalizadorSemantico {
             case "and": {
                 Object[] la = (Object[]) cond[1];
                 Object[] lb = (Object[]) cond[2];
-                boolean ra = evaluar(ejecutarCondicion(la)) >= 1;
-                boolean rb = evaluar(ejecutarCondicion(lb)) >= 1;
+                boolean ra = evaluarCondicion(ejecutarCondicion(la));
+                boolean rb = evaluarCondicion(ejecutarCondicion(lb));
                 return (ra && rb) ? 1 : 0;
             }
             case "or": {
                 Object[] la = (Object[]) cond[1];
                 Object[] lb = (Object[]) cond[2];
-                boolean ra = evaluar(ejecutarCondicion(la)) >= 1;
-                boolean rb = evaluar(ejecutarCondicion(lb)) >= 1;
+                boolean ra = evaluarCondicion(ejecutarCondicion(la));
+                boolean rb = evaluarCondicion(ejecutarCondicion(lb));
                 return (ra || rb) ? 1 : 0;
             }
             case "not": {
                 Object[] lc = (Object[]) cond[1];
-                return evaluar(ejecutarCondicion(lc)) >= 1 ? 0 : 1;
+                return evaluarCondicion(ejecutarCondicion(lc)) ? 0 : 1;
             }
             default:
                 return 0;
         }
     }
 
+    /* EVALUAR COLOR */
+    public int evaluarColorComponente(Object expr) {
+        if (expr == null) return 0;
+        if (expr instanceof Number) {
+            int val = ((Number) expr).intValue();
+            return Math.max(0, Math.min(255, val));
+        }
+        if (expr instanceof String) {
+            String s = (String) expr;
+            if (s.contains("?")) return 0;
+            try {
+                int val = (int) Double.parseDouble(s);
+                return Math.max(0, Math.min(255, val));
+            } catch (NumberFormatException e) {
+                return 0;
+            }
+        }
+        return 0;
+    }
+
+    public float evaluarHslComponente(Object expr) {
+        if (expr == null) return 0f;
+        if (expr instanceof Number) {
+            return ((Number) expr).floatValue();
+        }
+        if (expr instanceof String) {
+            String s = (String) expr;
+            if (s.contains("?")) return 0f;
+            try {
+                return Float.parseFloat(s);
+            } catch (NumberFormatException e) {
+                return 0f;
+            }
+        }
+        return 0f;
+    }
+
+
     public int mayor(Object a, Object b) {
         ultimaCondicion = new Object[]{"mayor", a, b};
-        return evaluar(a) > evaluar(b) ? 1 : 0;
+        return comparar(a, b) > 0 ? 1 : 0;
     }
 
     public int menor(Object a, Object b) {
         ultimaCondicion = new Object[]{"menor", a, b};
-        return evaluar(a) < evaluar(b) ? 1 : 0;
+        return comparar(a, b) < 0 ? 1 : 0;
     }
 
     public int igual(Object a, Object b) {
         ultimaCondicion = new Object[]{"igual", a, b};
-        Object va = resolverVariable(a);
-        Object vb = resolverVariable(b);
-        if (va instanceof String && vb instanceof String) return va.equals(vb) ? 1 : 0;
-        return evaluar(a) == evaluar(b) ? 1 : 0;
+        return comparar(a, b) == 0 ? 1 : 0;
     }
 
     public int diferente(Object a, Object b) {
         ultimaCondicion = new Object[]{"diferente", a, b};
-        Object va = resolverVariable(a);
-        Object vb = resolverVariable(b);
-        if (va instanceof String && vb instanceof String) return !va.equals(vb) ? 1 : 0;
-        return evaluar(a) != evaluar(b) ? 1 : 0;
+        return comparar(a, b) != 0 ? 1 : 0;
     }
 
     public int mayorIgual(Object a, Object b) {
         ultimaCondicion = new Object[]{"mayorIgual", a, b};
-        return evaluar(a) >= evaluar(b) ? 1 : 0;
+        return comparar(a, b) >= 0 ? 1 : 0;
     }
 
     public int menorIgual(Object a, Object b) {
         ultimaCondicion = new Object[]{"menorIgual", a, b};
-        return evaluar(a) <= evaluar(b) ? 1 : 0;
+        return comparar(a, b) <= 0 ? 1 : 0;
+    }
+
+    private double comparar(Object a, Object b) {
+        Object va = resolverVariable(a);
+        Object vb = resolverVariable(b);
+        if (tieneComodin(va) || tieneComodin(vb)) {
+            return 0;
+        }
+
+        double da = va instanceof Number ? ((Number) va).doubleValue() : (double) evaluarNumero(va);
+        double db = vb instanceof Number ? ((Number) vb).doubleValue() : (double) evaluarNumero(vb);
+
+        return Double.compare(da, db);
     }
 
     public int and(Object a, Object b) {
@@ -571,7 +736,7 @@ public class AnalizadorSemantico {
         }
     }
 
-    /* HELPERS  */
+    /* HELPERS */
     public String expresionAString(Object expr) {
         if (expr == null) return "";
         if ("?".equals(expr)) return "?";
@@ -597,14 +762,15 @@ public class AnalizadorSemantico {
     }
 
     private Object resolverVariable(Object val) {
+        if (val == null) return null;
+        if (val instanceof Number) return val;
         if ("?".equals(val)) return val;
-
         if (val instanceof String) {
             String strVal = (String) val;
             if (strVal.contains("?")) return val;
-
             Object stored = valorVariables.get(strVal);
             if (stored != null) return stored;
+            try { return Double.parseDouble(strVal); } catch (NumberFormatException ignored) {}
         }
         return val;
     }
@@ -618,13 +784,10 @@ public class AnalizadorSemantico {
 
     private boolean esStringNoNumerico(Object val) {
         if (val == null) return false;
-
         if ("?".equals(val)) return true;
-
         if (val instanceof String) {
             String s = (String) val;
             if (s.contains("?")) return true;
-
             try {
                 Double.parseDouble(s);
                 return false;
@@ -637,13 +800,10 @@ public class AnalizadorSemantico {
 
     private String objetoAString(Object val) {
         if (val == null) return "";
-
         if ("?".equals(val)) return "?";
-
         if (val instanceof String && ((String) val).contains("?")) {
             return (String) val;
         }
-
         if (val instanceof Double) {
             double d = (Double) val;
             if (d == Math.floor(d) && !Double.isInfinite(d))
@@ -656,27 +816,30 @@ public class AnalizadorSemantico {
     private boolean validarTipoAsignacion(String nombre, String tipo, Object valor,
                                           int linea, int columna) {
         if (valor == null) return true;
-        Object vr = resolverVariable(valor);
 
+        Object vr = resolverVariable(valor);
         if ("number".equals(tipo)) {
+            if (vr instanceof Number) return true;
             if (vr instanceof String) {
+                String sv = (String) vr;
+                if (sv.contains("?")) return true;
                 try {
-                    Double.parseDouble((String) vr);
+                    Double.parseDouble(sv);
                     return true;
                 } catch (NumberFormatException e) {
-                    if (!valorVariables.containsKey((String) vr)) {
-                        agregarError(nombre, linea, columna, "Semántico",
-                                "Variable '" + nombre + "' es number pero se asignó \"" +
-                                        vr + "\". Solo acepta valores numéricos.");
-                        return false;
-                    }
+
+                    if (valorVariables.containsKey(sv)) return true;
+                    agregarError(nombre, linea, columna, "Semántico",
+                            "Variable '" + nombre + "' es number pero se asignó \""
+                                    + sv + "\". Solo acepta valores numéricos.");
+                    return false;
                 }
             }
         }
         if ("string".equals(tipo) && vr instanceof Number) {
             agregarError(nombre, linea, columna, "Semántico",
-                    "Variable '" + nombre + "' es string pero se asignó el número " +
-                            vr + ". Solo acepta cadenas.");
+                    "Variable '" + nombre + "' es string pero se asignó el número "
+                            + vr + ". Solo acepta cadenas.");
             return false;
         }
         return true;
