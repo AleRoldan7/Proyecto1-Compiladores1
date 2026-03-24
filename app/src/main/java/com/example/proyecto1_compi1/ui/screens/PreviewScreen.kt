@@ -354,7 +354,6 @@ fun PreviewScreen(navController: NavController) {
     }
 }
 
-// ── Estado de guardado ────────────────────────────────────────────────────────
 sealed class SaveStatus {
     object Idle         : SaveStatus()
     object Success      : SaveStatus()
@@ -362,7 +361,6 @@ sealed class SaveStatus {
     data class Error(val msg: String) : SaveStatus()
 }
 
-// ── Campo de texto oscuro ─────────────────────────────────────────────────────
 @Composable
 private fun DarkField(value: String, onValueChange: (String) -> Unit, label: String) {
     Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
@@ -423,7 +421,6 @@ fun generarPKMCompleto(
         }
     }
 
-    // ── Contadores para el header ─────────────────────────────────────────
     var totalSecciones = 0
     var totalPreguntas = 0
     var totalAbiertas  = 0
@@ -469,10 +466,7 @@ fun generarPKMCompleto(
     }
 }
 
-/**
- * Recolecta SOLO elementos estructurales (secciones, tablas, preguntas, textos)
- * Ignora variables, asignaciones, ciclos, condicionales, etc.
- */
+
 private fun recolectarElementoEstructural(el: Any?, dest: MutableList<Any>) {
     if (el == null) return
 
@@ -490,7 +484,6 @@ private fun recolectarElementoEstructural(el: Any?, dest: MutableList<Any>) {
         is SectionsModel -> {
             // Guardar la sección
             dest.add(el)
-            // Recolectar sus elementos hijos (pueden tener más estructura)
             el.elements?.forEach { sub ->
                 recolectarElementoEstructural(sub, dest)
             }
@@ -499,9 +492,7 @@ private fun recolectarElementoEstructural(el: Any?, dest: MutableList<Any>) {
         // Si es una pregunta genérica
         is QuestionModel -> dest.add(el)
 
-        // Ignorar todo lo demás (variables, ciclos, asignaciones, etc.)
         else -> {
-            // No hacer nada - estos elementos no van al PKM
         }
     }
 }
@@ -648,7 +639,6 @@ fun serializarEstilos(styles: List<Any>?): String {
                 is BorderStyle -> {
                     appendLine("<border,${style.width},${style.type},color=${serializarColor(style.color)}/>")
                 }
-                // Si es un String (borde serializado previamente)
                 is String -> {
                     // Formato esperado: "SOLID:2:#FF3C43"
                     val parts = style.split(":")
@@ -662,8 +652,7 @@ fun serializarEstilos(styles: List<Any>?): String {
                     }
                 }
                 else -> {
-                    // No mostrar el nombre de la clase, solo comentario
-                    // appendLine("<!-- ${style.javaClass.simpleName} -->")
+
                 }
             }
         }
@@ -671,9 +660,7 @@ fun serializarEstilos(styles: List<Any>?): String {
     }
 }
 
-/**
- * Serializa un color a su formato PKM
- */
+
 fun serializarColor(color: ColorValue?): String = when (color) {
     is HexaColor -> color.toPKM()
     is RgbColor -> color.toPKM()
@@ -683,9 +670,7 @@ fun serializarColor(color: ColorValue?): String = when (color) {
     else -> "#000000"
 }
 
-/**
- * Limpia un string, reemplazando emojis por su notación PKM
- */
+
 private fun cleanStr(s: String): String =
     s.replace("\"", "")
         .replace("😀", "@[:smile:]")

@@ -184,15 +184,12 @@ class ReadPKM(private val context: Context) {
             }
         }
 
-        // Dividir en líneas más pequeñas para mejor lectura
         sequence.chunked(100).forEachIndexed { index, chunk ->
             Log.d("PKMLOADER", "Secuencia ${index + 1}: $chunk")
         }
     }
 
-    /**
-     * Obtiene el nombre del tipo de token - CORREGIDO: usando when con sym directamente
-     */
+
     private fun getTokenTypeName(tokenSym: Int): String {
         return when (tokenSym) {
             sym.METADATA_BLOCK -> "HASHES"
@@ -446,9 +443,7 @@ class ReadPKM(private val context: Context) {
         }
     }
 
-    /**
-     * Clase para almacenar información detallada de tokens
-     */
+
     data class TokenInfo(
         val sym: Int,
         val type: String,

@@ -159,14 +159,12 @@ public class SpecialQuestion {
 
         for (PropertyItem item : properties) {
             if ("styles".equals(item.key)) {
-                // Styles: copiar sin cambios
                 resolved.add(new PropertyItem(item.key, item.value));
                 continue;
             }
 
             if ("options_poke".equals(item.key)) {
-                // options_poke: resolver wildcards en los parámetros de la PokeAPI
-                // ["NUMBER", "1", "?"] → ["NUMBER", "1", "10"]
+
                 Object nuevoValor = resolverValor(item.value, argCursor);
                 resolved.add(new PropertyItem(item.key, nuevoValor));
                 continue;
@@ -180,10 +178,6 @@ public class SpecialQuestion {
     }
 
 
-    /**
-     * Resuelve un valor consumiendo args del cursor cuando encuentra "?".
-     * El cursor se pasa como int[] para poder modificarlo en métodos helper.
-     */
     private Object resolverValor(Object value, int[] cursor) {
         if (value == null) return null;
 
@@ -199,16 +193,6 @@ public class SpecialQuestion {
         return value;
     }
 
-    /**
-     * Reemplaza los "?" en un string de izquierda a derecha.
-     * Cada "?" consume un argumento del cursor.
-     *
-     * Ejemplo: "ID ?: desc ?" con args [3, "texto"]
-     * → 1er ? → "3" → "ID 3: desc ?"
-     * → 2do ? → "texto" → "ID 3: desc texto"
-     *
-     * Si el resultado es una expresión aritmética la evalúa.
-     */
     private Object resolverString(String template, int[] cursor) {
         if (!template.contains("?")) return template;
 
@@ -235,11 +219,9 @@ public class SpecialQuestion {
 
         String resultado = sb.toString();
 
-        // Si parece una expresión aritmética, intentar evaluarla
         if (esAritmetica && resultado.matches(".*[+\\-*/].*")) {
             try {
                 double val = evaluarAritmetica(resultado);
-                // Retorna int si no tiene decimales
                 if (val == Math.floor(val) && !Double.isInfinite(val))
                     return (int) val;
                 return val;
@@ -249,9 +231,6 @@ public class SpecialQuestion {
         return resultado;
     }
 
-    /**
-     * Resuelve una lista reemplazando "?" y -999 (marcador de comodín en int_list).
-     */
     private Object resolverLista(List<?> lista, int[] cursor) {
         List<Object> nueva = new ArrayList<>();
         for (Object item : lista) {
@@ -265,10 +244,9 @@ public class SpecialQuestion {
                         nueva.add(arg);
                     }
                 } else {
-                    nueva.add(-1); // sin respuesta si no hay arg
+                    nueva.add(-1);
                 }
             } else if (item instanceof String && ((String) item).contains("?")) {
-                // String con ? en options
                 nueva.add(resolverString((String) item, cursor));
             } else {
                 nueva.add(item);
@@ -277,9 +255,7 @@ public class SpecialQuestion {
         return nueva;
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    //  DRAW — construye la pregunta con propiedades resueltas
-    // ─────────────────────────────────────────────────────────────────────────
+
     public QuestionModel draw() {
         List<PropertyItem> resolved = getResolvedProperties();
         System.out.println("[draw] type='" + type + "' resolved props=" + resolved.size());
@@ -323,7 +299,6 @@ public class SpecialQuestion {
         for (PropertyItem prop : props) {
             if (prop == null || prop.key == null) continue;
             if ("options_poke".equals(prop.key)) {
-                // Pasar options_poke directamente si DropQuestion lo soporta
                 q.addProperty(prop);
                 continue;
             }
@@ -332,9 +307,7 @@ public class SpecialQuestion {
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    //  HELPERS
-    // ─────────────────────────────────────────────────────────────────────────
+
     private String argToString(Object arg) {
         if (arg == null) return "";
         if (arg instanceof Double) {
@@ -351,20 +324,13 @@ public class SpecialQuestion {
         catch (Exception e) { return false; }
     }
 
-    /**
-     * Evalúa expresiones aritméticas simples respetando precedencia.
-     * Soporta: +, -, *, /, ^
-     * Ejemplo: "20 * 3" → 60.0, "10 + 2" → 12.0
-     */
+
     private double evaluarAritmetica(String expr) {
         expr = expr.trim().replaceAll("\\s+", "");
 
-        // Potencia primero
         expr = aplicarOperador(expr, '^', Math::pow);
-        // Multiplicación y división
         expr = aplicarOperador(expr, '*', (a, b) -> a * b);
         expr = aplicarOperador(expr, '/', (a, b) -> b != 0 ? a / b : 0);
-        // Suma y resta
         expr = aplicarOperador(expr, '+', Double::sum);
         expr = aplicarOperador(expr, '-', (a, b) -> a - b);
 
@@ -375,7 +341,6 @@ public class SpecialQuestion {
                                    java.util.function.BiFunction<Double, Double, Double> func) {
         int idx = buscarOperador(expr, op);
         while (idx > 0) {
-            // Extrae operandos izquierdo y derecho
             int leftStart = idx - 1;
             while (leftStart >= 0 &&
                     (Character.isDigit(expr.charAt(leftStart)) ||
@@ -386,7 +351,6 @@ public class SpecialQuestion {
             leftStart++;
 
             int rightEnd = idx + 1;
-            // Permite número negativo después del operador
             if (rightEnd < expr.length() && expr.charAt(rightEnd) == '-') rightEnd++;
             while (rightEnd < expr.length() &&
                     (Character.isDigit(expr.charAt(rightEnd)) ||
@@ -411,10 +375,8 @@ public class SpecialQuestion {
     }
 
     private int buscarOperador(String expr, char op) {
-        // Busca el operador FUERA de números negativos al inicio
         for (int i = 1; i < expr.length(); i++) {
             if (expr.charAt(i) == op) {
-                // Asegura que no sea un signo negativo
                 if (op == '-' && (expr.charAt(i - 1) == '*' || expr.charAt(i - 1) == '/'))
                     continue;
                 return i;
@@ -423,9 +385,6 @@ public class SpecialQuestion {
         return -1;
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    //  GETTERS
-    // ─────────────────────────────────────────────────────────────────────────
     public String              getName()             { return name;            }
     public String              getType()             { return type;            }
     public List<PropertyItem>  getProperties()       { return properties;      }

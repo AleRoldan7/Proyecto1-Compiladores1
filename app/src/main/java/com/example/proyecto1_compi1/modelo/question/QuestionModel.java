@@ -43,10 +43,7 @@ public abstract class QuestionModel {
         }
     }
 
-    /**
-     * Convierte cualquier tipo numérico a int.
-     * Cubre: Integer, Double, Float, Long, String numérico.
-     */
+
     private int toInt(Object value) {
         if (value == null) return 0;
         if (value instanceof Integer) return (Integer) value;
